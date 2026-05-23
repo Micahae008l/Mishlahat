@@ -9,12 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RoleInsightsRouteImport } from './routes/role-insights'
+import { Route as PostSignupRouteImport } from './routes/post-signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AiCounselorRouteImport } from './routes/ai-counselor'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RoleInsightsRoute = RoleInsightsRouteImport.update({
+  id: '/role-insights',
+  path: '/role-insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostSignupRoute = PostSignupRouteImport.update({
+  id: '/post-signup',
+  path: '/post-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/post-signup': typeof PostSignupRoute
+  '/role-insights': typeof RoleInsightsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/post-signup': typeof PostSignupRoute
+  '/role-insights': typeof RoleInsightsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +78,28 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/post-signup': typeof PostSignupRoute
+  '/role-insights': typeof RoleInsightsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ai-counselor' | '/dashboard' | '/login' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/ai-counselor'
+    | '/dashboard'
+    | '/login'
+    | '/onboarding'
+    | '/post-signup'
+    | '/role-insights'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai-counselor' | '/dashboard' | '/login' | '/onboarding'
+  to:
+    | '/'
+    | '/ai-counselor'
+    | '/dashboard'
+    | '/login'
+    | '/onboarding'
+    | '/post-signup'
+    | '/role-insights'
   id:
     | '__root__'
     | '/'
@@ -75,6 +107,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/onboarding'
+    | '/post-signup'
+    | '/role-insights'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,10 +117,26 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PostSignupRoute: typeof PostSignupRoute
+  RoleInsightsRoute: typeof RoleInsightsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/role-insights': {
+      id: '/role-insights'
+      path: '/role-insights'
+      fullPath: '/role-insights'
+      preLoaderRoute: typeof RoleInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post-signup': {
+      id: '/post-signup'
+      path: '/post-signup'
+      fullPath: '/post-signup'
+      preLoaderRoute: typeof PostSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -131,7 +181,18 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PostSignupRoute: PostSignupRoute,
+  RoleInsightsRoute: RoleInsightsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

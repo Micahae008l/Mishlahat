@@ -11,10 +11,13 @@ import {
 } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import appCss from "../styles.css?url";
 import { queryClient } from "@/lib/query-client";
 import { clearToken, getToken } from "@/lib/auth";
+import { MishlahatLogo, MISHLAHAT_LOGO_URL } from "@/components/MishlahatLogo";
+import { SITE_NAME_HE } from "@/lib/brand";
 import { IDF_BACKDROP_IMAGE_URLS, preloadIdfBackdropImages } from "@/lib/idf-images";
 
 export const Route = createRootRoute({
@@ -24,9 +27,12 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "משלחת" },
+      { title: SITE_NAME_HE },
+      { name: "description", content: `${SITE_NAME_HE} — פלטפורמת הכנה לשירות בצה״ל: פרופיל, מא״ה, והתאמת תפקידים עם AI` },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: MISHLAHAT_LOGO_URL },
+      { rel: "apple-touch-icon", href: MISHLAHAT_LOGO_URL },
       { rel: "stylesheet", href: appCss },
       {
         rel: "stylesheet",
@@ -92,9 +98,9 @@ function RootLayoutInner() {
       </main>
       {!isBareShell && (
         <footer className="border-t border-iron/30 mt-20">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8 text-xs text-dust/60">
-            <span>&copy; {new Date().getFullYear()} משלחת</span>
-            <div className="flex gap-6">
+          <div className="mx-auto flex max-w-7xl flex-col-reverse items-center gap-4 px-4 py-6 text-xs text-dust/60 sm:flex-row sm:justify-between sm:px-6 sm:py-8">
+            <span className="text-dust/50">&copy; {new Date().getFullYear()} {SITE_NAME_HE}</span>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <Link to="/" className="transition hover:text-foreground">ראשי</Link>
               <Link to="/role-insights" className="transition hover:text-foreground">תובנות</Link>
               <span className="cursor-default">פרטיות</span>
@@ -120,7 +126,13 @@ const NAV_AUTHED = [
 
 function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => void }) {
   const NAV_ITEMS = authed ? NAV_AUTHED : NAV_PUBLIC;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     function handleScroll() {
@@ -136,18 +148,16 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className={`sticky top-0 z-50 transition-all duration-200 ${
-        scrolled
+        scrolled || mobileOpen
           ? "border-b border-iron/30 bg-background/95 backdrop-blur-sm shadow-[0_1px_8px_oklch(0_0_0/0.4)]"
           : "border-b border-transparent bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight text-primary">משלחת</span>
-          <span className="text-[10px] font-mono font-medium text-dust/50 tracking-widest uppercase">v1</span>
-        </Link>
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <MishlahatLogo size="sm" linked />
 
-        <div className="flex items-center gap-1">
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-1">
           <nav className="flex items-center">
             {NAV_ITEMS.map((item) => (
               <NavLink key={item.to} to={item.to} exact={"exact" in item ? item.exact : undefined}>
@@ -183,7 +193,72 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
             )}
           </div>
         </div>
+
+        {/* Mobile: CTA + hamburger */}
+        <div className="flex items-center gap-2 sm:hidden">
+          {!authed && (
+            <Link
+              to="/post-signup"
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+            >
+              התחברו
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center text-dust transition hover:text-foreground"
+            aria-label={mobileOpen ? "סגור תפריט" : "פתח תפריט"}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile dropdown */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden border-t border-iron/20 bg-background/98 backdrop-blur-sm sm:hidden"
+          >
+            <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  activeOptions={"exact" in item && item.exact ? { exact: true } : undefined}
+                  className="px-2 py-2.5 text-sm font-medium transition-colors"
+                  inactiveProps={{ className: "text-dust" }}
+                  activeProps={{ className: "text-primary" }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {authed && (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="px-2 py-2.5 text-sm font-medium text-dust transition hover:text-foreground"
+                  >
+                    דשבורד
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="px-2 py-2.5 text-right text-sm font-medium text-dust transition hover:text-foreground"
+                  >
+                    יציאה
+                  </button>
+                </>
+              )}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }

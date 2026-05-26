@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, Loader2, ArrowLeft, Award } from "lucide-react";
 import { toast } from "sonner";
 import { RoleMatchCards } from "@/components/RoleMatchCards";
-import { IdfPhotoGallery } from "@/components/IdfPhotoGallery";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
 import { getDashboardStats, matchRolesRequest, type RoleMatch } from "@/lib/api";
@@ -98,7 +97,7 @@ function AiCounselorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 topo-lines">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 topo-lines">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -115,18 +114,11 @@ function AiCounselorPage() {
 
         <div className="border-b border-iron/30 pb-6 text-right">
           <p className="font-mono text-xs tracking-widest text-primary uppercase mb-2">יועץ התאמה</p>
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">התאמת תפקידים בצה&quot;ל</h1>
-          <p className="mt-2 max-w-lg text-sm text-dust leading-relaxed">
+          <h1 className="text-xl font-bold text-foreground sm:text-3xl">התאמת תפקידים בצה&quot;ל</h1>
+          <p className="mt-2 max-w-lg text-xs text-dust leading-relaxed sm:text-sm">
             ניתוח אישי מול מאגר תפקידים — תוצאות ויזואליות, תקציר לכל תפקיד, פירוט רק כשצריך.
           </p>
         </div>
-
-        <IdfPhotoGallery
-          photoIds={["paratroopers", "border-prep", "nahal-march", "navy-training", "alpine-training"]}
-          columns={5}
-          aspectClassName="aspect-[3/2]"
-          className="hidden md:grid"
-        />
 
         {!aiReady && token && (
           <div className="border border-iron/30 bg-card p-5 text-right">
@@ -145,7 +137,7 @@ function AiCounselorPage() {
         )}
 
         {dash && aiReady && (
-          <div className="flex flex-wrap justify-end gap-3 rounded-sm border border-iron/25 bg-card/50 px-4 py-3 font-mono text-xs text-dust">
+          <div className="flex flex-wrap justify-center gap-3 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:justify-end sm:px-4">
             <span>
               דפ״ר: <strong className="text-foreground">{dash.stats?.daparScore ?? "—"}</strong>
             </span>

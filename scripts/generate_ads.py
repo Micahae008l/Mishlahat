@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Mishlahat Ad Generator v2 — Premium ads with real IDF soldier photos.
+Al Madim Ad Generator v2 — Premium ads with real IDF soldier photos.
 Uses python-bidi for correct Hebrew RTL rendering.
 """
 import os
@@ -530,7 +530,7 @@ def ad10():
 
 # ═══════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    print("\nGenerating Mishlahat ads with real IDF photos...\n")
+    print("\nGenerating Al Madim ads with real IDF photos...\n")
     ad1(); ad2(); ad3(); ad4(); ad5()
     ad6(); ad7(); ad8(); ad9(); ad10()
     count = len(list(OUT.glob("ad*.png")))

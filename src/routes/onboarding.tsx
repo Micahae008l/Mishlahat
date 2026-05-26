@@ -231,7 +231,7 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 sm:py-16">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-16">
       <div className="mb-8 hidden overflow-hidden rounded-sm border border-iron/30 lg:block">
         <IdfPhotoPanel
           photo={idfPhotoAt(step)}
@@ -259,7 +259,7 @@ function OnboardingPage() {
         </p>
       </div>
 
-      <div className="border border-iron/30 bg-card p-8 overflow-hidden">
+      <div className="border border-iron/30 bg-card p-5 overflow-hidden sm:p-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}

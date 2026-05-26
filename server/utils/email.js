@@ -36,7 +36,7 @@ async function getTransporter() {
 }
 
 export async function sendOtpEmail(email, code) {
-  const from = trimEnv("SMTP_FROM") || `משלחת <${trimEnv("SMTP_USER") || "no-reply@mishlahat.local"}>`;
+  const from = trimEnv("SMTP_FROM") || `על מדים <${trimEnv("SMTP_USER") || "no-reply@mishlahat.local"}>`;
   const transporter = await getTransporter();
 
   if (!transporter) {
@@ -53,11 +53,11 @@ export async function sendOtpEmail(email, code) {
   await transporter.sendMail({
     from,
     to: email,
-    subject: "קוד הכניסה שלך למשלחת",
-    text: `קוד הכניסה שלך למשלחת הוא: ${code}\n\nהקוד תקף ל-10 דקות.`,
+    subject: "קוד הכניסה שלך לעל מדים",
+    text: `קוד הכניסה שלך לעל מדים הוא: ${code}\n\nהקוד תקף ל-10 דקות.`,
     html: `
       <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
-        <h2>קוד הכניסה שלך למשלחת</h2>
+        <h2>קוד הכניסה שלך לעל מדים</h2>
         <p>הזינו את הקוד הבא כדי להמשיך:</p>
         <p style="font-size:28px;font-weight:700;letter-spacing:0.2em">${code}</p>
         <p>הקוד תקף ל-10 דקות.</p>

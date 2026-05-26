@@ -1,4 +1,4 @@
-# משלחת (Mishlahat)
+# על מדים (Al Madim)
 
 אפליקציית TanStack Start + Vite עם API ב־Express ומסד MongoDB.
 

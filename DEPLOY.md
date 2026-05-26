@@ -1,12 +1,12 @@
-# Deploy Mishlahat (subdomain setup)
+# Deploy Al Madim / על מדים (subdomain setup)
 
-Keep the WordPress shop at **https://mike.haddad.co.il/** and run Mishlahat at:
+Keep the WordPress shop at **https://mike.haddad.co.il/** and run על מדים at:
 
 | Service | URL |
 |---------|-----|
 | Shop (unchanged) | `https://mike.haddad.co.il/` |
-| Mishlahat app | `https://app.mike.haddad.co.il/` |
-| Mishlahat API | `https://api.mike.haddad.co.il/` |
+| על מדים app | `https://app.mike.haddad.co.il/` |
+| על מדים API | `https://api.mike.haddad.co.il/` |
 
 You can use `mishlahat.mike.haddad.co.il` instead of `app` — just use the same hostname everywhere below.
 

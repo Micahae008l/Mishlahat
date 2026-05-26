@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(timeout 20 npm run dev)",
+      "Bash(nvm version *)",
+      "Bash(nvm --version)",
+      "Bash(winget --version)"
+    ]
+  }
+}

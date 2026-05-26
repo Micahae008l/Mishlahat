@@ -75,7 +75,7 @@ function LoginPage() {
       {/* Form side */}
       <div
         dir="rtl"
-        className="flex w-full shrink-0 flex-col justify-between px-8 py-10 sm:px-12 md:max-w-[440px] lg:max-w-[480px]"
+        className="flex w-full shrink-0 flex-col justify-between px-5 py-8 sm:px-12 sm:py-10 md:max-w-[440px] lg:max-w-[480px]"
       >
         <nav className="flex gap-8 border-b border-iron/30 text-sm font-semibold">
           <span className="border-b-2 border-primary pb-3 text-foreground">כניסה</span>
@@ -182,7 +182,7 @@ function LoginPage() {
             <span className="text-primary">בלי סיסמה.</span>
           </h2>
           <p className="max-w-md text-sm leading-relaxed text-dust">
-            משלחת שומרת את הפרופיל שלכם ומאפשרת להשתמש ביועץ AI אחרי הזנת דפ״ר, פרופיל רפואי וציוני מא״ה.
+            על מדים שומרת את הפרופיל שלכם ומאפשרת להשתמש ביועץ AI אחרי הזנת דפ״ר, פרופיל רפואי וציוני מא״ה.
           </p>
         </div>
 

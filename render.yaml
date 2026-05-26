@@ -2,7 +2,7 @@
 # Frontend goes to Cloudflare (see DEPLOY.md).
 services:
   - type: web
-    name: mishlahat-api
+    name: kachkivun-api
     runtime: node
     rootDir: server
     plan: free

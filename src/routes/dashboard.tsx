@@ -2,9 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ChevronLeft, Target, Calendar } from "lucide-react";
+import { Target, Calendar, FileText } from "lucide-react";
+import { DashboardAccountPreferences } from "@/components/DashboardAccountPreferences";
+import { DashboardActionCard } from "@/components/DashboardActionCard";
 import { migrateLegacyYomHameahTo12, YOM_HAMEAH_12_KEYS } from "@/lib/yom-hameah-12";
-import { getDashboardStats } from "@/lib/api";
+import { progressBarProps } from "@/lib/a11y";
+import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
+import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { AI_PROFILE_MISSING_LABELS } from "@/lib/profile-preference-data";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
@@ -12,6 +16,12 @@ import { getIdfPhoto } from "@/lib/idf-images";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
+  head: () => ({
+    meta: [
+      { title: "דשבורד | קח כיוון" },
+      { name: "description", content: "דשבורד אישי: דפ״ר, פרופיל רפואי, ספירה לאחור ליום הגיוס, והתאמת תפקידים." },
+    ],
+  }),
 });
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -82,15 +92,15 @@ function DashboardPage() {
 
   useEffect(() => {
     if (mounted && !getToken()) {
-      navigate({ to: "/login" });
+      navigate({ to: "/post-signup" });
     }
   }, [mounted, navigate]);
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ["dashboard", token],
-    queryFn: () => getDashboardStats(),
+    ...dashboardQueryOptions(token),
     enabled: mounted && !!token,
   });
+  const showSkeleton = isPending && !data;
 
   const countdownTarget = useMemo(() => {
     const status = data?.user?.status;
@@ -127,11 +137,8 @@ function DashboardPage() {
         <p className="text-center text-dust">…</p>
       ) : !token ? (
         <p className="text-center text-dust">מעבירים להתחברות…</p>
-      ) : isPending ? (
-        <div className="flex flex-col items-center gap-4 py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-dust">טוען נתונים מהשרת…</p>
-        </div>
+      ) : showSkeleton ? (
+        <DashboardSkeleton />
       ) : isError ? (
         <div className="mx-auto max-w-md border border-iron/30 bg-card p-8 text-center">
           <p className="text-destructive">{error instanceof Error ? error.message : "שגיאה"}</p>
@@ -147,10 +154,10 @@ function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8">
+        <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8" dir="rtl">
           <motion.div variants={fadeUp} className="overflow-hidden rounded-sm border border-iron/30">
             <IdfPhotoPanel
-              photo={getIdfPhoto("soldiers-snow")}
+              photo={getIdfPhoto("s1")}
               aspectClassName="aspect-[24/7] sm:aspect-[32/7]"
               overlayClassName="from-background/60 via-background/75 to-background"
             />
@@ -211,9 +218,9 @@ function DashboardPage() {
                     </span>
                   </div>
                   <div className="mt-8 space-y-2.5">
-                    <div className="flex items-center justify-between gap-4 text-xs text-dust">
-                      <span className="font-mono tabular-nums text-primary">{towardPct}%</span>
+                    <div className="flex flex-row items-center justify-between gap-4 text-xs text-dust">
                       <span>התקדמות לקראת הגיוס</span>
+                      <span className="font-mono tabular-nums text-primary">{towardPct}%</span>
                     </div>
                     <DashboardProgress value={towardPct} size="lg" />
                     <p className="font-mono text-[11px] text-dust/60">
@@ -249,61 +256,57 @@ function DashboardPage() {
             </motion.div>
           </div>
 
-          {/* Actions */}
-          <motion.div variants={fadeUp} className="flex flex-wrap justify-start gap-3">
+          <motion.div variants={fadeUp}>
+            <DashboardAccountPreferences data={data} />
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="flex justify-start" dir="rtl">
             <Link
               to="/onboarding"
-              className="rounded-md border border-iron/40 px-5 py-2.5 text-sm font-medium text-dust transition hover:border-primary/40 hover:text-foreground"
+              className="text-sm text-dust transition hover:text-primary hover:underline"
             >
-              עדכון פרופיל
+              עריכת מא״ה מלאה (12 ממדים) →
             </Link>
           </motion.div>
 
           {/* AI CTA */}
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="space-y-4">
             {aiReady ? (
-              <Link
+              <DashboardActionCard
                 to="/ai-counselor"
-                className="group flex items-center justify-between gap-4 border border-primary/30 bg-primary/[0.04] p-5 transition-colors hover:bg-primary/[0.08] sm:p-8"
-              >
-                <div className="hidden h-10 w-10 shrink-0 items-center justify-center border border-primary/30 text-primary transition group-hover:-translate-x-1 sm:flex">
-                  <ChevronLeft className="h-5 w-5" />
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-[10px] tracking-widest text-primary uppercase mb-1">מוכן להפעלה</p>
-                  <h3 className="flex items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
-                    <Target className="h-5 w-5 shrink-0 text-primary" />
-                    התאמת תפקידים עם יועץ AI
-                  </h3>
-                  <p className="mt-1 text-sm text-dust">
-                    ניתוח מעמיק של הפרופיל שלכם מול מאגר תפקידים רחב.
-                  </p>
-                </div>
-              </Link>
+                variant="primary"
+                badge="מוכן להפעלה"
+                title="התאמת תפקידים עם יועץ AI"
+                description="ניתוח מעמיק של הפרופיל שלכם מול מאגר תפקידים רחב."
+                icon={Target}
+              />
             ) : (
-              <div className="border border-iron/30 bg-card p-5 text-right sm:p-8">
+              <div className="border border-iron/30 bg-card p-5 text-right sm:p-8" dir="rtl">
                 <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">יועץ AI</p>
-                <h3 className="flex items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
+                <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
                   <Target className="h-5 w-5 shrink-0 text-dust" />
-                  השלימו פרטים כדי להפעיל התאמות
+                  <span>השלימו פרטים כדי להפעיל התאמות</span>
                 </h3>
                 {missingLabels.length > 0 ? (
-                  <ul className="mt-3 list-inside list-disc text-sm text-dust">
+                  <ul className="mt-3 list-disc pr-5 text-sm text-dust">
                     {missingLabels.map((label) => (
                       <li key={label}>{label}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-dust">השלימו את ההדרכה / הפרופיל.</p>
+                  <p className="mt-2 text-sm text-dust">מלאו את ההעדפות למעלה ושמרו.</p>
                 )}
-                <Link
-                  to="/onboarding"
-                  className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  עדכון פרופיל
-                </Link>
               </div>
+            )}
+
+            {aiReady && (
+              <DashboardActionCard
+                to="/report"
+                badge="חדש"
+                title="דוח כיוון אישי מלא"
+                description="10 תפקידים, טיפים, PDF — והיסטוריה לחזור לדוחות קודמים."
+                icon={FileText}
+              />
             )}
           </motion.div>
         </motion.div>
@@ -314,19 +317,18 @@ function DashboardPage() {
 
 function DashboardProgress({
   value,
+  label,
   size = "md",
 }: {
   value: number;
+  label: string;
   size?: "md" | "lg";
 }) {
   const clamped = Math.min(100, Math.max(0, value));
   return (
     <div
       className={`w-full overflow-hidden rounded-sm bg-iron/25 ${size === "lg" ? "h-3.5" : "h-3"}`}
-      role="progressbar"
-      aria-valuenow={clamped}
-      aria-valuemin={0}
-      aria-valuemax={100}
+      {...progressBarProps(clamped, label)}
     >
       <motion.div
         className="h-full rounded-sm bg-primary shadow-[0_0_14px_oklch(0.73_0.11_80/0.4)]"
@@ -349,14 +351,14 @@ function MetricRow({
 }) {
   return (
     <div className="flex flex-1 flex-col justify-center gap-4 p-4 text-right sm:p-7">
-      <div className="flex items-end justify-between gap-4">
-        <span className="shrink-0 font-mono text-sm tabular-nums text-primary">{pct}%</span>
-        <div className="min-w-0">
+      <div className="flex flex-row items-end justify-between gap-4">
+        <div className="min-w-0 text-right">
           <p className="text-xs text-dust">{label}</p>
           <p className="font-mono text-3xl font-black tabular-nums leading-none text-foreground">{value}</p>
         </div>
+        <span className="shrink-0 font-mono text-sm tabular-nums text-primary">{pct}%</span>
       </div>
-      <DashboardProgress value={pct} />
+      <DashboardProgress value={pct} label={label} />
     </div>
   );
 }

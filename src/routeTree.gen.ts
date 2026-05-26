@@ -10,16 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RoleInsightsRouteImport } from './routes/role-insights'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as PostSignupRouteImport } from './routes/post-signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AiCounselorRouteImport } from './routes/ai-counselor'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportReportIdRouteImport } from './routes/report.$reportId'
 
 const RoleInsightsRoute = RoleInsightsRouteImport.update({
   id: '/role-insights',
   path: '/role-insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostSignupRoute = PostSignupRouteImport.update({
@@ -47,77 +55,107 @@ const AiCounselorRoute = AiCounselorRouteImport.update({
   path: '/ai-counselor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportReportIdRoute = ReportReportIdRouteImport.update({
+  id: '/$reportId',
+  path: '/$reportId',
+  getParentRoute: () => ReportRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/ai-counselor'
     | '/dashboard'
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/report'
     | '/role-insights'
+    | '/report/$reportId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/ai-counselor'
     | '/dashboard'
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/report'
     | '/role-insights'
+    | '/report/$reportId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/ai-counselor'
     | '/dashboard'
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/report'
     | '/role-insights'
+    | '/report/$reportId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AiCounselorRoute: typeof AiCounselorRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PostSignupRoute: typeof PostSignupRoute
+  ReportRoute: typeof ReportRouteWithChildren
   RoleInsightsRoute: typeof RoleInsightsRoute
 }
 
@@ -128,6 +166,13 @@ declare module '@tanstack/react-router' {
       path: '/role-insights'
       fullPath: '/role-insights'
       preLoaderRoute: typeof RoleInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post-signup': {
@@ -165,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiCounselorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -172,16 +224,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/report/$reportId': {
+      id: '/report/$reportId'
+      path: '/$reportId'
+      fullPath: '/report/$reportId'
+      preLoaderRoute: typeof ReportReportIdRouteImport
+      parentRoute: typeof ReportRoute
+    }
   }
 }
 
+interface ReportRouteChildren {
+  ReportReportIdRoute: typeof ReportReportIdRoute
+}
+
+const ReportRouteChildren: ReportRouteChildren = {
+  ReportReportIdRoute: ReportReportIdRoute,
+}
+
+const ReportRouteWithChildren =
+  ReportRoute._addFileChildren(ReportRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AiCounselorRoute: AiCounselorRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PostSignupRoute: PostSignupRoute,
+  ReportRoute: ReportRouteWithChildren,
   RoleInsightsRoute: RoleInsightsRoute,
 }
 export const routeTree = rootRouteImport

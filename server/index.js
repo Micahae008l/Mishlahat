@@ -6,8 +6,11 @@ import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import aiRoutes from "./routes/ai.js";
+import adminRoutes from "./routes/admin.js";
+import reportsRoutes from "./routes/reports.js";
 import { isSmtpConfigured } from "./utils/email.js";
 import { corsOptions } from "./utils/corsOptions.js";
+import { SITE_NAME_EN, SITE_NAME_HE } from "./utils/brand.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,9 +23,9 @@ app.use(express.json());
 // Root — this process is the JSON API only; the UI is Vite (default :8080)
 app.get("/", (_req, res) => {
   res.type("html").send(`<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><title>Al Madim API</title></head>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"/><title>${SITE_NAME_HE} API</title></head>
 <body style="font-family:system-ui;padding:2rem;max-width:40rem">
-  <h1>Al Madim API</h1>
+  <h1>${SITE_NAME_HE} (${SITE_NAME_EN}) API</h1>
   <p>This port serves <strong>REST only</strong> under <code>/api</code>.</p>
   <p>Open the app: <a href="${FRONTEND_URL}"><strong>${FRONTEND_URL}</strong></a></p>
   <p>Try <a href="/api/health"><code>GET /api/health</code></a></p>
@@ -34,6 +37,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/reports", reportsRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {

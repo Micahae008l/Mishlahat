@@ -10,6 +10,8 @@ type Props = {
   imgClassName?: string;
   showCredit?: boolean;
   creditPosition?: "bottom" | "corner";
+  loading?: "eager" | "lazy";
+  fetchPriority?: "high" | "low" | "auto";
 };
 
 /** Full-bleed panel with gradient + per-photo credit. */
@@ -21,14 +23,19 @@ export function IdfPhotoPanel({
   imgClassName,
   showCredit = true,
   creditPosition = "bottom",
+  loading,
+  fetchPriority,
 }: Props) {
   return (
     <div className={`relative overflow-hidden ${aspectClassName} ${className}`}>
       <IdfPhotoBackdrop
         src={photo.src}
         alt={photo.alt}
+        objectPosition={photo.objectPosition}
         overlayClassName={overlayClassName ?? "from-background/30 via-background/50 to-background/85"}
         imgClassName={imgClassName}
+        loading={loading}
+        fetchPriority={fetchPriority}
       />
       {showCredit ? (
         <div

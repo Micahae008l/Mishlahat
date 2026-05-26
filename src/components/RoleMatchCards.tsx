@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bot,
@@ -15,6 +15,7 @@ import {
 import { IdfPhotoCredit } from "@/components/IdfPhotoCredit";
 import type { RoleMatch } from "@/lib/api";
 import { pickRolePhoto, type IdfPhoto } from "@/lib/idf-photo-catalog";
+import { ARIA } from "@/lib/a11y";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -67,7 +68,8 @@ function MatchRing({ pct, size = "lg" }: { pct: number; size?: "lg" | "md" }) {
       </svg>
       <div
         className="absolute inset-0 flex flex-col items-center justify-center font-mono tabular-nums text-foreground"
-        aria-label={`${clamped}% התאמה`}
+        role="img"
+        aria-label={ARIA.matchPct(clamped)}
       >
         <span className={size === "lg" ? "text-2xl font-black" : "text-lg font-black"}>{clamped}</span>
         <span className="text-[9px] text-dust">%</span>
@@ -88,6 +90,7 @@ function RoleCard({
   featured?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const detailId = useId();
   const headline = role.summary?.trim() || role.description.split(/(?<=[.!?])\s+/)[0] || role.roleTitle;
 
   return (
@@ -108,7 +111,10 @@ function RoleCard({
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-l from-card via-card/75 to-transparent" />
-          <span className="absolute top-3 left-3 rounded-sm border border-primary/30 bg-background/80 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-primary">
+          <span
+            className="absolute top-3 left-3 rounded-sm border border-primary/30 bg-background/80 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-primary"
+            aria-hidden
+          >
             #{rank}
           </span>
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent px-3 pb-2 pt-8 text-left">
@@ -148,12 +154,18 @@ function RoleCard({
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
                 className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                aria-expanded={expanded}
+                aria-controls={detailId}
               >
                 {expanded ? "פחות פירוט" : "למה התפקיד מתאים?"}
-                <ChevronDown className={`h-3.5 w-3.5 transition ${expanded ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition ${expanded ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
               </button>
               {expanded ? (
                 <motion.p
+                  id={detailId}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-2 text-xs leading-relaxed text-dust"
@@ -181,14 +193,16 @@ export function RoleMatchCards({ roles }: { roles: RoleMatch[] }) {
   const [topPhoto, ...restPhotos] = photos;
 
   return (
-    <div className="space-y-5">
+    <section className="space-y-5" aria-labelledby="role-match-results-heading">
       <div className="flex items-center justify-end gap-2 text-right">
         <div>
           <p className="font-mono text-[10px] tracking-widest text-primary uppercase">תוצאות</p>
-          <h2 className="text-xl font-bold text-foreground">5 תפקידים מותאמים לפרופיל שלכם</h2>
+          <h2 id="role-match-results-heading" className="text-xl font-bold text-foreground">
+            5 תפקידים מותאמים לפרופיל שלכם
+          </h2>
           <p className="mt-1 text-[11px] text-dust/70">לכל תפקיד תמונה שונה · קרדיט לצלם/מקור בתחתית התמונה</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10 text-primary">
+        <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10 text-primary" aria-hidden>
           <Bot className="h-5 w-5" />
         </div>
       </div>
@@ -202,6 +216,6 @@ export function RoleMatchCards({ roles }: { roles: RoleMatch[] }) {
           ))}
         </div>
       ) : null}
-    </div>
+    </section>
   );
 }

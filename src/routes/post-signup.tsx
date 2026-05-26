@@ -6,13 +6,13 @@ import { Calendar, ChevronLeft, ChevronRight, Mail, Shield, User, X } from "luci
 import { toast } from "sonner";
 import {
   completeScoreOnboarding,
-  getDashboardStats,
   requestOtp,
   verifyOtp,
   type DashboardResponse,
   type YomHameah,
 } from "@/lib/api";
-import { getToken, setToken } from "@/lib/auth";
+import { getToken, setAuthSession } from "@/lib/auth";
+import { dashboardQueryOptions, prefetchAuthedData } from "@/lib/queries";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
 import {
   COMBAT_PREFERENCE_OPTIONS,
@@ -23,9 +23,16 @@ import {
   type FitnessPreferenceValue,
 } from "@/lib/profile-preference-data";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
-import { MishlahatLogo } from "@/components/MishlahatLogo";
+import { KachKivunLogo } from "@/components/KachKivunLogo";
+import { SITE_NAME_HE } from "@/lib/brand";
 import { idfPhotoAt } from "@/lib/idf-images";
 import { defaultYomHameah12Scores, YOM_HAMEAH_12_KEYS, YOM_HAMEAH_12_LABELS_HE } from "@/lib/yom-hameah-12";
+import { ARIA } from "@/lib/a11y";
+import {
+  PostSignupBootstrapSkeleton,
+  PostSignupFormSkeleton,
+} from "@/components/skeletons/PageSkeletons";
+import { OtpInput } from "@/components/OtpInput";
 import {
   coerceCombat,
   coerceFitness,
@@ -90,7 +97,7 @@ function PostSignupPage() {
         return;
       }
       try {
-        const d = await getDashboardStats();
+        const d = await queryClient.fetchQuery(dashboardQueryOptions(getToken()));
         if (cancelled) return;
         if (d.aiReady) {
           navigate({ to: "/dashboard", replace: true });
@@ -106,7 +113,7 @@ function PostSignupPage() {
     return () => {
       cancelled = true;
     };
-  }, [mounted, navigate]);
+  }, [mounted, navigate, queryClient]);
 
   async function sendCode() {
     if (!email.trim() || !email.includes("@")) {
@@ -142,17 +149,20 @@ function PostSignupPage() {
     setLoading(true);
     try {
       const res = await verifyOtp(email.trim(), clean);
-      setToken(res.token);
-      toast.success("האימייל אומת והחשבון הופעל");
+      setAuthSession(res.token, res.role);
+      prefetchAuthedData(queryClient, res.token);
       try {
-        const d = await getDashboardStats();
-        await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        const d = await queryClient.fetchQuery(dashboardQueryOptions(res.token));
         if (d.aiReady) {
+          toast.success("התחברתם בהצלחה");
           navigate({ to: "/dashboard", replace: true });
           return;
         }
+        toast.success("ממשיכים להשלמת הפרופיל האישי");
         applyServerProfile(d);
+        setStep(Math.max(3, computePostSignupResumeStep(d)));
       } catch {
+        toast.success("בואו נשלים את הפרופיל");
         setStep(3);
       }
     } catch (err) {
@@ -252,19 +262,14 @@ function PostSignupPage() {
 
   if (!mounted) {
     return (
-      <div dir="rtl" className="flex min-h-dvh items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div dir="rtl" className="flex min-h-dvh items-center justify-center bg-background px-6">
+        <PostSignupFormSkeleton />
       </div>
     );
   }
 
   if (getToken() && !bootstrapped) {
-    return (
-      <div dir="rtl" className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-sm text-dust">טוענים את הפרופיל מהשרת…</p>
-      </div>
-    );
+    return <PostSignupBootstrapSkeleton />;
   }
 
   const progress = Math.round((step / TOTAL_STEPS) * 100);
@@ -286,14 +291,28 @@ function PostSignupPage() {
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-10">
         {/* Top bar */}
-        <div className="mx-auto mb-8 flex w-full max-w-2xl items-center justify-between">
-          <MishlahatLogo size="sm" linked />
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-dust transition hover:text-foreground">
-            <X className="h-4 w-4" />
-            חזרה לאתר
-          </Link>
-          {isAuthStep && (
+        <div className="mx-auto mb-8 flex w-full max-w-2xl items-center justify-between gap-4">
+          <KachKivunLogo size="md" linked />
+          {step === 1 ? (
+            <Link to="/" className="flex items-center gap-1.5 text-sm text-dust transition hover:text-foreground">
+              <X className="h-4 w-4" />
+              חזרה לאתר
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={goBack}
+              className="flex items-center gap-1.5 text-sm text-dust transition hover:text-foreground disabled:opacity-50"
+            >
+              <ChevronRight className="h-4 w-4" />
+              חזרה
+            </button>
+          )}
+          {isAuthStep ? (
             <span className="font-mono text-[10px] tracking-widest text-dust/40 uppercase">חיבור מאובטח</span>
+          ) : (
+            <span className="w-px shrink-0" aria-hidden />
           )}
         </div>
 
@@ -357,21 +376,15 @@ function PostSignupPage() {
               )}
 
               {step === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-4 text-right">
+                  <p className="text-sm text-dust">
+                    שלחנו קוד ל־<span className="font-medium text-foreground" dir="ltr">{email}</span>
+                  </p>
                   <Field label="קוד אימות">
-                    <input
-                      dir="ltr"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="123456"
-                      className="input-field text-center font-mono text-2xl font-bold tracking-[0.35em]"
-                    />
+                    <OtpInput value={code} onChange={setCode} disabled={loading} />
                   </Field>
                   <button type="button" disabled={loading} onClick={sendCode} className="text-sm text-primary hover:underline disabled:opacity-50">
-                    שלחו קוד חדש
+                    לא קיבלתם? שלחו קוד חדש
                   </button>
                 </div>
               )}
@@ -384,7 +397,7 @@ function PostSignupPage() {
                       autoComplete="nickname"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="איך לקרוא לכם בעל מדים?"
+                      placeholder="איך לקרוא לכם?"
                       className="input-field pl-10 pr-4"
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dust/40">
@@ -473,14 +486,9 @@ function PostSignupPage() {
               )}
             </div>
 
-            <div className="mt-8 flex items-center justify-between border-t border-iron/20 pt-6">
-              <button type="button" disabled={loading} onClick={goBack} className="flex items-center gap-1.5 text-sm text-dust transition hover:text-foreground disabled:opacity-50">
-                חזרה
-                <ChevronRight className="h-4 w-4" />
-              </button>
-
+            <div className="mt-8 flex justify-start border-t border-iron/20 pt-6">
               {step === 1 && <PrimaryButton loading={loading} onClick={sendCode}>שלחו לי קוד</PrimaryButton>}
-              {step === 2 && <PrimaryButton loading={loading} onClick={verifyCode}>התחברו</PrimaryButton>}
+              {step === 2 && <PrimaryButton loading={loading} onClick={verifyCode}>המשיכו</PrimaryButton>}
               {step === 3 && <PrimaryButton loading={loading} onClick={nextFromUsername}>הבא</PrimaryButton>}
               {step === 4 && <PrimaryButton loading={loading} onClick={nextFromCoreScores}>הבא</PrimaryButton>}
               {step === 5 && <PrimaryButton loading={loading} onClick={() => setStep(6)}>הבא</PrimaryButton>}
@@ -491,7 +499,7 @@ function PostSignupPage() {
         </motion.div>
 
         <p className="mt-6 text-center font-mono text-[9px] text-dust/50">
-          {idfPhotoAt(step).creditShort} · CC BY-SA 3.0
+          {idfPhotoAt(step).creditShort}
         </p>
       </div>
     </div>
@@ -500,7 +508,12 @@ function PostSignupPage() {
 
 function getStepMeta(step: number) {
   const icon = <Shield className="h-5 w-5 text-primary" />;
-  if (step === 1) return { icon: <Mail className="h-5 w-5 text-primary" />, title: "התחברו לעל מדים", subtitle: "הזינו אימייל. נשלח קוד חד־פעמי. אם אין חשבון, ניצור אחד אוטומטית." };
+  if (step === 1)
+    return {
+      icon: <Mail className="h-5 w-5 text-primary" />,
+      title: `התחברות ל${SITE_NAME_HE}`,
+      subtitle: "הזינו אימייל. אם כבר יש חשבון — נשלח קוד ותיכנסו לדשבורד. אם לא — נמשיך להשלמת פרופיל.",
+    };
   if (step === 2) return { icon, title: "הזינו את הקוד", subtitle: "שלחנו קוד לאימייל שלכם." };
   if (step === 3) return { icon: <User className="h-5 w-5 text-primary" />, title: "שם משתמש", subtitle: "זה השם שיופיע בדשבורד וביועץ." };
   if (step === 4) return { icon, title: "ציונים בסיסיים", subtitle: "דפ״ר ופרופיל רפואי נדרשים לפני שימוש ביועץ AI." };
@@ -517,10 +530,17 @@ function PrimaryButton({ children, loading, onClick }: { children: React.ReactNo
       type="button"
       disabled={loading}
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97] disabled:opacity-50"
+      aria-busy={loading}
+      className="inline-flex min-w-[8rem] items-center justify-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
     >
-      <ChevronLeft className="h-4 w-4" />
-      {loading ? "ממתין…" : children}
+      {loading ? (
+        <span className="h-4 w-24 animate-pulse rounded-sm bg-primary-foreground/30" aria-hidden />
+      ) : (
+        <>
+          {children}
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </>
+      )}
     </button>
   );
 }
@@ -528,8 +548,10 @@ function PrimaryButton({ children, loading, onClick }: { children: React.ReactNo
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2 text-right">
-      <label className="text-sm font-medium text-foreground">{label}</label>
-      {children}
+      <label className="block text-sm font-medium text-foreground">
+        <span className="mb-2 block">{label}</span>
+        {children}
+      </label>
     </div>
   );
 }
@@ -537,11 +559,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function YomSliderCard({ title, value, onChange }: { title: string; value: number; onChange: (n: number) => void }) {
   return (
     <div className="border border-iron/20 bg-card p-4">
-      <div className="flex justify-between gap-2">
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        <span className="font-mono text-sm font-bold tabular-nums text-primary">{value}</span>
-      </div>
-      <input type="range" min={1} max={5} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} className="mt-3 w-full accent-primary" />
+      <label className="block">
+        <div className="flex justify-between gap-2">
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+          <span className="font-mono text-sm font-bold tabular-nums text-primary" aria-hidden>
+            {value}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={5}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="mt-3 w-full accent-primary"
+          aria-valuetext={ARIA.rangeValue(title, value, 5)}
+        />
+      </label>
     </div>
   );
 }

@@ -1,14 +1,14 @@
-# Deploy Al Madim / על מדים (subdomain setup)
+# Deploy קח כיוון (Kach Kivun) — subdomain setup
 
-Keep the WordPress shop at **https://mike.haddad.co.il/** and run על מדים at:
+Keep the WordPress shop at **https://mike.haddad.co.il/** and run קח כיוון at:
 
 | Service | URL |
 |---------|-----|
 | Shop (unchanged) | `https://mike.haddad.co.il/` |
-| על מדים app | `https://app.mike.haddad.co.il/` |
-| על מדים API | `https://api.mike.haddad.co.il/` |
+| קח כיוון app | `https://app.mike.haddad.co.il/` |
+| קח כיוון API | `https://api.mike.haddad.co.il/` |
 
-You can use `mishlahat.mike.haddad.co.il` instead of `app` — just use the same hostname everywhere below.
+You can use a dedicated subdomain (e.g. `app.mike.haddad.co.il`) — use the same hostname everywhere below.
 
 ---
 
@@ -37,7 +37,7 @@ You can use `mishlahat.mike.haddad.co.il` instead of `app` — just use the same
 2. **Database Access** → add a user with password.  
 3. **Network Access** → **Add IP Address** → **Allow access from anywhere** (`0.0.0.0/0`) so Render can connect.  
 4. **Connect** → **Drivers** → copy the URI. Replace `<password>` with your user password.  
-   Example: `mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/mishlahat?retryWrites=true&w=majority`
+   Example: `mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/kachkivun?retryWrites=true&w=majority`
 
 Save this as `MONGODB_URI` — you will paste it into Render in step 2.
 
@@ -47,7 +47,7 @@ Save this as `MONGODB_URI` — you will paste it into Render in step 2.
 
 1. Push this repo to **GitHub** (if it is not there yet).  
 2. Open [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**.  
-3. Connect the GitHub repo. Render reads `render.yaml` and creates **mishlahat-api**.  
+3. Connect the GitHub repo. Render reads `render.yaml` and creates **kachkivun-api**.  
 4. In the service **Environment**, set (if not already):
 
    | Key | Value |
@@ -59,9 +59,9 @@ Save this as `MONGODB_URI` — you will paste it into Render in step 2.
    | `ALLOWED_ORIGINS` | `https://app.mike.haddad.co.il` |
    | `SMTP_*` | optional — for real OTP emails (see `server/.env.example`) |
 
-5. Wait until deploy is **Live**. Open the Render URL (e.g. `https://mishlahat-api.onrender.com/api/health`) — you should see `{"status":"ok",...}`.
+5. Wait until deploy is **Live**. Open the Render URL (e.g. `https://kachkivun-api.onrender.com/api/health`) — you should see `{"status":"ok",...}`.
 
-6. **Custom domain on Render:** Service → **Settings** → **Custom Domains** → add `api.mike.haddad.co.il`. Render shows a **CNAME** target (e.g. `mishlahat-api.onrender.com`).
+6. **Custom domain on Render:** Service → **Settings** → **Custom Domains** → add `api.mike.haddad.co.il`. Render shows a **CNAME** target (e.g. `kachkivun-api.onrender.com`).
 
 ---
 
@@ -150,6 +150,6 @@ npm run deploy:web
 
 ---
 
-## Optional: use `mishlahat` instead of `app`
+## Optional: use `kachkivun` instead of `app`
 
-Use `mishlahat.mike.haddad.co.il` everywhere this doc says `app.mike.haddad.co.il`, and set the same URL in Render `FRONTEND_URL` and `ALLOWED_ORIGINS`.
+Use `kachkivun.mike.haddad.co.il` everywhere this doc says `app.mike.haddad.co.il`, and set the same URL in Render `FRONTEND_URL` and `ALLOWED_ORIGINS`.

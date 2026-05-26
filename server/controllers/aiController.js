@@ -2,8 +2,10 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
+import User from "../models/User.js";
 import MilitaryStats from "../models/MilitaryStats.js";
 import Preferences from "../models/Preferences.js";
+import { recordAiUsage } from "../utils/recordAiUsage.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import {
   YOM_HAMEAH_12_KEYS,
@@ -102,8 +104,14 @@ const AI_MODEL = process.env.AI_MATCH_MODEL || "gpt-4o";
 const AI_TEMPERATURE = parseFloat(process.env.AI_MATCH_TEMPERATURE) || 0.2;
 
 export async function matchRoles(req, res) {
+  const userId = req.userId;
+  let userEmail = "";
+  let filteredRoleCount = 0;
+  const startedAt = Date.now();
+
   try {
-    const userId = req.userId;
+    const user = await User.findById(userId).select("email");
+    userEmail = user?.email || "";
 
     const stats = await MilitaryStats.findOne({ userId });
     const preferences = await Preferences.findOne({ userId });
@@ -124,6 +132,7 @@ export async function matchRoles(req, res) {
     const catalog = getIdfRoleCatalogParsed();
     const allRoles = catalog?.roles || [];
     const filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
+    filteredRoleCount = filteredRoles.length;
 
     console.log(`[ai/match-roles] Pre-filtered ${allRoles.length} → ${filteredRoles.length} roles for user ${userId}`);
 
@@ -220,10 +229,18 @@ ${yomLines}${legacyQ}
       response_format: { type: "json_object" },
     });
 
+    const durationMs = Date.now() - startedAt;
+    const usage = completion.usage ?? {};
+    const modelUsed = completion.model || AI_MODEL;
+    const promptTokens = usage.prompt_tokens ?? 0;
+    const completionTokens = usage.completion_tokens ?? 0;
+    const totalTokens = usage.total_tokens ?? promptTokens + completionTokens;
+
     const choice = completion.choices[0];
     const content = choice?.message?.content?.trim() ?? "";
+    const finishReason = choice?.finish_reason ?? null;
 
-    if (choice?.finish_reason === "length") {
+    if (finishReason === "length") {
       console.warn("[ai/match-roles] finish_reason=length (possible truncation)");
     }
 
@@ -231,10 +248,40 @@ ${yomLines}${legacyQ}
 
     if (!Array.isArray(roles) || roles.length === 0) {
       console.error("[ai/match-roles] Unparseable or empty roles. Raw (first 400 chars):", content.slice(0, 400));
+      await recordAiUsage({
+        userId,
+        userEmail,
+        endpoint: "match-roles",
+        model: modelUsed,
+        promptTokens,
+        completionTokens,
+        totalTokens,
+        durationMs,
+        status: "parse_error",
+        finishReason,
+        openaiRequestId: completion.id ?? null,
+        filteredRoleCount,
+        errorMessage: "Unparseable or empty roles",
+      });
       return res.status(502).json({
         error: "AI returned invalid response format. Please try again.",
       });
     }
+
+    await recordAiUsage({
+      userId,
+      userEmail,
+      endpoint: "match-roles",
+      model: modelUsed,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      durationMs,
+      status: "success",
+      finishReason,
+      openaiRequestId: completion.id ?? null,
+      filteredRoleCount,
+    });
 
     // Ensure roles are sorted by matchPercentage descending
     roles.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
@@ -257,6 +304,19 @@ ${yomLines}${legacyQ}
 
     res.json({ roles: normalized });
   } catch (err) {
+    await recordAiUsage({
+      userId,
+      userEmail,
+      endpoint: "match-roles",
+      model: AI_MODEL,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status: "api_error",
+      filteredRoleCount,
+      errorMessage: err?.message || "Unknown error",
+    });
     if (err?.status === 401) {
       return res.status(503).json({ error: "OpenAI API key is invalid or missing." });
     }

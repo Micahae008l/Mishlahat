@@ -12,9 +12,12 @@ export {
   type IdfPhoto,
 } from "./idf-photo-catalog";
 
-import { IDF_BACKDROP_IMAGE_URLS, IDF_PHOTO_CATALOG } from "./idf-photo-catalog";
+import { IDF_BACKDROP_IMAGE_URLS, IDF_PHOTO_CATALOG, LEGACY_PHOTO_ALIASES } from "./idf-photo-catalog";
 
 const byId = Object.fromEntries(IDF_PHOTO_CATALOG.map((p) => [p.id, p.src])) as Record<string, string>;
+for (const [legacy, slideId] of Object.entries(LEGACY_PHOTO_ALIASES)) {
+  byId[legacy] = byId[slideId];
+}
 
 export const IDF_IMAGE_KFIR_TRAINING_1600 = byId["kfir-training"];
 export const IDF_IMAGE_BORDER_PREP_1600 = byId["border-prep"];
@@ -25,6 +28,9 @@ export const IDF_IMAGE_ALPINE_TRAINING = byId["alpine-training"];
 export const IDF_IMAGE_OFFICER_GRADUATION = byId["officer-graduation"];
 export const IDF_IMAGE_SOLDIERS_SNOW = byId["soldiers-snow"];
 export const IDF_IMAGE_SOLDIERS_CLIMBING = byId["soldiers-climbing"];
+
+/** Direct slide URLs (s1–s9) */
+export const HERO_SLIDE_IMAGE_URLS = IDF_PHOTO_CATALOG.map((p) => p.src);
 
 const preloadedHrefs = new Set<string>();
 
@@ -37,7 +43,8 @@ function backdropPreloadAlreadyInHead(href: string): boolean {
 
 export function preloadIdfBackdropImages(): void {
   if (typeof document === "undefined") return;
-  for (const href of IDF_BACKDROP_IMAGE_URLS) {
+  const toPreload = IDF_BACKDROP_IMAGE_URLS.slice(0, 3);
+  for (const href of toPreload) {
     if (preloadedHrefs.has(href)) continue;
     if (backdropPreloadAlreadyInHead(href)) {
       preloadedHrefs.add(href);

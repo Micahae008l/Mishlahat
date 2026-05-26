@@ -1,0 +1,12 @@
+/** Stable React Query keys — keep in sync with persist + prefetch helpers. */
+
+export const queryKeys = {
+  session: (tokenPresent: boolean) => ["session", tokenPresent] as const,
+  dashboard: (token: string | null) => ["dashboard", token] as const,
+  reportHistory: (token: string | null) => ["report-history", token] as const,
+  reportHistoryDetail: (reportId: string, token: string | null) =>
+    ["report-history-detail", reportId, token] as const,
+  adminMe: (token: string | null) => ["admin-me", token] as const,
+  adminOverview: (token: string | null) => ["admin-overview", token] as const,
+  adminUsers: (token: string | null, search: string) => ["admin-users", token, search] as const,
+};

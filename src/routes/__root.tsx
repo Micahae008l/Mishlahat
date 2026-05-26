@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createRootRoute,
   HeadContent,
@@ -9,15 +9,18 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getToken } from "@/lib/auth";
+import { prefetchAuthedData, sessionQueryOptions } from "@/lib/queries";
 import { Toaster } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, Shield, X } from "lucide-react";
 import appCss from "../styles.css?url";
 import { queryClient } from "@/lib/query-client";
-import { clearToken, getToken } from "@/lib/auth";
-import { MishlahatLogo, MISHLAHAT_LOGO_URL } from "@/components/MishlahatLogo";
-import { SITE_NAME_HE } from "@/lib/brand";
+import { clearToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
+import { KachKivunLogo } from "@/components/KachKivunLogo";
+import { SITE_DESCRIPTION, SITE_NAME_HE } from "@/lib/brand";
+import { ARIA, MAIN_CONTENT_ID, MOBILE_NAV_ID } from "@/lib/a11y";
 import { IDF_BACKDROP_IMAGE_URLS, preloadIdfBackdropImages } from "@/lib/idf-images";
 
 export const Route = createRootRoute({
@@ -27,18 +30,25 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: SITE_NAME_HE },
-      { name: "description", content: `${SITE_NAME_HE} — פלטפורמת הכנה לשירות בצה״ל: פרופיל, מא״ה, והתאמת תפקידים עם AI` },
+      { title: SITE_DESCRIPTION },
+      { name: "description", content: SITE_DESCRIPTION },
+      { name: "keywords", content: "צבא, צה״ל, גיוס, דפ״ר, מא״ה, יום המאה, פרופיל רפואי, התאמת תפקיד, שירות צבאי, הכנה לשירות" },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:locale", content: "he_IL" },
+      { property: "og:site_name", content: SITE_NAME_HE },
+      { property: "og:title", content: SITE_DESCRIPTION },
+      { property: "og:description", content: SITE_DESCRIPTION },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: MISHLAHAT_LOGO_URL },
-      { rel: "apple-touch-icon", href: MISHLAHAT_LOGO_URL },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "stylesheet", href: appCss },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap",
       },
-      ...IDF_BACKDROP_IMAGE_URLS.map((href) => ({
+      ...IDF_BACKDROP_IMAGE_URLS.slice(0, 2).map((href) => ({
         rel: "preload" as const,
         href,
         as: "image" as const,
@@ -71,6 +81,7 @@ function RootLayout() {
 }
 
 function RootLayoutInner() {
+  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isBareShell = pathname === "/post-signup";
   const navigate = useNavigate();
@@ -84,20 +95,34 @@ function RootLayoutInner() {
     preloadIdfBackdropImages();
   }, []);
 
+  useEffect(() => {
+    const token = getToken();
+    if (token) prefetchAuthedData(queryClient, token);
+  }, [pathname, queryClient]);
+
   function logout() {
     clearToken();
+    queryClient.clear();
     setAuthed(false);
     navigate({ to: "/" });
   }
 
   return (
     <>
-      {!isBareShell && <SiteHeader authed={authed} onLogout={logout} />}
-      <main className="animate-fade-in">
+      {!isBareShell && (
+        <a
+          href={`#${MAIN_CONTENT_ID}`}
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:m-4 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+        >
+          {ARIA.skipToMain}
+        </a>
+      )}
+      {!isBareShell && <SiteHeader authed={authed} tokenPresent={authed} onLogout={logout} />}
+      <main id={MAIN_CONTENT_ID} className="animate-fade-in" aria-label={ARIA.main} tabIndex={-1}>
         <Outlet />
       </main>
       {!isBareShell && (
-        <footer className="border-t border-iron/30 mt-20">
+        <footer className="border-t border-iron/30 mt-20" aria-label={ARIA.footer}>
           <div className="mx-auto flex max-w-7xl flex-col-reverse items-center gap-4 px-4 py-6 text-xs text-dust/60 sm:flex-row sm:justify-between sm:px-6 sm:py-8">
             <span className="text-dust/50">&copy; {new Date().getFullYear()} {SITE_NAME_HE}</span>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
@@ -121,11 +146,36 @@ const NAV_AUTHED = [
   { to: "/", label: "בית", exact: true },
   { to: "/dashboard", label: "דשבורד" },
   { to: "/ai-counselor", label: "יועץ AI" },
+  { to: "/report", label: "דוח אישי" },
   { to: "/role-insights", label: "תובנות" },
 ] as const;
 
-function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => void }) {
-  const NAV_ITEMS = authed ? NAV_AUTHED : NAV_PUBLIC;
+function SiteHeader({
+  authed,
+  tokenPresent,
+  onLogout,
+}: {
+  authed: boolean;
+  tokenPresent: boolean;
+  onLogout: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const { data: session } = useQuery(sessionQueryOptions(tokenPresent));
+
+  useEffect(() => {
+    if (session?.role) setStoredRole(session.role);
+  }, [session?.role]);
+
+  const isAdmin = session?.role === "admin" || (tokenPresent && isStoredAdmin());
+
+  const NAV_ITEMS = useMemo(() => {
+    const base: { to: string; label: string; exact?: boolean }[] = authed ? [...NAV_AUTHED] : [...NAV_PUBLIC];
+    if (!authed || !isAdmin) return base;
+    const dashIdx = base.findIndex((item) => item.to === "/dashboard");
+    const insertAt = dashIdx >= 0 ? dashIdx + 1 : base.length;
+    base.splice(insertAt, 0, { to: "/admin", label: "ניהול" });
+    return base;
+  }, [authed, isAdmin]);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -144,6 +194,7 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
 
   return (
     <motion.header
+      aria-label={ARIA.siteHeader}
       initial={{ y: -12, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -154,11 +205,11 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
       }`}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <MishlahatLogo size="sm" linked />
+        <KachKivunLogo size="md" linked />
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-1">
-          <nav className="flex items-center">
+          <nav className="flex items-center" aria-label={ARIA.navPrimary}>
             {NAV_ITEMS.map((item) => (
               <NavLink key={item.to} to={item.to} exact={"exact" in item ? item.exact : undefined}>
                 {item.label}
@@ -169,6 +220,15 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
           <div className="mr-3 flex items-center gap-2">
             {authed ? (
               <>
+                {isAdmin ? (
+                  <Link
+                    to="/admin"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/15 px-3 py-1.5 text-sm font-semibold text-primary transition hover:bg-primary/25"
+                  >
+                    <Shield className="h-3.5 w-3.5" aria-hidden />
+                    ניהול
+                  </Link>
+                ) : null}
                 <Link
                   to="/dashboard"
                   className="rounded-md border border-iron/40 bg-card px-4 py-1.5 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary"
@@ -196,6 +256,15 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
 
         {/* Mobile: CTA + hamburger */}
         <div className="flex items-center gap-2 sm:hidden">
+          {authed && isAdmin ? (
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-1 rounded-md border border-primary/50 bg-primary/15 px-2.5 py-1.5 text-xs font-semibold text-primary"
+            >
+              <Shield className="h-3.5 w-3.5" aria-hidden />
+              ניהול
+            </Link>
+          ) : null}
           {!authed && (
             <Link
               to="/post-signup"
@@ -208,9 +277,11 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             className="flex h-9 w-9 items-center justify-center text-dust transition hover:text-foreground"
-            aria-label={mobileOpen ? "סגור תפריט" : "פתח תפריט"}
+            aria-label={mobileOpen ? ARIA.closeMenu : ARIA.openMenu}
+            aria-expanded={mobileOpen}
+            aria-controls={MOBILE_NAV_ID}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
           </button>
         </div>
       </div>
@@ -225,7 +296,11 @@ function SiteHeader({ authed, onLogout }: { authed: boolean; onLogout: () => voi
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden border-t border-iron/20 bg-background/98 backdrop-blur-sm sm:hidden"
           >
-            <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3">
+            <nav
+              id={MOBILE_NAV_ID}
+              className="mx-auto flex max-w-7xl flex-col px-4 py-3"
+              aria-label={ARIA.navMobile}
+            >
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.to}

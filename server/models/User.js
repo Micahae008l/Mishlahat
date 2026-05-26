@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
       enum: ["Pre-Draft", "Active Duty", "Discharged"],
       default: "Pre-Draft",
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
+    },
   },
   { timestamps: true }
 );

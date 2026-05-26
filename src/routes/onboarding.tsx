@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, Crosshair } from "lucide-react";
 import { toast } from "sonner";
-import { getDashboardStats, updateProfile, type YomHameah } from "@/lib/api";
+import { updateProfile, type YomHameah } from "@/lib/api";
+import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
 import {
@@ -22,6 +23,8 @@ import {
   coerceFocus,
   draftDateToYmd,
 } from "@/lib/profile-resume";
+import { ARIA } from "@/lib/a11y";
+import { OnboardingSkeleton } from "@/components/skeletons/PageSkeletons";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { idfPhotoAt } from "@/lib/idf-images";
 
@@ -78,10 +81,10 @@ function OnboardingPage() {
   const token = mounted ? getToken() : null;
 
   const { data: dash, isPending, isError, refetch } = useQuery({
-    queryKey: ["dashboard", token],
-    queryFn: () => getDashboardStats(),
+    ...dashboardQueryOptions(token),
     enabled: mounted && !!token,
   });
+  const showSkeleton = isPending && !dash;
 
   useEffect(() => {
     if (!dash || hydratedRef.current) return;
@@ -198,21 +201,8 @@ function OnboardingPage() {
             ? "בחרו תאריך משוער. אפשר לעדכן אחר כך."
             : "נדרש לפני שימוש ביועץ AI.";
 
-  if (!mounted) {
-    return (
-      <div className="mx-auto flex min-h-[50vh] max-w-2xl items-center justify-center px-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (token && isPending) {
-    return (
-      <div className="mx-auto flex min-h-[50vh] max-w-2xl flex-col items-center justify-center gap-3 px-6">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-sm text-dust">טוענים את הפרופיל…</p>
-      </div>
-    );
+  if (!mounted || (token && showSkeleton)) {
+    return <OnboardingSkeleton />;
   }
 
   if (token && isError) {
@@ -329,6 +319,8 @@ function OnboardingPage() {
                       key={n}
                       type="button"
                       onClick={() => setDapar(n)}
+                      aria-pressed={dapar === n}
+                      aria-label={ARIA.scoreChip(n, dapar === n)}
                       className={`rounded-sm border px-3.5 py-2 font-mono text-sm font-bold tabular-nums transition-colors ${
                         dapar === n
                           ? "border-primary bg-primary/10 text-primary"
@@ -346,6 +338,8 @@ function OnboardingPage() {
                       key={n}
                       type="button"
                       onClick={() => setMedical(n)}
+                      aria-pressed={medical === n}
+                      aria-label={ARIA.scoreChip(n, medical === n)}
                       className={`rounded-sm border px-3.5 py-2 font-mono text-sm font-bold tabular-nums transition-colors ${
                         medical === n
                           ? "border-primary bg-primary/10 text-primary"
@@ -367,7 +361,7 @@ function OnboardingPage() {
                   disabled={dapar == null || medical == null || saving}
                   className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-40"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
                   {saving ? "שומר…" : "סיום ושמירה"}
                 </button>
               ) : (
@@ -376,7 +370,7 @@ function OnboardingPage() {
                   onClick={next}
                   className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
                   הבא
                 </button>
               )}

@@ -10,7 +10,6 @@ import {
   Shield,
   ArrowUpLeft,
 } from "lucide-react";
-import { IdfPhotoGallery } from "@/components/IdfPhotoGallery";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto, idfPhotoAt, type IdfPhoto } from "@/lib/idf-images";
 import { getDashboardStats } from "@/lib/api";
@@ -76,8 +75,8 @@ function HomePage() {
   return (
     <div className="topo-lines">
       {/* ── Hero: asymmetric 5/7 split ── */}
-      <section className="min-h-[calc(100vh-3.5rem)]">
-        <div className="mx-auto grid max-w-7xl items-stretch px-6 lg:grid-cols-[5fr_7fr] lg:min-h-[calc(100vh-3.5rem)]">
+      <section className="min-h-[calc(100dvh-3.5rem)]">
+        <div className="mx-auto grid max-w-7xl items-stretch px-4 sm:px-6 lg:grid-cols-[5fr_7fr] lg:min-h-[calc(100vh-3.5rem)]">
           {/* Text column — right side in RTL */}
           <motion.div
             variants={stagger}
@@ -105,7 +104,7 @@ function HomePage() {
               variants={fadeUp}
               className="mt-6 max-w-md text-base leading-[1.7] text-dust"
             >
-              מישלט מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל.
+              על מדים מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל.
               נתונים אישיים, ציונים, מסלול תפקיד, ויועץ AI. במקום אחד, בעברית, בחינם.
             </motion.p>
 
@@ -120,7 +119,7 @@ function HomePage() {
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="mt-16 flex gap-10">
+            <motion.div variants={fadeUp} className="mt-12 flex gap-6 sm:mt-16 sm:gap-10">
               <DataPoint value="+120" label="תפקידים" />
               <DataPoint value="12" label="ממדי מא״ה" />
               <DataPoint value="3 דק׳" label="זמן הרשמה" />
@@ -161,7 +160,7 @@ function HomePage() {
 
       {/* ── Capabilities — staggered asymmetric cards ── */}
       <section className="py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -178,7 +177,7 @@ function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid gap-px bg-iron/20 sm:grid-cols-3">
+          <div className="grid gap-px bg-iron/20 grid-cols-1 sm:grid-cols-3">
             <CapabilityCard
               icon={<BarChart3 className="h-5 w-5" />}
               title="מעקב נתונים"
@@ -208,7 +207,7 @@ function HomePage() {
 
       {/* ── Evidence: photo + text, offset grid ── */}
       <section className="py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[2fr_3fr] lg:gap-20">
             <motion.div
               initial={{ opacity: 0 }}
@@ -242,7 +241,7 @@ function HomePage() {
                 עם אחוזי התאמה.
               </p>
 
-              <div className="mt-10 grid grid-cols-3 gap-6 border-t border-iron/30 pt-8">
+              <div className="mt-10 grid grid-cols-1 gap-4 border-t border-iron/30 pt-8 sm:grid-cols-3 sm:gap-6">
                 <StepBlock num="01" title="הרשמה" desc="חשבון חינמי תוך 3 דקות" />
                 <StepBlock num="02" title="נתונים" desc='דפ״ר, רפואי, מא״ה והעדפות' />
                 <StepBlock num="03" title="תובנות" desc="התאמה + המלצות AI" />
@@ -254,19 +253,9 @@ function HomePage() {
 
       <div className="section-divider" />
 
-      {/* ── Photo gallery — all catalog images ── */}
-      <section className="py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <p className="mb-6 text-right font-mono text-xs tracking-widest text-primary uppercase">מהשטח</p>
-          <IdfPhotoGallery columns={3} aspectClassName="aspect-[4/3] sm:aspect-[3/2]" />
-        </div>
-      </section>
-
-      <div className="section-divider" />
-
       {/* ── Trust — horizontal bar ── */}
       <section className="py-16">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="grid grid-cols-1 gap-px bg-iron/20 sm:grid-cols-3">
             <TrustBlock icon={<Lock className="h-4 w-4" />} title="הצפנה מקצה לקצה" desc="כל הנתונים מוצפנים ומאובטחים." />
             <TrustBlock icon={<Shield className="h-4 w-4" />} title="פרטיות מלאה" desc="לא משתפים מידע עם צד שלישי." />
@@ -284,7 +273,7 @@ function HomePage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease }}
-          className="mx-auto grid max-w-7xl items-center gap-8 px-6 lg:grid-cols-2 lg:gap-12"
+          className="mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-12"
         >
           <div className="order-2 lg:order-1 overflow-hidden rounded-sm border border-iron/30">
             <IdfPhotoPanel
@@ -347,7 +336,7 @@ function CapabilityCard({
         overlayClassName="from-background/70 via-background/85 to-background"
         showCredit={false}
       />
-      <div className="p-8">
+      <div className="p-5 sm:p-8">
         <div className="text-primary mb-4">{icon}</div>
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-dust">{description}</p>

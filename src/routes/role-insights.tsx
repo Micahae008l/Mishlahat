@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
-import { IdfPhotoGallery } from "@/components/IdfPhotoGallery";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto, idfPhotoAt } from "@/lib/idf-images";
 import placeholderRaw from "../../content/he/role-insights-placeholder.txt?raw";
@@ -35,13 +34,13 @@ function RoleInsightsPage() {
   const sections = useMemo(() => parseInsightSections(placeholderRaw), []);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-12 px-6 py-10 sm:px-8 md:space-y-16 md:py-14 topo-lines">
+    <div className="mx-auto max-w-4xl space-y-12 px-4 py-8 sm:px-8 md:space-y-16 md:py-14 topo-lines">
       {/* Header with photo */}
       <motion.header
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
-        className="relative overflow-hidden border border-iron/30 p-8 text-right md:p-12"
+        className="relative overflow-hidden border border-iron/30 p-5 text-right sm:p-8 md:p-12"
       >
         <IdfPhotoPanel
           photo={getIdfPhoto("paratroopers")}
@@ -62,8 +61,6 @@ function RoleInsightsPage() {
         </div>
       </motion.header>
 
-      <IdfPhotoGallery columns={3} aspectClassName="aspect-[16/10]" className="mb-10" />
-
       {/* Content sections */}
       <div className="space-y-6 md:space-y-8">
         {sections.map(({ title, body }, i) => (
@@ -82,7 +79,7 @@ function RoleInsightsPage() {
                 overlayClassName="from-background/40 via-background/60 to-background"
               />
             </div>
-            <div className="p-6 md:p-10">
+            <div className="p-4 sm:p-6 md:p-10">
             {title ? (
               <h2 className="text-xl font-bold text-foreground md:text-2xl mb-5">
                 {title}

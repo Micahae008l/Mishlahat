@@ -20,9 +20,9 @@ app.use(express.json());
 // Root — this process is the JSON API only; the UI is Vite (default :8080)
 app.get("/", (_req, res) => {
   res.type("html").send(`<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><title>Mishlahat API</title></head>
+<html lang="en"><head><meta charset="utf-8"/><title>Al Madim API</title></head>
 <body style="font-family:system-ui;padding:2rem;max-width:40rem">
-  <h1>Mishlahat API</h1>
+  <h1>Al Madim API</h1>
   <p>This port serves <strong>REST only</strong> under <code>/api</code>.</p>
   <p>Open the app: <a href="${FRONTEND_URL}"><strong>${FRONTEND_URL}</strong></a></p>
   <p>Try <a href="/api/health"><code>GET /api/health</code></a></p>

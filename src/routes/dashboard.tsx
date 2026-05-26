@@ -7,7 +7,6 @@ import { migrateLegacyYomHameahTo12, YOM_HAMEAH_12_KEYS } from "@/lib/yom-hameah
 import { getDashboardStats } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { AI_PROFILE_MISSING_LABELS } from "@/lib/profile-preference-data";
-import { IdfPhotoGallery } from "@/components/IdfPhotoGallery";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
 
@@ -123,7 +122,7 @@ function DashboardPage() {
     data?.aiProfileMissing?.map((k) => AI_PROFILE_MISSING_LABELS[k] ?? k).filter(Boolean) ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10 topo-lines">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 topo-lines">
       {!mounted ? (
         <p className="text-center text-dust">…</p>
       ) : !token ? (
@@ -157,26 +156,11 @@ function DashboardPage() {
             />
           </motion.div>
 
-          <motion.div variants={fadeUp} className="hidden sm:block">
-            <IdfPhotoGallery
-              photoIds={[
-                "kfir-training",
-                "nahal-march",
-                "navy-training",
-                "alpine-training",
-                "soldiers-climbing",
-                "officer-graduation",
-              ]}
-              columns={3}
-              aspectClassName="aspect-[2/1]"
-            />
-          </motion.div>
-
           {/* Header bar */}
-          <motion.div variants={fadeUp} className="flex items-end justify-between border-b border-iron/30 pb-6">
+          <motion.div variants={fadeUp} className="flex flex-col-reverse gap-3 border-b border-iron/30 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="text-right">
               <p className="font-mono text-xs tracking-widest text-dust uppercase mb-2">דשבורד</p>
-              <h1 className="text-3xl font-black sm:text-4xl">
+              <h1 className="text-2xl font-black sm:text-4xl">
                 שלום,{" "}
                 <span className="text-primary">
                   {data.user.preferredName?.trim()
@@ -187,7 +171,7 @@ function DashboardPage() {
                 </span>
               </h1>
             </div>
-            <div className="flex items-center gap-2 rounded-sm border border-olive/30 bg-olive/10 px-3 py-1.5">
+            <div className="flex items-center gap-2 self-end rounded-sm border border-olive/30 bg-olive/10 px-3 py-1.5 sm:self-auto">
               <span className="h-2 w-2 rounded-full bg-olive" />
               <span className="text-xs font-semibold text-olive-foreground">{statusHebrew(data.user.status)}</span>
             </div>
@@ -196,7 +180,7 @@ function DashboardPage() {
           {/* Main grid: countdown + metrics */}
           <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
             {/* Countdown */}
-            <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-8">
+            <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-5 sm:p-8">
               <div className="flex items-center gap-2 text-xs text-dust mb-6">
                 <Calendar className="h-3.5 w-3.5" />
                 {data.user.status === "Active Duty" ? "עד השחרור" : data.user.status === "Discharged" ? "סטטוס" : "עד הגיוס"}
@@ -210,12 +194,12 @@ function DashboardPage() {
               ) : countdownTarget ? (
                 <div className="text-right">
                   <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-6xl font-black tabular-nums text-foreground leading-none">
+                    <span className="font-mono text-5xl font-black tabular-nums text-foreground leading-none sm:text-6xl">
                       {days}
                     </span>
                     <span className="text-lg font-medium text-dust">ימים</span>
                   </div>
-                  <div className="mt-4 flex gap-6 font-mono text-sm tabular-nums text-dust">
+                  <div className="mt-4 flex flex-wrap gap-4 font-mono text-sm tabular-nums text-dust sm:gap-6">
                     <span>
                       <span className="font-bold text-foreground/80">{String(hours).padStart(2, "0")}</span> שעות
                     </span>
@@ -280,15 +264,15 @@ function DashboardPage() {
             {aiReady ? (
               <Link
                 to="/ai-counselor"
-                className="group flex items-center justify-between border border-primary/30 bg-primary/[0.04] p-8 transition-colors hover:bg-primary/[0.08]"
+                className="group flex items-center justify-between gap-4 border border-primary/30 bg-primary/[0.04] p-5 transition-colors hover:bg-primary/[0.08] sm:p-8"
               >
-                <div className="flex h-10 w-10 items-center justify-center border border-primary/30 text-primary transition group-hover:-translate-x-1">
+                <div className="hidden h-10 w-10 shrink-0 items-center justify-center border border-primary/30 text-primary transition group-hover:-translate-x-1 sm:flex">
                   <ChevronLeft className="h-5 w-5" />
                 </div>
                 <div className="text-right">
                   <p className="font-mono text-[10px] tracking-widest text-primary uppercase mb-1">מוכן להפעלה</p>
-                  <h3 className="flex items-center justify-end gap-2 text-lg font-bold text-foreground">
-                    <Target className="h-5 w-5 text-primary" />
+                  <h3 className="flex items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
+                    <Target className="h-5 w-5 shrink-0 text-primary" />
                     התאמת תפקידים עם יועץ AI
                   </h3>
                   <p className="mt-1 text-sm text-dust">
@@ -297,10 +281,10 @@ function DashboardPage() {
                 </div>
               </Link>
             ) : (
-              <div className="border border-iron/30 bg-card p-8 text-right">
+              <div className="border border-iron/30 bg-card p-5 text-right sm:p-8">
                 <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">יועץ AI</p>
-                <h3 className="flex items-center justify-end gap-2 text-lg font-bold text-foreground">
-                  <Target className="h-5 w-5 text-dust" />
+                <h3 className="flex items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
+                  <Target className="h-5 w-5 shrink-0 text-dust" />
                   השלימו פרטים כדי להפעיל התאמות
                 </h3>
                 {missingLabels.length > 0 ? (
@@ -364,7 +348,7 @@ function MetricRow({
   pct: number;
 }) {
   return (
-    <div className="flex flex-1 flex-col justify-center gap-4 p-7 text-right">
+    <div className="flex flex-1 flex-col justify-center gap-4 p-4 text-right sm:p-7">
       <div className="flex items-end justify-between gap-4">
         <span className="shrink-0 font-mono text-sm tabular-nums text-primary">{pct}%</span>
         <div className="min-w-0">

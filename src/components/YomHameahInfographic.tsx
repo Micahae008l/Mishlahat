@@ -25,7 +25,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
           מאה — איך לקרוא את זה?
         </h2>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          כל ממד הוא ציון נפרד בסולם 1–5. במשלחת נאגדים חמישה ממדים נוחים מתוך הרשימה הארוכה של הגליון הרשמי.
+          כל ממד הוא ציון נפרד בסולם 1–5. בעל מדים נאגדים חמישה ממדים נוחים מתוך הרשימה הארוכה של הגליון הרשמי.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
 
       {/* Five merged dimensions */}
       <div>
-        <p className="mb-2 text-right text-xs font-medium text-foreground">חמשת הממדים במשלחת</p>
+        <p className="mb-2 text-right text-xs font-medium text-foreground">חמשת הממדים בעל מדים</p>
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="list">
           {DIMENSION_CHIPS.map(({ short, hint }) => (
             <li

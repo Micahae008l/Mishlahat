@@ -23,6 +23,7 @@ import {
   type FitnessPreferenceValue,
 } from "@/lib/profile-preference-data";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
+import { MishlahatLogo } from "@/components/MishlahatLogo";
 import { idfPhotoAt } from "@/lib/idf-images";
 import { defaultYomHameah12Scores, YOM_HAMEAH_12_KEYS, YOM_HAMEAH_12_LABELS_HE } from "@/lib/yom-hameah-12";
 import {
@@ -286,6 +287,7 @@ function PostSignupPage() {
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-10">
         {/* Top bar */}
         <div className="mx-auto mb-8 flex w-full max-w-2xl items-center justify-between">
+          <MishlahatLogo size="sm" linked />
           <Link to="/" className="flex items-center gap-1.5 text-sm text-dust transition hover:text-foreground">
             <X className="h-4 w-4" />
             חזרה לאתר
@@ -319,7 +321,7 @@ function PostSignupPage() {
             </span>
           </div>
 
-          <div className="px-6 py-8 sm:px-10 sm:py-10">
+          <div className="px-4 py-6 sm:px-10 sm:py-10">
             {/* Step header */}
             <motion.div
               key={step}
@@ -382,7 +384,7 @@ function PostSignupPage() {
                       autoComplete="nickname"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="איך לקרוא לכם במשלחת?"
+                      placeholder="איך לקרוא לכם בעל מדים?"
                       className="input-field pl-10 pr-4"
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dust/40">
@@ -498,7 +500,7 @@ function PostSignupPage() {
 
 function getStepMeta(step: number) {
   const icon = <Shield className="h-5 w-5 text-primary" />;
-  if (step === 1) return { icon: <Mail className="h-5 w-5 text-primary" />, title: "התחברו למשלחת", subtitle: "הזינו אימייל. נשלח קוד חד־פעמי. אם אין חשבון, ניצור אחד אוטומטית." };
+  if (step === 1) return { icon: <Mail className="h-5 w-5 text-primary" />, title: "התחברו לעל מדים", subtitle: "הזינו אימייל. נשלח קוד חד־פעמי. אם אין חשבון, ניצור אחד אוטומטית." };
   if (step === 2) return { icon, title: "הזינו את הקוד", subtitle: "שלחנו קוד לאימייל שלכם." };
   if (step === 3) return { icon: <User className="h-5 w-5 text-primary" />, title: "שם משתמש", subtitle: "זה השם שיופיע בדשבורד וביועץ." };
   if (step === 4) return { icon, title: "ציונים בסיסיים", subtitle: "דפ״ר ופרופיל רפואי נדרשים לפני שימוש ביועץ AI." };

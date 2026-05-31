@@ -35,6 +35,18 @@ const userSchema = new mongoose.Schema(
       enum: ["Pre-Draft", "Active Duty", "Discharged"],
       default: "Pre-Draft",
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
+    },
+    /** Per-user lifetime AI token cap; null inherits DEFAULT_USER_TOKEN_CAP. Admins ignore caps. */
+    tokenCap: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>קח כיוון (Kach Kivun) — Project Guide</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#121933;
+    --panel-2:#1a2347;
+    --ink:#e8ecff;
+    --muted:#9aa3c7;
+    --accent:#7c5cff;
+    --accent-2:#22d3ee;
+    --good:#34d399;
+    --warn:#fbbf24;
+    --border:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;line-height:1.55}
+  body{background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.25), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.18), transparent 60%),
+    var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:48px 24px 96px}
+  header.hero{
+    border:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(124,92,255,.15), rgba(34,211,238,.08));
+    border-radius:24px;
+    padding:40px;
+    margin-bottom:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .badge{
+    display:inline-block;padding:6px 12px;border-radius:999px;
+    background:rgba(124,92,255,.2);color:#cdb8ff;font-size:12px;
+    letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+    border:1px solid rgba(124,92,255,.4);
+  }
+  h1{font-size:44px;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.1}
+  h1 .he{font-family:"Frank Ruhl Libre","David Libre",serif;color:#fff}
+  h1 .en{color:var(--accent-2)}
+  .sub{color:var(--muted);font-size:17px;max-width:720px}
+  .grid{display:grid;gap:20px}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:820px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}}
+  section{margin-top:40px}
+  h2{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2 .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#0b1020;font-weight:800;margin-right:12px;font-size:15px;
+  }
+  .lede{color:var(--muted);margin:0 0 18px;max-width:760px}
+  .card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:20px;transition:transform .15s ease, border-color .15s ease;
+  }
+  .card:hover{transform:translateY(-2px);border-color:rgba(124,92,255,.4)}
+  .card h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:10px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .pill{
+    display:inline-block;padding:3px 10px;border-radius:999px;
+    background:rgba(255,255,255,.06);color:var(--ink);font-size:12px;
+    border:1px solid var(--border);margin:2px 4px 2px 0;
+  }
+  .pill.accent{background:rgba(124,92,255,.18);border-color:rgba(124,92,255,.4);color:#d6c8ff}
+  .pill.cyan{background:rgba(34,211,238,.15);border-color:rgba(34,211,238,.4);color:#a5f3fc}
+  .pill.good{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4);color:#a7f3d0}
+  .pill.warn{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.4);color:#fde68a}
+  .stack-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .ico{
+    width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:inline-flex;align-items:center;justify-content:center;
+    color:#0b1020;font-weight:800;font-size:14px;flex-shrink:0;
+  }
+  .flow{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:24px;
+  }
+  .step{
+    display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed var(--border);
+  }
+  .step:last-child{border-bottom:0}
+  .step .n{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--panel-2);color:var(--accent-2);font-weight:700;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    border:1px solid rgba(34,211,238,.3);
+  }
+  .step .body strong{display:block;margin-bottom:2px}
+  .step .body span{color:var(--muted);font-size:14px}
+  code{
+    background:rgba(255,255,255,.07);padding:2px 6px;border-radius:6px;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;color:#fcd9a8;
+  }
+  .arch{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:24px;font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:13px;color:var(--muted);white-space:pre;overflow-x:auto;
+  }
+  .arch .h{color:var(--accent-2)}
+  .arch .a{color:#cdb8ff}
+  .arch .g{color:#a7f3d0}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
+  th{background:rgba(255,255,255,.04);color:var(--accent-2);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  tr:last-child td{border-bottom:0}
+  td code{color:#a5f3fc}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:13px}
+  .legend span::before{content:"●";margin-right:6px}
+  .l-fe::before{color:var(--accent)}
+  .l-be::before{color:var(--accent-2)}
+  .l-db::before{color:var(--good)}
+  .l-ext::before{color:var(--warn)}
+  footer{margin-top:60px;text-align:center;color:var(--muted);font-size:13px}
+  .kbd{
+    font-family:"SF Mono",monospace;background:#0b1020;
+    border:1px solid var(--border);border-bottom-width:2px;
+    padding:2px 8px;border-radius:6px;font-size:12px;color:var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="badge">Project Guide · 2026</span>
+  <h1><span class="he">קח כיוון</span> · <span class="en">Kach Kivun</span></h1>
+  <p class="sub">A full-stack web app that helps Israeli pre-army candidates find the right IDF role: profile onboarding, AI-driven role matching, an AI counselor & secretary, PDF reports, and an admin panel. This guide walks through every piece of the stack — frontend, backend, database, auth (including OTP), AI, and deployment.</p>
+</header>
+
+<!-- AT A GLANCE -->
+<section>
+  <h2><span class="num">1</span>At a Glance</h2>
+  <p class="lede">Three layers: a React app in the browser, an Express API in the cloud, and MongoDB for storage. Email OTP for sign-in, OpenAI for AI features, PDFKit for downloadable reports.</p>
+
+  <div class="grid cols-4">
+    <div class="card">
+      <h3><span class="ico">FE</span> Frontend</h3>
+      <p>React 19 + TypeScript single-page app with file-based routing and Tailwind UI.</p>
+      <div class="stack-row">
+        <span class="pill accent">React 19</span>
+        <span class="pill accent">TypeScript</span>
+        <span class="pill accent">Vite 7</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="ico">BE</span> Backend</h3>
+      <p>Node.js REST API built with Express, JWT auth, and Mongoose models.</p>
+      <div class="stack-row">
+        <span class="pill cyan">Node.js</span>
+        <span class="pill cyan">Express 4</span>
+        <span class="pill cyan">Mongoose</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="ico">DB</span> Database</h3>
+      <p>MongoDB Atlas (cloud). 7 collections covering users, OTPs, prefs, reports, AI usage, refresh tokens.</p>
+      <div class="stack-row">
+        <span class="pill good">MongoDB</span>
+        <span class="pill good">Atlas</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="ico">AI</span> Intelligence</h3>
+      <p>OpenAI API powers the role matcher, counselor chat, and secretary assistant.</p>
+      <div class="stack-row">
+        <span class="pill warn">OpenAI</span>
+        <span class="pill warn">PDFKit</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section>
+  <h2><span class="num">2</span>How the Pieces Fit Together</h2>
+  <p class="lede">A user opens the app, the React frontend talks to the Express API, which reads/writes MongoDB and calls OpenAI when AI is needed. Email goes out through SMTP (Nodemailer).</p>
+
+  <div class="arch">
+<span class="h">┌────────────────────────────────────────────────────────────────────────┐</span>
+<span class="h">│</span>                          <span class="a">BROWSER (user)</span>                                <span class="h">│</span>
+<span class="h">│</span>   React 19  ·  TanStack Router  ·  TanStack Query  ·  Tailwind v4        <span class="h">│</span>
+<span class="h">│</span>   Radix UI  ·  React Hook Form + Zod  ·  Framer Motion  ·  Recharts      <span class="h">│</span>
+<span class="h">└──────────────────────────────┬─────────────────────────────────────────┘</span>
+                               │  fetch / JSON  (Bearer JWT)
+                               ▼
+<span class="h">┌────────────────────────────────────────────────────────────────────────┐</span>
+<span class="h">│</span>                       <span class="a">EXPRESS API  (Node.js)</span>                              <span class="h">│</span>
+<span class="h">│</span>   /api/auth   /api/profile   /api/dashboard                             <span class="h">│</span>
+<span class="h">│</span>   /api/ai     /api/reports   /api/admin                                  <span class="h">│</span>
+<span class="h">│</span>   middleware:  CORS · rate-limit · JWT auth · validation · sanitize      <span class="h">│</span>
+<span class="h">└─────────┬──────────────────┬──────────────────────┬────────────────────┘</span>
+          │                  │                      │
+          ▼                  ▼                      ▼
+   <span class="g">┌──────────────┐</span>   <span class="g">┌──────────────┐</span>      <span class="g">┌──────────────┐</span>
+   <span class="g">│  MongoDB     │</span>   <span class="g">│  OpenAI API  │</span>      <span class="g">│  SMTP (mail) │</span>
+   <span class="g">│  Atlas       │</span>   <span class="g">│  GPT models  │</span>      <span class="g">│  OTP codes   │</span>
+   <span class="g">└──────────────┘</span>   <span class="g">└──────────────┘</span>      <span class="g">└──────────────┘</span>
+  </div>
+
+  <div class="legend">
+    <span class="l-fe">Frontend (browser)</span>
+    <span class="l-be">Backend (API)</span>
+    <span class="l-db">Database</span>
+    <span class="l-ext">External services</span>
+  </div>
+</section>
+
+<!-- FRONTEND DEEP DIVE -->
+<section>
+  <h2><span class="num">3</span>Frontend — What the User Sees</h2>
+  <p class="lede">Built with the modern React stack. Routes are files in <code>src/routes/</code>, components live in <code>src/components/</code>, and styling is utility-first with Tailwind.</p>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Core framework</h3>
+      <div class="stack-row">
+        <span class="pill accent">React 19</span>
+        <span class="pill accent">TypeScript 5.8</span>
+        <span class="pill accent">Vite 7</span>
+        <span class="pill accent">TanStack Start</span>
+      </div>
+      <p style="margin-top:10px">Vite gives instant dev reload. TanStack Start adds SSR-ready routing.</p>
+    </div>
+    <div class="card">
+      <h3>Routing</h3>
+      <div class="stack-row"><span class="pill accent">TanStack Router</span></div>
+      <p style="margin-top:10px">File-based: each <code>.tsx</code> in <code>src/routes/</code> becomes a URL. Type-safe links, generated tree.</p>
+    </div>
+    <div class="card">
+      <h3>UI components</h3>
+      <div class="stack-row">
+        <span class="pill accent">Radix UI</span>
+        <span class="pill accent">Tailwind v4</span>
+        <span class="pill accent">lucide-react</span>
+        <span class="pill accent">tw-animate-css</span>
+      </div>
+      <p style="margin-top:10px">Radix gives accessible primitives (dialogs, dropdowns, tabs). Tailwind handles styling. Lucide icons.</p>
+    </div>
+    <div class="card">
+      <h3>Forms & validation</h3>
+      <div class="stack-row">
+        <span class="pill accent">react-hook-form</span>
+        <span class="pill accent">Zod</span>
+        <span class="pill accent">input-otp</span>
+      </div>
+      <p style="margin-top:10px">Hook Form for state, Zod for schemas. <code>input-otp</code> renders the 6-digit code field.</p>
+    </div>
+    <div class="card">
+      <h3>Data fetching</h3>
+      <div class="stack-row">
+        <span class="pill accent">@tanstack/react-query</span>
+        <span class="pill accent">fetch</span>
+      </div>
+      <p style="margin-top:10px">React Query caches API responses, handles loading/error states, and refreshes data.</p>
+    </div>
+    <div class="card">
+      <h3>Motion & charts</h3>
+      <div class="stack-row">
+        <span class="pill accent">Framer Motion</span>
+        <span class="pill accent">Recharts</span>
+        <span class="pill accent">Sonner</span>
+      </div>
+      <p style="margin-top:10px">Framer animates transitions, Recharts draws the dashboard graphs, Sonner shows toasts.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px;font-size:18px">Pages (routes)</h3>
+  <table>
+    <thead><tr><th>Path</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code></td><td>Landing page — hero, value props, call to sign up</td></tr>
+      <tr><td><code>/login</code></td><td>Email + OTP sign-in</td></tr>
+      <tr><td><code>/post-signup</code></td><td>Welcome screen after first registration</td></tr>
+      <tr><td><code>/onboarding</code></td><td>Multi-step profile wizard (preferences, skills, interests)</td></tr>
+      <tr><td><code>/dashboard</code></td><td>Personal hub — actions, history, account settings</td></tr>
+      <tr><td><code>/role-insights</code></td><td>Browse matched IDF roles</td></tr>
+      <tr><td><code>/ai-counselor</code></td><td>Chat with the AI advisor</td></tr>
+      <tr><td><code>/ai-secretary</code></td><td>AI assistant for admin tasks</td></tr>
+      <tr><td><code>/report</code></td><td>Generate a new personal report</td></tr>
+      <tr><td><code>/report/$reportId</code></td><td>View a saved report</td></tr>
+      <tr><td><code>/admin</code></td><td>Admin panel — only for admin users</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- BACKEND -->
+<section>
+  <h2><span class="num">4</span>Backend — The API</h2>
+  <p class="lede">A single Express server in <code>server/</code> exposing a REST API under <code>/api</code>. Everything in JSON.</p>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <h3>Runtime & framework</h3>
+      <div class="stack-row">
+        <span class="pill cyan">Node.js</span>
+        <span class="pill cyan">Express 4</span>
+        <span class="pill cyan">ES modules</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Database layer</h3>
+      <div class="stack-row">
+        <span class="pill cyan">Mongoose 8</span>
+        <span class="pill cyan">MongoDB Atlas</span>
+      </div>
+      <p style="margin-top:10px">Mongoose models in <code>server/models/</code> define schemas.</p>
+    </div>
+    <div class="card">
+      <h3>Security</h3>
+      <div class="stack-row">
+        <span class="pill cyan">bcrypt</span>
+        <span class="pill cyan">jsonwebtoken</span>
+        <span class="pill cyan">express-rate-limit</span>
+        <span class="pill cyan">CORS</span>
+      </div>
+      <p style="margin-top:10px">Password hashing, JWT access/refresh tokens, rate limits per route.</p>
+    </div>
+    <div class="card">
+      <h3>Email (OTP)</h3>
+      <div class="stack-row">
+        <span class="pill cyan">Nodemailer</span>
+        <span class="pill cyan">SMTP</span>
+      </div>
+      <p style="margin-top:10px">Sends 6-digit OTP codes. In dev (no SMTP), code is printed to the server log.</p>
+    </div>
+    <div class="card">
+      <h3>AI</h3>
+      <div class="stack-row">
+        <span class="pill cyan">openai SDK</span>
+      </div>
+      <p style="margin-top:10px">Calls GPT for matching, counseling, summarizing.</p>
+    </div>
+    <div class="card">
+      <h3>PDF reports</h3>
+      <div class="stack-row">
+        <span class="pill cyan">PDFKit</span>
+      </div>
+      <p style="margin-top:10px">Generates a downloadable PDF of each report.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px;font-size:18px">API surface</h3>
+  <table>
+    <thead><tr><th>Route group</th><th>Purpose</th><th>Key endpoints</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/auth</code></td><td>Sign-up, OTP, login, refresh, logout</td><td><code>request-otp</code>, <code>verify-otp</code>, <code>login</code>, <code>refresh</code>, <code>me</code></td></tr>
+      <tr><td><code>/api/profile</code></td><td>Read/write user preferences</td><td><code>GET /</code>, <code>PUT /</code></td></tr>
+      <tr><td><code>/api/dashboard</code></td><td>Dashboard data (cards, stats)</td><td><code>GET /</code></td></tr>
+      <tr><td><code>/api/ai</code></td><td>Chat + role matching via OpenAI</td><td><code>counselor</code>, <code>secretary</code>, <code>match</code></td></tr>
+      <tr><td><code>/api/reports</code></td><td>Generate / fetch / list reports + PDF</td><td><code>POST /</code>, <code>GET /:id</code>, <code>GET /:id/pdf</code></td></tr>
+      <tr><td><code>/api/admin</code></td><td>Admin-only: users, usage, controls</td><td><code>users</code>, <code>usage</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:28px;font-size:18px">Middleware (request pipeline)</h3>
+  <div class="grid cols-3">
+    <div class="card"><h3>CORS</h3><p>Allows the frontend domain to call the API.</p></div>
+    <div class="card"><h3>rejectMalformed</h3><p>Rejects oversized URLs / bad JSON early.</p></div>
+    <div class="card"><h3>rateLimit</h3><p>Per-IP limits — strict on auth routes, lighter on the rest.</p></div>
+    <div class="card"><h3>auth (JWT)</h3><p>Verifies the Bearer token and attaches the user.</p></div>
+    <div class="card"><h3>validateRequest</h3><p>Validates body/query against a schema before the controller runs.</p></div>
+    <div class="card"><h3>enforceTokenCap</h3><p>Limits OpenAI token usage per user / per day.</p></div>
+  </div>
+</section>
+
+<!-- DATABASE -->
+<section>
+  <h2><span class="num">5</span>Database — What We Store</h2>
+  <p class="lede">MongoDB on Atlas. Each model in <code>server/models/</code> is one collection.</p>
+
+  <table>
+    <thead><tr><th>Model</th><th>Stores</th></tr></thead>
+    <tbody>
+      <tr><td><code>User</code></td><td>email, password hash, role (user / admin), profile flags</td></tr>
+      <tr><td><code>EmailOtp</code></td><td>one-time 6-digit codes with expiry, used for sign-in</td></tr>
+      <tr><td><code>RefreshToken</code></td><td>long-lived refresh tokens for renewing JWTs</td></tr>
+      <tr><td><code>Preferences</code></td><td>onboarding answers — interests, skills, role preferences</td></tr>
+      <tr><td><code>MilitaryStats</code></td><td>military-relevant stats (fitness, profile, etc.)</td></tr>
+      <tr><td><code>ReportHistory</code></td><td>generated reports tied to a user</td></tr>
+      <tr><td><code>AiUsageLog</code></td><td>every AI call, for analytics and quota</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- AUTH / OTP FLOW -->
+<section>
+  <h2><span class="num">6</span>Authentication — Including OTP</h2>
+  <p class="lede">Email-first auth. The user types their email, gets a 6-digit code, and is signed in. The server issues a short-lived access token (JWT) and a refresh token that lives longer.</p>
+
+  <div class="grid cols-2">
+    <div class="flow">
+      <h3 style="margin-top:0">OTP sign-in flow</h3>
+      <div class="step"><div class="n">1</div><div class="body"><strong>User enters email</strong><span>Frontend posts to <code>POST /api/auth/request-otp</code></span></div></div>
+      <div class="step"><div class="n">2</div><div class="body"><strong>Server generates a 6-digit code</strong><span>Saved in <code>EmailOtp</code> with short expiry, sent via Nodemailer SMTP</span></div></div>
+      <div class="step"><div class="n">3</div><div class="body"><strong>User types the code</strong><span>The <code>input-otp</code> component captures 6 digits → <code>POST /api/auth/verify-otp</code></span></div></div>
+      <div class="step"><div class="n">4</div><div class="body"><strong>Server verifies</strong><span>Matches code + expiry, deletes the OTP row, finds or creates the User</span></div></div>
+      <div class="step"><div class="n">5</div><div class="body"><strong>Tokens issued</strong><span>Access JWT (15&nbsp;min) + Refresh token (30 days, stored in DB)</span></div></div>
+      <div class="step"><div class="n">6</div><div class="body"><strong>Frontend stores tokens</strong><span>React Query caches the session; all later calls send <code>Authorization: Bearer …</code></span></div></div>
+    </div>
+
+    <div class="flow">
+      <h3 style="margin-top:0">Token lifecycle</h3>
+      <div class="step"><div class="n">A</div><div class="body"><strong>Access token (JWT)</strong><span>Short-lived (~15&nbsp;min). Signed with <code>JWT_SECRET</code>, contains user id + role.</span></div></div>
+      <div class="step"><div class="n">B</div><div class="body"><strong>Refresh token</strong><span>Stored in <code>RefreshToken</code> collection. Used to mint a new access token without re-login.</span></div></div>
+      <div class="step"><div class="n">C</div><div class="body"><strong>Expiry</strong><span>When access expires, frontend hits <code>POST /api/auth/refresh</code> automatically.</span></div></div>
+      <div class="step"><div class="n">D</div><div class="body"><strong>Logout</strong><span><code>POST /api/auth/logout</code> deletes the refresh token from the DB.</span></div></div>
+      <div class="step"><div class="n">E</div><div class="body"><strong>Rate limiting</strong><span>Auth routes are protected by <code>authLimiter</code> — extra strict to block brute force.</span></div></div>
+      <div class="step"><div class="n">F</div><div class="body"><strong>Password path</strong><span>Optional <code>POST /api/auth/login</code> with bcrypt-hashed password also works.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- AI -->
+<section>
+  <h2><span class="num">7</span>The AI Layer</h2>
+  <p class="lede">Three AI surfaces, all backed by the <code>openai</code> SDK. Every call is logged in <code>AiUsageLog</code> and capped by <code>enforceTokenCap</code> middleware so a single user can't burn the whole budget.</p>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <h3>Role Matcher</h3>
+      <p>Takes the user's <code>Preferences</code> + <code>MilitaryStats</code> and returns ranked IDF role matches with reasons.</p>
+    </div>
+    <div class="card">
+      <h3>AI Counselor</h3>
+      <p>Conversational coach. Persists short context, answers questions about the army track.</p>
+    </div>
+    <div class="card">
+      <h3>AI Secretary</h3>
+      <p>Helps with reminders, summaries, and document-style tasks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEPLOY -->
+<section>
+  <h2><span class="num">8</span>How It Runs in Production</h2>
+  <p class="lede">Three hosting pieces, all on free or near-free tiers. DNS lives in Cloudflare.</p>
+
+  <table>
+    <thead><tr><th>Piece</th><th>Hosted on</th><th>URL</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend (React)</td><td>Cloudflare Workers (via Vite plugin)</td><td><code>https://app.mike.haddad.co.il</code></td></tr>
+      <tr><td>Backend (Express)</td><td>Render (Blueprint deploy from <code>render.yaml</code>)</td><td><code>https://api.mike.haddad.co.il</code></td></tr>
+      <tr><td>Database</td><td>MongoDB Atlas (free cluster)</td><td><code>mongodb+srv://…</code></td></tr>
+      <tr><td>Email</td><td>Any SMTP provider (Gmail / Mailgun / etc.)</td><td>via <code>SMTP_HOST/USER/PASS</code></td></tr>
+      <tr><td>AI</td><td>OpenAI API</td><td>via <code>OPENAI_API_KEY</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px;font-size:18px">Key environment variables</h3>
+  <div class="grid cols-2">
+    <div class="card"><h3>Backend (Render)</h3>
+      <p><code>MONGODB_URI</code> · <code>JWT_SECRET</code> · <code>ACCESS_TOKEN_TTL</code> · <code>REFRESH_TOKEN_DAYS</code> · <code>OPENAI_API_KEY</code> · <code>FRONTEND_URL</code> · <code>SMTP_HOST/USER/PASS</code></p>
+    </div>
+    <div class="card"><h3>Frontend (build-time)</h3>
+      <p><code>VITE_API_URL</code> — tells the React app where the API lives.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEV -->
+<section>
+  <h2><span class="num">9</span>Running It Locally</h2>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div class="body"><strong>Install</strong><span><span class="kbd">npm install</span> in repo root, then <span class="kbd">npm install</span> inside <code>server/</code></span></div></div>
+    <div class="step"><div class="n">2</div><div class="body"><strong>Env files</strong><span>Copy <code>server/.env.example</code> → <code>server/.env</code> and fill in <code>MONGODB_URI</code>, <code>JWT_SECRET</code>, <code>OPENAI_API_KEY</code></span></div></div>
+    <div class="step"><div class="n">3</div><div class="body"><strong>Start both at once</strong><span><span class="kbd">npm run dev</span> — runs the API on <code>:3001</code> and the Vite app on <code>:8080</code></span></div></div>
+    <div class="step"><div class="n">4</div><div class="body"><strong>Open the app</strong><span>Visit <code>http://localhost:8080/</code></span></div></div>
+    <div class="step"><div class="n">5</div><div class="body"><strong>No SMTP?</strong><span>OTP codes are printed to the API console so you can still sign in</span></div></div>
+  </div>
+</section>
+
+<!-- GLOSSARY -->
+<section>
+  <h2><span class="num">10</span>Mini Glossary (for explaining out loud)</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>JWT</h3><p>A signed token the server gives the browser to prove who you are without re-checking the database every request.</p></div>
+    <div class="card"><h3>OTP</h3><p>"One-Time Password" — a short code sent to your email; valid once, for a few minutes.</p></div>
+    <div class="card"><h3>Refresh token</h3><p>A longer-lived token stored server-side that lets you get a new JWT silently.</p></div>
+    <div class="card"><h3>Mongoose</h3><p>Library that gives MongoDB documents a typed schema and helpers.</p></div>
+    <div class="card"><h3>Vite</h3><p>The dev server + bundler — instant reload while coding, optimized output for prod.</p></div>
+    <div class="card"><h3>TanStack Router</h3><p>Type-safe file-based router for React, replaces React Router here.</p></div>
+    <div class="card"><h3>React Query</h3><p>Caches and re-fetches server data so components stay in sync automatically.</p></div>
+    <div class="card"><h3>Radix UI</h3><p>Unstyled accessible components (modals, dropdowns) we style with Tailwind.</p></div>
+    <div class="card"><h3>Tailwind</h3><p>Utility CSS — write classes like <code>px-4 text-lg</code> instead of custom CSS files.</p></div>
+    <div class="card"><h3>PDFKit</h3><p>Node library that draws PDF files on the server, byte by byte.</p></div>
+    <div class="card"><h3>Render</h3><p>Cloud host that runs the Node API from the GitHub repo.</p></div>
+    <div class="card"><h3>Cloudflare Workers</h3><p>Edge platform that serves the React app fast, worldwide.</p></div>
+  </div>
+</section>
+
+<footer>
+  קח כיוון · Kach Kivun — full-stack guide · generated from the repo as it stands today.
+</footer>
+
+</div>
+</body>
+</html>

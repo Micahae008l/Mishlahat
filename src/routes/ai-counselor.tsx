@@ -2,18 +2,31 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, User, Loader2, ArrowLeft, Award } from "lucide-react";
+import { Bot, User, ArrowLeft, Award } from "lucide-react";
+import {
+  ChatMessageSkeleton,
+  RoleMatchCardsSkeleton,
+} from "@/components/skeletons/PageSkeletons";
 import { toast } from "sonner";
 import { RoleMatchCards } from "@/components/RoleMatchCards";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
-import { getDashboardStats, matchRolesRequest, type RoleMatch } from "@/lib/api";
+import { matchRolesRequest, type RoleMatch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api-errors";
+import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { AI_PROFILE_MISSING_LABELS } from "@/lib/profile-preference-data";
 import { migrateLegacyYomHameahTo12, YOM_HAMEAH_12_KEYS } from "@/lib/yom-hameah-12";
+import { ARIA } from "@/lib/a11y";
 
 export const Route = createFileRoute("/ai-counselor")({
   component: AiCounselorPage,
+  head: () => ({
+    meta: [
+      { title: "יועץ AI | קח כיוון" },
+      { name: "description", content: "יועץ AI שמנתח את הפרופיל האישי שלכם וממליץ על תפקידים מתאימים בצה״ל." },
+    ],
+  }),
 });
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -43,12 +56,12 @@ function AiCounselorPage() {
   const token = mounted ? getToken() : null;
 
   const { data: dash } = useQuery({
-    queryKey: ["dashboard", token],
-    queryFn: () => getDashboardStats(),
+    ...dashboardQueryOptions(token),
     enabled: mounted && !!token,
   });
 
   const aiReady = Boolean(dash?.aiReady);
+  const tokenCapped = Boolean(dash?.aiTokens?.capped);
   const missingLabels =
     dash?.aiProfileMissing?.map((k) => AI_PROFILE_MISSING_LABELS[k] ?? k).filter(Boolean) ?? [];
 
@@ -73,6 +86,10 @@ function AiCounselorPage() {
       toast.error("השלימו את הפרופיל לפני שימוש ביועץ");
       return;
     }
+    if (tokenCapped) {
+      toast.error("הגעתם למכסת הטוקנים לשימוש ביועץ AI");
+      return;
+    }
     setLoading(true);
     setRoles(null);
     setMessages((prev) => [...prev, { role: "user", text: "בקשת התאמת תפקידים" }]);
@@ -88,8 +105,8 @@ function AiCounselorPage() {
       ]);
       toast.success("ההמלצות מוכנות");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "שגיאה";
-      setMessages((prev) => [...prev, { role: "ai", text: `שגיאה מהשרת: ${msg}` }]);
+      const msg = getErrorMessage(e, "שגיאה בהתאמת תפקידים");
+      setMessages((prev) => [...prev, { role: "ai", text: msg }]);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -106,7 +123,7 @@ function AiCounselorPage() {
       >
         <div className="overflow-hidden rounded-sm border border-iron/30">
           <IdfPhotoPanel
-            photo={getIdfPhoto("soldiers-climbing")}
+            photo={getIdfPhoto("s3")}
             aspectClassName="aspect-[21/7]"
             overlayClassName="from-background/55 via-background/75 to-background"
           />
@@ -120,7 +137,17 @@ function AiCounselorPage() {
           </p>
         </div>
 
-        {!aiReady && token && (
+        {tokenCapped && token && (
+          <div className="border border-destructive/30 bg-destructive/5 p-5 text-right">
+            <p className="font-semibold text-foreground text-sm">מכסת הטוקנים נוצלה</p>
+            <p className="mt-1 text-sm text-dust">
+              נוצלו {dash?.aiTokens?.used?.toLocaleString("he-IL") ?? "—"} מתוך{" "}
+              {dash?.aiTokens?.cap?.toLocaleString("he-IL") ?? "—"} טוקנים. פנו למנהל המערכת להגדלת המכסה.
+            </p>
+          </div>
+        )}
+
+        {!aiReady && token && !tokenCapped && (
           <div className="border border-iron/30 bg-card p-5 text-right">
             <p className="font-semibold text-foreground text-sm">נדרש פרופיל מלא לפני התאמת תפקידים</p>
             {missingLabels.length > 0 ? (
@@ -155,27 +182,36 @@ function AiCounselorPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            disabled={loading || !aiReady || !token}
+            disabled={loading || !aiReady || !token || tokenCapped}
             onClick={runMatch}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-40 active:scale-[0.97]"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
-            {loading ? "מנתחים…" : "התאמת תפקידים"}
+            <Award className="h-4 w-4" aria-hidden />
+            התאמת תפקידים
           </button>
           <Link
             to="/dashboard"
             className="inline-flex items-center gap-1.5 rounded-md border border-iron/40 px-5 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             דשבורד
           </Link>
         </div>
 
-        <div className="border border-iron/30 bg-card overflow-hidden">
+        <section className="border border-iron/30 bg-card overflow-hidden" aria-labelledby="ai-chat-heading">
           <div className="border-b border-iron/20 px-5 py-2.5 text-right">
-            <span className="font-mono text-[10px] tracking-widest text-dust uppercase">שיחה</span>
+            <h2 id="ai-chat-heading" className="font-mono text-[10px] tracking-widest text-dust uppercase">
+              שיחה
+            </h2>
           </div>
-          <div className="max-h-[min(280px,40vh)] space-y-4 overflow-y-auto p-5">
+          <div
+            className="max-h-[min(280px,40vh)] space-y-4 overflow-y-auto p-5"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-busy={loading}
+            aria-label={ARIA.chatLog}
+          >
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
@@ -190,7 +226,11 @@ function AiCounselorPage() {
                       m.role === "ai" ? "bg-primary/10 text-primary" : "bg-iron/30 text-foreground"
                     }`}
                   >
-                    {m.role === "ai" ? <Bot className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
+                    {m.role === "ai" ? (
+                      <Bot className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <User className="h-3.5 w-3.5" aria-hidden />
+                    )}
                   </div>
                   <div
                     className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
@@ -206,26 +246,29 @@ function AiCounselorPage() {
             </AnimatePresence>
 
             {loading && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-primary/10 text-primary">
-                  <Bot className="h-3.5 w-3.5" />
-                </div>
-                <div className="border border-iron/20 bg-secondary px-4 py-3">
-                  <div className="flex gap-1.5">
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60" style={{ animationDelay: "300ms" }} />
-                  </div>
-                </div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} role="status" aria-label={ARIA.chatLoading}>
+                <ChatMessageSkeleton />
               </motion.div>
             )}
             <div ref={bottomRef} />
           </div>
-        </div>
+        </section>
 
         <AnimatePresence>
-          {roles && roles.length > 0 && (
+          {loading && !roles ? (
             <motion.div
+              key="roles-skeleton"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease }}
+            >
+              <RoleMatchCardsSkeleton />
+            </motion.div>
+          ) : null}
+          {roles && roles.length > 0 ? (
+            <motion.div
+              key="roles-results"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -233,7 +276,7 @@ function AiCounselorPage() {
             >
               <RoleMatchCards roles={roles} />
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </motion.div>
     </div>

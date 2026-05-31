@@ -1,3 +1,5 @@
+import { SITE_NAME_HE } from "@/lib/brand";
+
 type Props = {
   /** Full explainer for optional `<details>` (same copy as `yom-hameah-explainer.txt`). */
   longExplainer: string;
@@ -18,14 +20,14 @@ export function YomHameahInfographic({ longExplainer }: Props) {
   return (
     <section
       aria-labelledby="yom-infographic-title"
-      className="space-y-5 rounded-2xl border border-primary/25 bg-gradient-to-b from-primary/[0.07] via-white/[0.02] to-transparent p-4 sm:p-5"
+      className="space-y-5 rounded-2xl border border-iron/30 bg-card/80 p-4 sm:p-5"
     >
       <div className="text-right">
         <h2 id="yom-infographic-title" className="text-base font-bold tracking-tight text-foreground sm:text-lg">
           מאה — איך לקרוא את זה?
         </h2>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-          כל ממד הוא ציון נפרד בסולם 1–5. בעל מדים נאגדים חמישה ממדים נוחים מתוך הרשימה הארוכה של הגליון הרשמי.
+          כל ממד הוא ציון נפרד בסולם 1–5. ב{SITE_NAME_HE} נאגדים חמישה ממדים נוחים מתוך הרשימה הארוכה של הגליון הרשמי.
         </p>
       </div>
 
@@ -83,7 +85,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
 
       {/* Five merged dimensions */}
       <div>
-        <p className="mb-2 text-right text-xs font-medium text-foreground">חמשת הממדים בעל מדים</p>
+        <p className="mb-2 text-right text-xs font-medium text-foreground">חמשת הממדים ב{SITE_NAME_HE}</p>
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="list">
           {DIMENSION_CHIPS.map(({ short, hint }) => (
             <li

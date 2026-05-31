@@ -8,6 +8,12 @@ import placeholderRaw from "../../content/he/role-insights-placeholder.txt?raw";
 
 export const Route = createFileRoute("/role-insights")({
   component: RoleInsightsPage,
+  head: () => ({
+    meta: [
+      { title: "תובנות תפקידים | קח כיוון" },
+      { name: "description", content: "סקירת תפקידים בצה״ל: קרבי, טכנולוגי, מודיעין, לוגיסטיקה ועוד — כל מה שצריך לדעת לפני גיוס." },
+    ],
+  }),
 });
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -43,7 +49,7 @@ function RoleInsightsPage() {
         className="relative overflow-hidden border border-iron/30 p-5 text-right sm:p-8 md:p-12"
       >
         <IdfPhotoPanel
-          photo={getIdfPhoto("paratroopers")}
+          photo={getIdfPhoto("s8")}
           aspectClassName="absolute inset-0 min-h-0"
           className="absolute inset-0"
           overlayClassName="from-background/70 via-background/85 to-background"
@@ -96,7 +102,7 @@ function RoleInsightsPage() {
       </div>
 
       {/* CTA bar */}
-      <div className="flex flex-col items-stretch justify-between gap-4 border border-primary/20 bg-primary/[0.03] p-6 text-right sm:flex-row sm:items-center sm:justify-end">
+      <div className="flex flex-col items-stretch justify-between gap-4 border border-iron/30 bg-card p-6 text-right sm:flex-row sm:items-center sm:justify-end">
         <p className="text-sm text-dust">
           מוכנים לנסות התאמה ראשונית? היועץ משתמש בדפ״ר וברפואי מהפרופיל.
         </p>

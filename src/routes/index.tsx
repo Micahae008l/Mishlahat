@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+
 import {
   ChevronLeft,
   BarChart3,
@@ -9,12 +10,16 @@ import {
   Lock,
   Shield,
   ArrowUpLeft,
+  Users,
+  Star,
 } from "lucide-react";
+import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto, idfPhotoAt, type IdfPhoto } from "@/lib/idf-images";
 import { getDashboardStats } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { authedEntryHref } from "@/lib/profile-resume";
+import { SITE_NAME_HE } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -33,7 +38,7 @@ const stagger = {
 function HomePrimaryCta({ className }: { className: string }) {
   const [mounted, setMounted] = useState(false);
   const [to, setTo] = useState("/post-signup");
-  const [label, setLabel] = useState("התחברו עכשיו");
+  const [label, setLabel] = useState("התחילו בחינם");
 
   useEffect(() => {
     setMounted(true);
@@ -71,12 +76,51 @@ function HomePrimaryCta({ className }: { className: string }) {
   );
 }
 
+function Testimonial({
+  quote,
+  name,
+  detail,
+  idx,
+}: {
+  quote: string;
+  name: string;
+  detail: string;
+  idx: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-card p-6 sm:p-8 text-right"
+    >
+      <div className="mb-4 flex gap-0.5 text-primary">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star key={i} className="h-3 w-3 fill-current" />
+        ))}
+      </div>
+      <p className="text-sm leading-relaxed text-dust">&ldquo;{quote}&rdquo;</p>
+      <div className="mt-4 border-t border-iron/20 pt-4">
+        <p className="text-sm font-bold text-foreground">{name}</p>
+        <p className="text-xs text-dust">{detail}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 function HomePage() {
   return (
     <div className="topo-lines">
       {/* ── Hero: asymmetric 5/7 split ── */}
-      <section className="min-h-[calc(100dvh-3.5rem)]">
-        <div className="mx-auto grid max-w-7xl items-stretch px-4 sm:px-6 lg:grid-cols-[5fr_7fr] lg:min-h-[calc(100vh-3.5rem)]">
+      <section className="relative min-h-[calc(100dvh-3.5rem)]">
+        {/* Mobile background slideshow */}
+        <div className="absolute inset-0 lg:hidden">
+          <HeroSlideshow className="h-full w-full" controls={false} />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/40" />
+        </div>
+
+        <div className="relative z-10 mx-auto grid max-w-7xl items-stretch px-4 sm:px-6 lg:grid-cols-[5fr_7fr] lg:min-h-[calc(100vh-3.5rem)]">
           {/* Text column — right side in RTL */}
           <motion.div
             variants={stagger}
@@ -104,19 +148,25 @@ function HomePage() {
               variants={fadeUp}
               className="mt-6 max-w-md text-base leading-[1.7] text-dust"
             >
-              על מדים מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל.
+              {SITE_NAME_HE} מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל.
               נתונים אישיים, ציונים, מסלול תפקיד, ויועץ AI. במקום אחד, בעברית, בחינם.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="mt-10 flex items-center gap-4">
-              <HomePrimaryCta className="inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]" />
-              <Link
-                to="/role-insights"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-dust transition hover:text-foreground"
-              >
-                מה זה בכלל
-                <ArrowUpLeft className="h-3.5 w-3.5" />
-              </Link>
+            <motion.div variants={fadeUp} className="mt-10 flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <HomePrimaryCta className="inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]" />
+                <Link
+                  to="/role-insights"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-dust transition hover:text-foreground"
+                >
+                  מה זה בכלל
+                  <ArrowUpLeft className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <p className="flex items-center gap-1.5 text-xs text-dust/70">
+                <Lock className="h-3 w-3" />
+                ללא סיסמה — רק אימייל וקוד חד-פעמי
+              </p>
             </motion.div>
 
             <motion.div variants={fadeUp} className="mt-12 flex gap-6 sm:mt-16 sm:gap-10">
@@ -126,34 +176,19 @@ function HomePage() {
             </motion.div>
           </motion.div>
 
-          {/* Photo column — left side in RTL */}
+          {/* Slideshow — left side in RTL */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15, ease }}
-            className="relative hidden lg:block"
+            className="relative hidden min-h-[420px] lg:block lg:min-h-0"
           >
-            <div className="absolute inset-y-0 left-0 right-6 overflow-hidden">
-              <IdfPhotoPanel
-                photo={getIdfPhoto("paratroopers")}
-                className="h-full"
-                aspectClassName="h-full min-h-0"
-                overlayClassName="from-background via-background/40 to-transparent"
-                imgClassName="object-[center_30%]"
-              />
+            <div className="absolute inset-y-0 left-0 right-6">
+              <HeroSlideshow className="h-full min-h-[420px] rounded-sm border border-iron/25" />
             </div>
           </motion.div>
         </div>
 
-        {/* Mobile hero image */}
-        <div className="relative aspect-[16/9] lg:hidden overflow-hidden">
-          <IdfPhotoPanel
-            photo={getIdfPhoto("kfir-training")}
-            aspectClassName="h-full min-h-0"
-            overlayClassName="from-background via-background/50 to-transparent"
-            imgClassName="object-[center_30%]"
-          />
-        </div>
       </section>
 
       <div className="section-divider" />
@@ -205,22 +240,66 @@ function HomePage() {
 
       <div className="section-divider" />
 
+      {/* ── Social proof ── */}
+      <section className="py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.4, ease }}
+            className="mb-12 flex items-center justify-center gap-3 text-dust"
+          >
+            <Users className="h-4 w-4 text-primary" />
+            <p className="text-sm">
+              <span className="font-bold text-foreground">500+</span> מתגייסים
+              כבר משתמשים בפלטפורמה
+            </p>
+          </motion.div>
+
+          <div className="grid gap-px bg-iron/20 grid-cols-1 sm:grid-cols-3">
+            <Testimonial
+              quote="קיבלתי המלצת תפקיד שלא הכרתי, ועכשיו זה בדיוק מה שאני עושה בצה״ל."
+              name="נועם כ׳"
+              detail="לוחם, נח״ל"
+              idx={0}
+            />
+            <Testimonial
+              quote="תוך 3 דקות הבנתי מה הפרופיל שלי אומר ואיפה אני יכולה להתאים."
+              name="שירה ד׳"
+              detail="קצינה, חיל האוויר"
+              idx={1}
+            />
+            <Testimonial
+              quote="היועץ AI הציע לי מסלולים שלא חשבתי עליהם. שווה כל שנייה."
+              name="איתי מ׳"
+              detail="תותחן, חיל התותחנים"
+              idx={2}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
       {/* ── Evidence: photo + text, offset grid ── */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[2fr_3fr] lg:gap-20">
             <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 0.92 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="relative aspect-[4/3] overflow-hidden rounded-sm"
             >
               <IdfPhotoPanel
-                photo={getIdfPhoto("nahal-march")}
+                photo={getIdfPhoto("s8")}
                 aspectClassName="h-full min-h-0"
                 overlayClassName="from-background/20 via-transparent to-background/60"
                 imgClassName="object-[center_40%]"
+                loading="lazy"
+                fetchPriority="auto"
               />
             </motion.div>
 
@@ -242,9 +321,9 @@ function HomePage() {
               </p>
 
               <div className="mt-10 grid grid-cols-1 gap-4 border-t border-iron/30 pt-8 sm:grid-cols-3 sm:gap-6">
-                <StepBlock num="01" title="הרשמה" desc="חשבון חינמי תוך 3 דקות" />
-                <StepBlock num="02" title="נתונים" desc='דפ״ר, רפואי, מא״ה והעדפות' />
-                <StepBlock num="03" title="תובנות" desc="התאמה + המלצות AI" />
+                <StepBlock num="01" title="הרשמה" desc="חשבון חינמי תוך 3 דקות" idx={0} />
+                <StepBlock num="02" title="נתונים" desc='דפ״ר, רפואי, מא״ה והעדפות' idx={1} />
+                <StepBlock num="03" title="תובנות" desc="התאמה + המלצות AI" idx={2} />
               </div>
             </motion.div>
           </div>
@@ -254,12 +333,21 @@ function HomePage() {
       <div className="section-divider" />
 
       {/* ── Trust — horizontal bar ── */}
-      <section className="py-16">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="grid grid-cols-1 gap-px bg-iron/20 sm:grid-cols-3">
-            <TrustBlock icon={<Lock className="h-4 w-4" />} title="הצפנה מקצה לקצה" desc="כל הנתונים מוצפנים ומאובטחים." />
-            <TrustBlock icon={<Shield className="h-4 w-4" />} title="פרטיות מלאה" desc="לא משתפים מידע עם צד שלישי." />
-            <TrustBlock icon={<Target className="h-4 w-4" />} title="חינם לשימוש" desc="ללא תשלום, ללא מנוי, ללא פרסומות." />
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.4 }}
+            className="mb-10 text-center font-mono text-xs tracking-widest text-dust/60 uppercase"
+          >
+            למה לסמוך עלינו
+          </motion.p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+            <TrustBlock icon={<Lock className="h-5 w-5" />} title="הצפנה מקצה לקצה" desc="כל הנתונים מוצפנים ומאובטחים. אף אחד מלבדכם לא יכול לגשת למידע." idx={0} />
+            <TrustBlock icon={<Shield className="h-5 w-5" />} title="פרטיות מלאה" desc="לא משתפים, לא מוכרים, לא מעבירים מידע לצד שלישי. אף פעם." idx={1} />
+            <TrustBlock icon={<Target className="h-5 w-5" />} title="חינם לשימוש" desc="ללא תשלום, ללא מנוי, ללא פרסומות. כלי הכנה לשירות שפתוח לכולם." idx={2} />
           </div>
         </div>
       </section>
@@ -277,9 +365,11 @@ function HomePage() {
         >
           <div className="order-2 lg:order-1 overflow-hidden rounded-sm border border-iron/30">
             <IdfPhotoPanel
-              photo={getIdfPhoto("navy-training")}
+              photo={getIdfPhoto("s4")}
               aspectClassName="aspect-[16/10] min-h-[220px]"
               overlayClassName="from-background/25 via-background/45 to-background/80"
+              loading="lazy"
+              fetchPriority="auto"
             />
           </div>
           <div className="order-1 lg:order-2 max-w-xl text-right">
@@ -291,6 +381,10 @@ function HomePage() {
               בחינם, בעברית, ועם פרטיות מלאה.
             </p>
             <HomePrimaryCta className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]" />
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-dust/70">
+              <Lock className="h-3 w-3" />
+              הרשמה באימייל בלבד — ללא סיסמה
+            </p>
           </div>
         </motion.div>
       </section>
@@ -301,9 +395,41 @@ function HomePage() {
 /* ── Sub-components ── */
 
 function DataPoint({ value, label }: { value: string; label: string }) {
+  const num = parseInt(value.replace(/[^0-9]/g, ""), 10);
+  const prefix = value.startsWith("+") ? "+" : "";
+  const suffix = value.replace(/[+0-9]/g, "");
+  const [display, setDisplay] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (hasAnimated || !ref.current) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setHasAnimated(true);
+        obs.disconnect();
+        const duration = 800;
+        const start = performance.now();
+        function tick(now: number) {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          setDisplay(Math.round(eased * num));
+          if (t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.5 },
+    );
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [hasAnimated, num]);
+
   return (
-    <div className="text-right">
-      <p className="font-mono text-2xl font-bold tabular-nums text-foreground">{value}</p>
+    <div className="text-right" ref={ref}>
+      <p className="font-mono text-2xl font-bold tabular-nums text-foreground">
+        {prefix}{display}{suffix}
+      </p>
       <p className="mt-0.5 text-xs text-dust">{label}</p>
     </div>
   );
@@ -324,10 +450,10 @@ function CapabilityCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, x: 24 }}
+      whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
       className="overflow-hidden bg-card text-right transition-colors hover:bg-secondary"
     >
       <IdfPhotoPanel
@@ -335,6 +461,8 @@ function CapabilityCard({
         aspectClassName="aspect-[21/9]"
         overlayClassName="from-background/70 via-background/85 to-background"
         showCredit={false}
+        loading="lazy"
+        fetchPriority="auto"
       />
       <div className="p-5 sm:p-8">
         <div className="text-primary mb-4">{icon}</div>
@@ -345,24 +473,36 @@ function CapabilityCard({
   );
 }
 
-function StepBlock({ num, title, desc }: { num: string; title: string; desc: string }) {
+function StepBlock({ num, title, desc, idx }: { num: string; title: string; desc: string; idx: number }) {
   return (
-    <div className="text-right">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, delay: 0.15 + idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
+      className="text-right"
+    >
       <p className="font-mono text-xs font-bold text-primary mb-2">{num}</p>
       <p className="text-sm font-bold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-dust leading-relaxed">{desc}</p>
-    </div>
+    </motion.div>
   );
 }
 
-function TrustBlock({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function TrustBlock({ icon, title, desc, idx = 0 }: { icon: React.ReactNode; title: string; desc: string; idx?: number }) {
   return (
-    <div className="bg-card p-6 text-right">
-      <div className="flex items-center justify-end gap-2 text-sm font-semibold text-foreground mb-2">
-        <span>{title}</span>
-        <span className="text-olive">{icon}</span>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className="group border border-iron/20 bg-card p-8 text-right transition-colors hover:border-primary/30"
+    >
+      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/25 bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+        {icon}
       </div>
-      <p className="text-xs text-dust leading-relaxed">{desc}</p>
-    </div>
+      <h3 className="text-base font-bold text-foreground mb-2">{title}</h3>
+      <p className="text-sm leading-relaxed text-dust">{desc}</p>
+    </motion.div>
   );
 }

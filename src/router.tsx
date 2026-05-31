@@ -54,6 +54,26 @@ function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => vo
   );
 }
 
+function DefaultNotFoundComponent() {
+  return (
+    <div className="flex min-h-[60dvh] flex-col items-center justify-center px-6 text-center">
+      <p className="font-mono text-7xl font-bold tabular-nums text-primary sm:text-9xl">404</p>
+      <h1 className="mt-4 text-2xl font-bold text-foreground sm:text-3xl">
+        הדף לא נמצא
+      </h1>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-dust">
+        הכתובת שחיפשתם לא קיימת, או שהדף הוסר. אפשר לחזור לדף הראשי ולהמשיך משם.
+      </p>
+      <a
+        href="/"
+        className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+      >
+        חזרה לדף הראשי
+      </a>
+    </div>
+  );
+}
+
 export const getRouter = () => {
   const router = createRouter({
     routeTree,
@@ -61,6 +81,7 @@ export const getRouter = () => {
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultErrorComponent: DefaultErrorComponent,
+    defaultNotFoundComponent: DefaultNotFoundComponent,
   });
 
   return router;

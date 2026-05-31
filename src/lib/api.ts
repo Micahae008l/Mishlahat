@@ -1,4 +1,4 @@
-import { clearToken, getToken } from "./auth";
+import { clearToken, getToken, setStoredRole, setToken } from "./auth";
 
 function apiBase(): string {
   const raw = import.meta.env.VITE_API_URL as string | undefined;
@@ -7,73 +7,191 @@ function apiBase(): string {
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
-export type ApiFetchOptions = RequestInit & { skipAuth?: boolean };
+export type ApiFetchOptions = RequestInit & { skipAuth?: boolean; retries?: number };
+
+let refreshPromise: Promise<string | null> | null = null;
+
+function retryDelayMs(attempt: number, status?: number): number {
+  if (status === 503 || status === 0) {
+    return Math.min(4000, 800 * 2 ** attempt);
+  }
+  return 600;
+}
 
 export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise<T> {
-  const { skipAuth, ...rest } = init ?? {};
-  const headers = new Headers(rest.headers);
-  if (!headers.has("Content-Type") && rest.body != null) {
-    headers.set("Content-Type", "application/json");
-  }
-  const token = skipAuth ? null : getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const { skipAuth, retries = 2, ...rest } = init ?? {};
+  const maxAttempts = Math.max(1, retries + 1);
+  let lastError: ApiError | null = null;
+  let didRefresh = false;
 
-  const res = await fetch(`${apiBase()}${path}`, { ...rest, headers });
-  const text = await res.text();
-  let json: unknown = {};
-  if (text) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, retryDelayMs(attempt - 1, lastError?.status)));
+    }
+
+    const headers = new Headers(rest.headers);
+    if (!headers.has("Content-Type") && rest.body != null) {
+      headers.set("Content-Type", "application/json");
+    }
+    const token = skipAuth ? null : getToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    let res: Response;
     try {
-      json = JSON.parse(text) as unknown;
-    } catch {
-      json = {};
+      res = await fetch(`${apiBase()}${path}`, {
+        ...rest,
+        headers,
+        credentials: rest.credentials ?? "include",
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      lastError = new ApiError(msg, 0);
+      if (attempt < maxAttempts - 1) continue;
+      throw lastError;
     }
+
+    const text = await res.text();
+    let json: unknown = {};
+    if (text) {
+      try {
+        json = JSON.parse(text) as unknown;
+      } catch {
+        json = {};
+      }
+    }
+    if (!res.ok) {
+      let msg =
+        typeof json === "object" &&
+        json !== null &&
+        "error" in json &&
+        typeof (json as { error: unknown }).error === "string"
+          ? (json as { error: string }).error
+          : res.statusText;
+      if ((!msg || msg === "Internal Server Error") && (res.status === 500 || res.status === 502)) {
+        msg = "שגיאת שרת. בפיתוח מקומי: הריצו npm run dev (Vite + API) או npm run server ליד Vite.";
+      }
+      if ((!msg || msg === "Service Unavailable") && res.status === 503) {
+        msg =
+          "השרת לא זמין (503). בפיתוח: הריצו מהשורש npm run dev, או npm run server (פורט 3001) לצד npm run dev:web. ודאו ש־MongoDB רץ ושהגדרות השרת ב־server/.env.";
+      }
+      const errCode =
+        typeof json === "object" &&
+        json !== null &&
+        "code" in json &&
+        typeof (json as { code: unknown }).code === "string"
+          ? (json as { code: string }).code
+          : undefined;
+      if (!skipAuth && token && res.status === 401 && !didRefresh && path !== "/api/auth/refresh") {
+        const refreshedToken = await refreshAccessToken();
+        if (refreshedToken) {
+          didRefresh = true;
+          attempt -= 1;
+          continue;
+        }
+        clearToken();
+      }
+      lastError = new ApiError(msg, res.status, errCode);
+      const retryable = res.status === 503 || res.status === 502 || res.status === 504;
+      if (retryable && attempt < maxAttempts - 1) continue;
+      throw lastError;
+    }
+    return json as T;
   }
-  if (!res.ok) {
-    let msg =
-      typeof json === "object" && json !== null && "error" in json && typeof (json as { error: unknown }).error === "string"
-        ? (json as { error: string }).error
-        : res.statusText;
-    if ((!msg || msg === "Internal Server Error") && (res.status === 500 || res.status === 502)) {
-      msg = "שגיאת שרת. בפיתוח מקומי: הריצו npm run dev (Vite + API) או npm run server ליד Vite.";
-    }
-    if ((!msg || msg === "Service Unavailable") && res.status === 503) {
-      msg =
-        "השרת לא זמין (503). בפיתוח: הריצו מהשורש npm run dev, או npm run server (פורט 3001) לצד npm run dev:web. ודאו ש־MongoDB רץ וש־JWT_SECRET ב־server/.env.";
-    }
-    if (token && (res.status === 401 || res.status === 403)) clearToken();
-    throw new ApiError(msg, res.status);
-  }
-  return json as T;
+
+  throw lastError ?? new ApiError("Request failed", 0);
 }
 
-export type LoginResponse = { token: string; userId: string; status?: string; isNewUser?: boolean };
+export type LoginResponse = {
+  token: string;
+  userId: string;
+  status?: string;
+  role?: "user" | "admin";
+  isNewUser?: boolean;
+};
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch(`${apiBase()}/api/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+        });
+        const text = await res.text();
+        const json = text ? (JSON.parse(text) as Partial<LoginResponse>) : {};
+        if (!res.ok || typeof json.token !== "string") {
+          clearToken();
+          return null;
+        }
+        setToken(json.token);
+        setStoredRole(json.role);
+        return json.token;
+      } catch {
+        clearToken();
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
+
+export async function logoutRequest() {
+  clearToken();
+  try {
+    await fetch(`${apiBase()}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // Local logout should still complete even if the API is temporarily unavailable.
+  }
+}
+
+export type SessionResponse = {
+  userId: string;
+  email: string;
+  role: "user" | "admin";
+  preferredName: string;
+  status: string;
+};
+
+export function getSession() {
+  return apiFetch<SessionResponse>("/api/auth/me");
+}
 
 export type OtpRequestResponse = {
   message: string;
   expiresInSeconds: number;
   delivery?: "email" | "console";
+  /** Dev only — when SMTP is off, so you can copy the code in the UI */
   devCode?: string;
 };
 
-export function requestOtp(email: string) {
+export type AuthIntent = "login" | "signup";
+
+export function requestOtp(email: string, options?: { intent?: AuthIntent }) {
   return apiFetch<OtpRequestResponse>("/api/auth/request-otp", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, intent: options?.intent ?? "login" }),
     skipAuth: true,
   });
 }
 
-export function verifyOtp(email: string, code: string) {
+export function verifyOtp(email: string, code: string, options?: { intent?: AuthIntent }) {
   return apiFetch<LoginResponse>("/api/auth/verify-otp", {
     method: "POST",
-    body: JSON.stringify({ email, code }),
+    body: JSON.stringify({ email, code, intent: options?.intent ?? "login" }),
     skipAuth: true,
   });
 }
@@ -165,13 +283,28 @@ export type PreferencesDto = {
   yomHameahSource?: string;
 };
 
+export type AiTokenCapStatus = {
+  used: number;
+  cap: number | null;
+  remaining: number | null;
+  unlimited: boolean;
+  capped: boolean;
+};
+
 export type DashboardResponse = {
-  user: { email: string; preferredName?: string; phone?: string; status: string; createdAt?: string };
+  user: {
+    email: string;
+    preferredName?: string;
+    phone?: string;
+    status: string;
+    createdAt?: string;
+  };
   stats: MilitaryStatsDto | null;
   preferences: PreferencesDto | null;
   daysRemaining: number | null;
   aiReady?: boolean;
   aiProfileMissing?: string[];
+  aiTokens?: AiTokenCapStatus;
 };
 
 export function getDashboardStats() {
@@ -226,4 +359,229 @@ export function matchRolesRequest() {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+// ── Full Report ─────────────────────────────────────────────────────────────
+
+export type FitnessData = {
+  run3km?: string;
+  pullUps?: number | null;
+  pushUps?: number | null;
+  sitUps?: number | null;
+  motivation?: string;
+  interests?: string;
+  languages?: string;
+  notes?: string;
+};
+
+export type ReportRole = {
+  roleTitle: string;
+  matchPercentage: number;
+  summary: string;
+  description: string;
+  tags: string[];
+  fitReason: string;
+  riskNote: string;
+  serviceLength?: string;
+  location?: string;
+};
+
+export type FullReport = {
+  direction: string;
+  directionExplanation: string;
+  strengths: string[];
+  weaknesses: string[];
+  improvementTips: string[];
+  interviewTips: string[];
+  roles: ReportRole[];
+  rolesTheyAskedAbout?: string;
+  fearResponse?: string;
+  parentSummary: string;
+};
+
+export type FullReportResponse = {
+  report: FullReport;
+  userName: string;
+  generatedAt: string;
+  historyId?: string;
+};
+
+export type ReportHistoryItem = {
+  id: string;
+  userName: string;
+  direction: string;
+  topRole: string;
+  topMatch: number | null;
+  createdAt: string;
+};
+
+export type ReportHistoryDetail = {
+  id: string;
+  report: FullReport;
+  userName: string;
+  direction: string;
+  generatedAt: string;
+};
+
+export function listReportHistory() {
+  return apiFetch<{ reports: ReportHistoryItem[] }>("/api/reports");
+}
+
+export function getReportHistory(id: string) {
+  return apiFetch<ReportHistoryDetail>(`/api/reports/${id}`);
+}
+
+export function deleteReportHistory(id: string) {
+  return apiFetch<{ message: string; id: string }>(`/api/reports/${id}`, { method: "DELETE" });
+}
+
+export function generateFullReport(fitness: FitnessData) {
+  return apiFetch<FullReportResponse>("/api/ai/full-report", {
+    method: "POST",
+    body: JSON.stringify({ fitness }),
+    retries: 5,
+  });
+}
+
+export async function downloadReportPdf(report: FullReport, userName: string): Promise<Blob> {
+  let token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+  let res = await fetch(`${base}/api/ai/report-pdf`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body: JSON.stringify({ report, userName }),
+  });
+  if (token && res.status === 401) {
+    token = await refreshAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+      res = await fetch(`${base}/api/ai/report-pdf`, {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ report, userName }),
+      });
+    }
+  }
+  if (!res.ok) {
+    throw new ApiError("PDF generation failed", res.status);
+  }
+  return res.blob();
+}
+
+// ── Admin ───────────────────────────────────────────────────────────────────
+
+export type AdminMeResponse = {
+  userId: string;
+  email: string;
+  preferredName: string;
+  role: "admin";
+};
+
+export type AdminOverviewResponse = {
+  users: { total: number; admins: number };
+  openai: {
+    totalCalls: number;
+    successCalls: number;
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    estimatedCostUsd: number;
+    pricing: { inputPer1M: number; outputPer1M: number; note: string };
+  };
+  recentUsage: Array<{
+    userEmail: string;
+    endpoint: string;
+    model: string;
+    totalTokens: number;
+    estimatedCostUsd: number;
+    status: string;
+    createdAt: string;
+  }>;
+};
+
+export type AdminUserRow = {
+  id: string;
+  email: string;
+  preferredName: string;
+  phone: string;
+  status: string;
+  role: "user" | "admin";
+  tokenCap: number | null;
+  effectiveTokenCap: number | null;
+  emailVerifiedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  aiReady: boolean;
+  aiProfileMissing: string[];
+  aiUsage: {
+    callCount: number;
+    totalTokens: number;
+    estimatedCostUsd: number;
+    lastCallAt: string | null;
+  };
+  aiTokens: AiTokenCapStatus;
+};
+
+export type AdminUsersResponse = {
+  users: AdminUserRow[];
+  total: number;
+  skip: number;
+  limit: number;
+  defaults?: { tokenCap: number | null };
+};
+
+export function getAdminMe() {
+  return apiFetch<AdminMeResponse>("/api/admin/me");
+}
+
+export function getAdminOverview() {
+  return apiFetch<AdminOverviewResponse>("/api/admin/overview");
+}
+
+export function getAdminUsers(params?: { q?: string; skip?: number; limit?: number }) {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.skip != null) sp.set("skip", String(params.skip));
+  if (params?.limit != null) sp.set("limit", String(params.limit));
+  const qs = sp.toString();
+  return apiFetch<AdminUsersResponse>(`/api/admin/users${qs ? `?${qs}` : ""}`);
+}
+
+export function updateAdminUserTokenCap(userId: string, tokenCap: number | null) {
+  return apiFetch<{
+    message: string;
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      tokenCap: number | null;
+      effectiveTokenCap: number | null;
+    };
+    aiTokens: AiTokenCapStatus;
+  }>(`/api/admin/users/${userId}/token-cap`, {
+    method: "PATCH",
+    body: JSON.stringify({ tokenCap }),
+  });
+}
+
+export function updateAdminUserRole(userId: string, role: "user" | "admin") {
+  return apiFetch<{ message: string; user: { id: string; email: string; role: string } }>(
+    `/api/admin/users/${userId}/role`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    },
+  );
+}
+
+export function deleteAdminUser(userId: string) {
+  return apiFetch<{ message: string; deletedUserId: string; email: string }>(
+    `/api/admin/users/${userId}`,
+    { method: "DELETE" },
+  );
 }

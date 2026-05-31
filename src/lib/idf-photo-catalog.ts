@@ -1,124 +1,149 @@
 /**
- * IDF backdrop photos — bundled assets with per-image attribution (CC BY-SA 3.0, Wikimedia / דובר צה״ל).
- * Add new files under src/assets/idf/ and register here with credit + keywords.
+ * Site photo catalog — hero slideshow assets used across panels, role cards, and backdrops.
+ * Add files under src/assets/hero-slideshow/ and register here.
  */
-import kfirTraining from "../assets/idf/kfir-training.jpg?url";
-import borderPrep from "../assets/idf/border-prep.jpg?url";
-import nahalMarch from "../assets/idf/nahal-march.jpg?url";
-import navyTraining from "../assets/idf/navy-training.jpg?url";
-import paratroopers from "../assets/idf/paratroopers.jpg?url";
-import alpineTraining from "../assets/idf/alpine-training.jpg?url";
-import officerGraduation from "../assets/idf/officer-graduation.jpg?url";
-import soldiersSnow from "../assets/idf/soldiers-snow.jpg?url";
-import soldiersClimbing from "../assets/idf/soldiers-climbing.jpg?url";
+import slide1 from "@/assets/hero-slideshow/slide-1.jpg?url";
+import slide2 from "@/assets/hero-slideshow/slide-2.jpg?url";
+import slide3 from "@/assets/hero-slideshow/slide-3.jpg?url";
+import slide4 from "@/assets/hero-slideshow/slide-4.jpg?url";
+import slide5 from "@/assets/hero-slideshow/slide-5.jpg?url";
+import slide6 from "@/assets/hero-slideshow/slide-6.jpg?url";
+import slide7 from "@/assets/hero-slideshow/slide-7.jpg?url";
+import slide8 from "@/assets/hero-slideshow/slide-8.jpg?url";
+import slide9 from "@/assets/hero-slideshow/slide-9.jpg?url";
+
+const CREDIT_SHORT = "צילום: על מדים";
+const CREDIT = "צילום שטח בצה״ל — ארכיון על מדים";
 
 export type IdfPhoto = {
   id: string;
   src: string;
   alt: string;
-  /** Full credit line (Hebrew) — show on hover or under image */
+  /** CSS object-position for crops */
+  objectPosition?: string;
   credit: string;
-  /** Short line for card overlay */
   creditShort: string;
-  /** Wikimedia Commons file page when known */
   commonsUrl?: string;
   keywords: string[];
 };
 
 export const IDF_PHOTO_CATALOG: readonly IdfPhoto[] = [
   {
-    id: "kfir-training",
-    src: kfirTraining,
-    alt: "לוחמי חטיבת כפיר באימון שטח",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "לוחמי חטיבת כפיר באימון שטח · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["כפיר", "קרבי", "לוחם", "שטח", "אימון", "חי\"ר", "גיוס", "לחימה", "combat", "field"],
+    id: "s1",
+    src: slide1,
+    alt: "לוחמים בשקיעה בשטח",
+    objectPosition: "center 40%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["שקיעה", "שטח", "לוחם", "קרבי", "חי\"ר", "גיוס", "לחימה", "combat", "field", "שלג", "רפואה", "care"],
   },
   {
-    id: "border-prep",
-    src: borderPrep,
-    alt: "חיילים בכוננות ליד הגבול",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "חיילים בכוננות ליד הגבול · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["גבול", "שמירה", "כוננות", "אבטחה", "שטח", "סיור", "border"],
+    id: "s2",
+    src: slide2,
+    alt: "טנק מרכבה באימון",
+    objectPosition: "center 45%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["טנק", "שריון", "מרכבה", "אימון", "שטח", "קרבי", "armor", "קצינים", "פיקוד", "admin"],
   },
   {
-    id: "nahal-march",
-    src: nahalMarch,
-    alt: "חיילי חטיבת הנח״ל בצעדה",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "חיילי חטיבת הנח״ל בצעדה · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["נחל", "נח\"ל", "צעדה", "שטח", "קרבי", "לוחם", "מסע"],
+    id: "s3",
+    src: slide3,
+    alt: "לוחם בלילה עם ציוד טקטי",
+    objectPosition: "center 35%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["לילה", "טקטי", "לוחם", "סייבר", "מחשב", "טכנולוגיה", "it", "cyber", "data", "מערכות", "תוכנה"],
   },
   {
-    id: "navy-training",
-    src: navyTraining,
-    alt: "חיילים באימון בחיל הים",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "אימון בחיל הים · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["ים", "חיל הים", "צוללת", "ספינה", "ים", "navy", "sea", "ימי"],
+    id: "s4",
+    src: slide4,
+    alt: "כוח בשטח ליד הים",
+    objectPosition: "center 50%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["ים", "חיל הים", "ספינה", "חוף", "navy", "sea", "ימי", "שטח"],
   },
   {
-    id: "paratroopers",
-    src: paratroopers,
-    alt: "חיילי חטיבת הצנחנים בצעדה",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "חיילי חטיבת הצנחנים בצעדה · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/File:IDF_military_berets._X.jpg",
-    keywords: ["צנחנים", "צנח", "קרבי", "לוחם", "שטח", "מסע כומתה"],
+    id: "s5",
+    src: slide5,
+    alt: "לוחמים וטנק בשטח בנוי",
+    objectPosition: "center 40%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["טנק", "עיר", "שטח", "לוחם", "קרבי", "כפיר", "אימון", "urban", "combat"],
   },
   {
-    id: "alpine-training",
-    src: alpineTraining,
-    alt: "חיילים באימון אלפיני",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "אימון אלפיני · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["אלפיני", "הר", "טיפוס", "שטח", "כושר", "פיקוד"],
+    id: "s6",
+    src: slide6,
+    alt: "כוח על תלולית אדמה",
+    objectPosition: "center 30%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["גבול", "שמירה", "כוננות", "אבטחה", "שטח", "סיור", "border", "תלולית", "הר"],
   },
   {
-    id: "officer-graduation",
-    src: officerGraduation,
-    alt: "טקס סיום קורס קצינים",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "טקס סיום קורס קצינים · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["קצינים", "טקס", "מנהל", "משא", "הדרכה", "משרד", "פיקוד", "admin", "hr", "מנהיגות"],
+    id: "s7",
+    src: slide7,
+    alt: "טנקים ועשן בשטח",
+    objectPosition: "center 45%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["טנק", "עשן", "אימון", "שטח", "קרבי", "לחימה", "armor", "field"],
   },
   {
-    id: "soldiers-snow",
-    src: soldiersSnow,
-    alt: "חיילים באימון בשלג",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "חיילים באימון בשלג · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["שלג", "חורף", "שטח", "אקלים", "סביבה", "רפואה", "טיפול", "welfare", "care"],
+    id: "s8",
+    src: slide8,
+    alt: "מסלול לוחמים בהר",
+    objectPosition: "center 40%",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: [
+      "הר",
+      "מסע",
+      "נחל",
+      "נח\"ל",
+      "צנחנים",
+      "צנח",
+      "כושר",
+      "מכשולים",
+      "טיפוס",
+      "אלפיני",
+      "לוחם",
+      "מסע כומתה",
+    ],
   },
   {
-    id: "soldiers-climbing",
-    src: soldiersClimbing,
-    alt: "חיילים באימון מכשולים",
-    creditShort: "צילום: יחידת דובר צה״ל",
-    credit:
-      "חיילים באימון מכשולים · צילום: יחידת דובר צה״ל · רישיון CC BY-SA 3.0 (ויקישיתוף)",
-    commonsUrl: "https://commons.wikimedia.org/wiki/Category:Photographs_provided_by_the_IDF_Spokesperson%27s_Unit",
-    keywords: ["מכשולים", "כושר", "טיפוס", "סייבר", "מחשב", "טכנולוגיה", "it", "cyber", "data", "מערכות", "תוכנה"],
+    id: "s9",
+    src: slide9,
+    alt: "טנק בראיית לילה",
+    objectPosition: "center center",
+    creditShort: CREDIT_SHORT,
+    credit: CREDIT,
+    keywords: ["לילה", "טנק", "ראיית לילה", "טכנולוגיה", "מודיעין", "סייבר", "it"],
   },
 ] as const;
 
-export const IDF_BACKDROP_IMAGE_URLS: readonly string[] = IDF_PHOTO_CATALOG.map((p) => p.src);
+/** Maps old Wikimedia catalog ids → hero slide ids */
+export const LEGACY_PHOTO_ALIASES: Record<string, string> = {
+  "kfir-training": "s1",
+  "border-prep": "s6",
+  "nahal-march": "s8",
+  "navy-training": "s4",
+  paratroopers: "s8",
+  "alpine-training": "s8",
+  "officer-graduation": "s2",
+  "soldiers-snow": "s1",
+  "soldiers-climbing": "s8",
+};
+
+export const ATTRIBUTION_HE = "צילומי שטח: ארכיון על מדים.";
+
+const catalogById = Object.fromEntries(IDF_PHOTO_CATALOG.map((p) => [p.id, p])) as Record<string, IdfPhoto>;
+
+function resolvePhotoId(id: string): string {
+  return LEGACY_PHOTO_ALIASES[id] ?? id;
+}
 
 function scorePhoto(photo: IdfPhoto, blob: string): number {
   let score = 0;
@@ -164,13 +189,11 @@ export function pickRolePhoto(
   return photo;
 }
 
-export const ATTRIBUTION_HE =
-  "צילומי רקע: ארכיון דובר צה״ל (יחידת דובר צה״ל), רישיון CC BY-SA 3.0 דרך ויקישיתוף — קרדיט מלא על כל תמונה.";
-
-const catalogById = Object.fromEntries(IDF_PHOTO_CATALOG.map((p) => [p.id, p])) as Record<string, IdfPhoto>;
+export const IDF_BACKDROP_IMAGE_URLS: readonly string[] = IDF_PHOTO_CATALOG.map((p) => p.src);
 
 export function getIdfPhoto(id: string): IdfPhoto {
-  return catalogById[id] ?? IDF_PHOTO_CATALOG[0];
+  const resolved = resolvePhotoId(id);
+  return catalogById[resolved] ?? IDF_PHOTO_CATALOG[0];
 }
 
 /** Stable pick for step index, route hash, etc. — spreads across full catalog. */
@@ -180,5 +203,5 @@ export function idfPhotoAt(index: number): IdfPhoto {
 }
 
 export function idfPhotosForIds(ids: string[]): IdfPhoto[] {
-  return ids.map((id) => catalogById[id]).filter(Boolean);
+  return ids.map((id) => getIdfPhoto(id));
 }

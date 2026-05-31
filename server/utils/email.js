@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { SITE_NAME_HE } from "./brand.js";
 
 let transporterPromise;
 let warnedNoSmtp;
@@ -36,7 +37,8 @@ async function getTransporter() {
 }
 
 export async function sendOtpEmail(email, code) {
-  const from = trimEnv("SMTP_FROM") || `על מדים <${trimEnv("SMTP_USER") || "no-reply@mishlahat.local"}>`;
+  const from =
+    trimEnv("SMTP_FROM") || `${SITE_NAME_HE} <${trimEnv("SMTP_USER") || "no-reply@kachkivun.local"}>`;
   const transporter = await getTransporter();
 
   if (!transporter) {
@@ -46,18 +48,23 @@ export async function sendOtpEmail(email, code) {
         "[email] אין SMTP — לא נשלח מייל. הוסיפו SMTP_HOST, SMTP_USER, SMTP_PASS ב־server/.env (ראו server/.env.example, Gmail: סיסמת אפליקציה)."
       );
     }
-    console.log(`[auth/otp] dev code for ${email}: ${code}`);
-    return { delivered: false, devCode: code };
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[auth/otp] dev code for ${email}: ${code}`);
+    }
+    return { delivered: false };
   }
+
+  const subject = `קוד הכניסה שלך ל${SITE_NAME_HE}`;
+  const text = `קוד הכניסה שלך ל${SITE_NAME_HE} הוא: ${code}\n\nהקוד תקף ל-10 דקות.`;
 
   await transporter.sendMail({
     from,
     to: email,
-    subject: "קוד הכניסה שלך לעל מדים",
-    text: `קוד הכניסה שלך לעל מדים הוא: ${code}\n\nהקוד תקף ל-10 דקות.`,
+    subject,
+    text,
     html: `
       <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
-        <h2>קוד הכניסה שלך לעל מדים</h2>
+        <h2>קוד הכניסה שלך ל${SITE_NAME_HE}</h2>
         <p>הזינו את הקוד הבא כדי להמשיך:</p>
         <p style="font-size:28px;font-weight:700;letter-spacing:0.2em">${code}</p>
         <p>הקוד תקף ל-10 דקות.</p>

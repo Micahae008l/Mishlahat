@@ -16,12 +16,20 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_DAYS
+        value: "30"
       - key: OPENAI_API_KEY
         sync: false
+      - key: DEFAULT_USER_TOKEN_CAP
+        sync: false
       - key: FRONTEND_URL
-        value: https://app.mike.haddad.co.il
+        sync: false
       - key: ALLOWED_ORIGINS
-        value: https://app.mike.haddad.co.il
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

@@ -14,7 +14,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminSkeleton, AdminUsersTableSkeleton } from "@/components/skeletons/PageSkeletons";
-import { ApiError, deleteAdminUser, updateAdminUserRole, type AdminUserRow } from "@/lib/api";
+import {
+  ApiError,
+  deleteAdminUser,
+  updateAdminUserRole,
+  updateAdminUserTokenCap,
+  type AdminUserRow,
+} from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import {
   adminMeQueryOptions,
@@ -101,7 +107,7 @@ function AdminPage() {
 
   useEffect(() => {
     if (session.isSuccess && session.data.role !== "admin") {
-      toast.error("אין הרשאת מנהל. התחברו עם mike.haddad.08@gmail.com");
+      toast.error("אין הרשאת מנהל. התחברו עם חשבון מנהל מורשה.");
       navigate({ to: "/dashboard" });
     }
   }, [session.isSuccess, session.data?.role, navigate]);
@@ -132,6 +138,16 @@ function AdminPage() {
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-me"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const tokenCapMutation = useMutation({
+    mutationFn: ({ id, tokenCap }: { id: string; tokenCap: number | null }) =>
+      updateAdminUserTokenCap(id, tokenCap),
+    onSuccess: () => {
+      toast.success("מכסת טוקנים עודכנה");
+      void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -313,6 +329,7 @@ function AdminPage() {
                         <th className="py-2 pl-3 font-medium">סטטוס</th>
                         <th className="py-2 pl-3 font-medium">תפקיד</th>
                         <th className="py-2 pl-3 font-medium">AI</th>
+                        <th className="py-2 pl-3 font-medium">טוקנים</th>
                         <th className="py-2 pl-3 font-medium">עלות</th>
                         <th className="py-2 font-medium">פעולות</th>
                       </tr>
@@ -323,9 +340,12 @@ function AdminPage() {
                           key={u.id}
                           user={u}
                           currentAdminId={me?.userId}
+                          defaultTokenCap={usersQuery.data?.defaults?.tokenCap ?? null}
                           onRole={(role) => roleMutation.mutate({ id: u.id, role })}
+                          onTokenCap={(tokenCap) => tokenCapMutation.mutate({ id: u.id, tokenCap })}
                           onDelete={() => setDeleteTarget(u)}
                           rolePending={roleMutation.isPending}
+                          tokenCapPending={tokenCapMutation.isPending}
                         />
                       ))}
                     </tbody>
@@ -396,20 +416,54 @@ function MetricCard({
   );
 }
 
+function tokenCapLabel(user: AdminUserRow, defaultTokenCap: number | null) {
+  if (user.role === "admin") return "ללא הגבלה (מנהל)";
+  const { used, cap, unlimited } = user.aiTokens;
+  if (unlimited) return `${formatTokens(used)} · ללא הגבלה`;
+  return `${formatTokens(used)} / ${formatTokens(cap ?? 0)}`;
+}
+
 function UserRow({
   user,
   currentAdminId,
+  defaultTokenCap,
   onRole,
+  onTokenCap,
   onDelete,
   rolePending,
+  tokenCapPending,
 }: {
   user: AdminUserRow;
   currentAdminId?: string;
+  defaultTokenCap: number | null;
   onRole: (role: "user" | "admin") => void;
+  onTokenCap: (tokenCap: number | null) => void;
   onDelete: () => void;
   rolePending: boolean;
+  tokenCapPending: boolean;
 }) {
   const isSelf = currentAdminId === user.id;
+  const [capInput, setCapInput] = useState(
+    user.tokenCap != null ? String(user.tokenCap) : ""
+  );
+
+  useEffect(() => {
+    setCapInput(user.tokenCap != null ? String(user.tokenCap) : "");
+  }, [user.tokenCap]);
+
+  function saveTokenCap() {
+    const trimmed = capInput.trim();
+    if (!trimmed) {
+      onTokenCap(null);
+      return;
+    }
+    const n = Number.parseInt(trimmed, 10);
+    if (!Number.isFinite(n) || n < 0) {
+      toast.error("מכסה חייבת להיות מספר שלם ולא שלילי");
+      return;
+    }
+    onTokenCap(n);
+  }
 
   return (
     <tr className="border-b border-iron/10">
@@ -432,6 +486,32 @@ function UserRow({
           <span>חסר פרופיל</span>
         )}
         <span className="mr-2 font-mono text-[10px] tabular-nums">({user.aiUsage.callCount})</span>
+      </td>
+      <td className="py-3 pl-3">
+        <p className="font-mono text-[11px] tabular-nums text-dust">{tokenCapLabel(user, defaultTokenCap)}</p>
+        {user.role !== "admin" ? (
+          <div className="mt-1.5 flex flex-wrap items-center justify-end gap-1">
+            <input
+              type="number"
+              min={0}
+              value={capInput}
+              onChange={(e) => setCapInput(e.target.value)}
+              placeholder={
+                defaultTokenCap != null ? `ברירת מחדל ${formatTokens(defaultTokenCap)}` : "ללא הגבלה"
+              }
+              className="w-24 rounded border border-iron/30 bg-background px-2 py-1 font-mono text-[11px] text-foreground outline-none focus:border-primary/50"
+              title="ריק = ברירת מחדל מהשרת"
+            />
+            <button
+              type="button"
+              disabled={tokenCapPending}
+              onClick={saveTokenCap}
+              className="rounded border border-iron/30 px-2 py-1 text-[10px] text-dust transition hover:text-foreground disabled:opacity-40"
+            >
+              שמור
+            </button>
+          </div>
+        ) : null}
       </td>
       <td className="py-3 pl-3 font-mono text-xs tabular-nums">
         {formatUsd(user.aiUsage.estimatedCostUsd)}

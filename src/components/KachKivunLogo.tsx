@@ -14,9 +14,11 @@ type Props = {
   className?: string;
   /** Wrap in link to home */
   linked?: boolean;
+  /** Destination when `linked` (default `/`) */
+  linkTo?: string;
 };
 
-export function KachKivunLogo({ size = "md", className = "", linked = false }: Props) {
+export function KachKivunLogo({ size = "md", className = "", linked = false, linkTo = "/" }: Props) {
   const inner = (
     <span className={`text-primary ${textClass[size]} ${className}`}>{SITE_NAME_HE}</span>
   );
@@ -24,9 +26,9 @@ export function KachKivunLogo({ size = "md", className = "", linked = false }: P
   if (linked) {
     return (
       <Link
-        to="/"
+        to={linkTo}
         className="rounded-sm transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        aria-label={`${SITE_NAME_HE} — דף הבית`}
+        aria-label={linkTo === "/dashboard" ? `${SITE_NAME_HE} — דשבורד` : `${SITE_NAME_HE} — דף הבית`}
       >
         {inner}
       </Link>

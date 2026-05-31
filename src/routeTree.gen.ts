@@ -15,6 +15,7 @@ import { Route as PostSignupRouteImport } from './routes/post-signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AiSecretaryRouteImport } from './routes/ai-secretary'
 import { Route as AiCounselorRouteImport } from './routes/ai-counselor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -50,6 +51,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiSecretaryRoute = AiSecretaryRouteImport.update({
+  id: '/ai-secretary',
+  path: '/ai-secretary',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiCounselorRoute = AiCounselorRouteImport.update({
   id: '/ai-counselor',
   path: '/ai-counselor',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
+  '/ai-secretary': typeof AiSecretaryRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
+  '/ai-secretary': typeof AiSecretaryRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
+  '/ai-secretary': typeof AiSecretaryRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ai-counselor'
+    | '/ai-secretary'
     | '/dashboard'
     | '/login'
     | '/onboarding'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ai-counselor'
+    | '/ai-secretary'
     | '/dashboard'
     | '/login'
     | '/onboarding'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ai-counselor'
+    | '/ai-secretary'
     | '/dashboard'
     | '/login'
     | '/onboarding'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AiCounselorRoute: typeof AiCounselorRoute
+  AiSecretaryRoute: typeof AiSecretaryRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-secretary': {
+      id: '/ai-secretary'
+      path: '/ai-secretary'
+      fullPath: '/ai-secretary'
+      preLoaderRoute: typeof AiSecretaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-counselor': {
       id: '/ai-counselor'
       path: '/ai-counselor'
@@ -249,6 +269,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AiCounselorRoute: AiCounselorRoute,
+  AiSecretaryRoute: AiSecretaryRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,

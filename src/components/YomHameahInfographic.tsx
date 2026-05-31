@@ -20,7 +20,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
   return (
     <section
       aria-labelledby="yom-infographic-title"
-      className="space-y-5 rounded-2xl border border-primary/25 bg-gradient-to-b from-primary/[0.07] via-white/[0.02] to-transparent p-4 sm:p-5"
+      className="space-y-5 rounded-2xl border border-iron/30 bg-card/80 p-4 sm:p-5"
     >
       <div className="text-right">
         <h2 id="yom-infographic-title" className="text-base font-bold tracking-tight text-foreground sm:text-lg">

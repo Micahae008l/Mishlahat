@@ -14,9 +14,9 @@ const CONTENT_W = 495;
 const COLORS = {
   text: "#1a1a1a",
   muted: "#555555",
-  accent: "#9a7b2f",
-  line: "#e0dcd4",
-  cardBg: "#faf8f3",
+  accent: "#6b7c52",
+  line: "#d8ddd0",
+  cardBg: "#f4f6ef",
   risk: "#8b2500",
 };
 

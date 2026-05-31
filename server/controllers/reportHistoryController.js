@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import ReportHistory from "../models/ReportHistory.js";
 
 const MAX_REPORTS_PER_USER = 30;
@@ -6,7 +5,7 @@ const MAX_REPORTS_PER_USER = 30;
 export async function listReportHistory(req, res) {
   try {
     const userId = req.userId;
-    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    const limit = Number(req.query.limit) || 20;
 
     const rows = await ReportHistory.find({ userId })
       .sort({ createdAt: -1 })
@@ -33,10 +32,6 @@ export async function listReportHistory(req, res) {
 export async function getReportHistory(req, res) {
   try {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid report id" });
-    }
-
     const row = await ReportHistory.findOne({ _id: id, userId: req.userId }).lean();
     if (!row) {
       return res.status(404).json({ error: "Report not found" });
@@ -58,10 +53,6 @@ export async function getReportHistory(req, res) {
 export async function deleteReportHistory(req, res) {
   try {
     const id = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid report id" });
-    }
-
     const deleted = await ReportHistory.findOneAndDelete({ _id: id, userId: req.userId });
     if (!deleted) {
       return res.status(404).json({ error: "Report not found" });

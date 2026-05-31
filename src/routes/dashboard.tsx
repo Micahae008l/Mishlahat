@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Target, Calendar, FileText } from "lucide-react";
+import { Target, Calendar } from "lucide-react";
 import { DashboardAccountPreferences } from "@/components/DashboardAccountPreferences";
 import { DashboardActionCard } from "@/components/DashboardActionCard";
 import { migrateLegacyYomHameahTo12, YOM_HAMEAH_12_KEYS } from "@/lib/yom-hameah-12";
@@ -269,23 +269,31 @@ function DashboardPage() {
             </Link>
           </motion.div>
 
-          {/* AI CTA */}
-          <motion.div variants={fadeUp} className="space-y-4">
+          {/* Hub — התאמת תפקידים */}
+          <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="dashboard-tools-heading">
+            <div className="text-right">
+              <p className="font-mono text-[10px] tracking-widest text-dust uppercase">כלי AI</p>
+              <h2 id="dashboard-tools-heading" className="text-lg font-bold text-foreground sm:text-xl">
+                התאמת תפקידים
+              </h2>
+              <p className="mt-1 text-sm text-dust">מזכיר AI בקרוב — בינתיים הפעילו את יוצר ההתאמה מהכותרת.</p>
+            </div>
+
             {aiReady ? (
               <DashboardActionCard
                 to="/ai-counselor"
                 variant="primary"
                 badge="מוכן להפעלה"
-                title="התאמת תפקידים עם יועץ AI"
-                description="ניתוח מעמיק של הפרופיל שלכם מול מאגר תפקידים רחב."
+                title="יוצר התאמת תפקידים"
+                description="ניתוח הפרופיל שלכם מול מאגר תפקידים והמלצות עם ציון התאמה."
                 icon={Target}
               />
             ) : (
               <div className="border border-iron/30 bg-card p-5 text-right sm:p-8" dir="rtl">
-                <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">יועץ AI</p>
+                <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">התאמת תפקידים</p>
                 <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
                   <Target className="h-5 w-5 shrink-0 text-dust" />
-                  <span>השלימו פרטים כדי להפעיל התאמות</span>
+                  <span>השלימו פרטים כדי להפעיל את היוצר</span>
                 </h3>
                 {missingLabels.length > 0 ? (
                   <ul className="mt-3 list-disc pr-5 text-sm text-dust">
@@ -298,17 +306,7 @@ function DashboardPage() {
                 )}
               </div>
             )}
-
-            {aiReady && (
-              <DashboardActionCard
-                to="/report"
-                badge="חדש"
-                title="דוח כיוון אישי מלא"
-                description="10 תפקידים, טיפים, PDF — והיסטוריה לחזור לדוחות קודמים."
-                icon={FileText}
-              />
-            )}
-          </motion.div>
+          </motion.section>
         </motion.div>
       )}
     </div>
@@ -331,7 +329,7 @@ function DashboardProgress({
       {...progressBarProps(clamped, label)}
     >
       <motion.div
-        className="h-full rounded-sm bg-primary shadow-[0_0_14px_oklch(0.73_0.11_80/0.4)]"
+        className="h-full rounded-sm bg-primary shadow-[0_0_14px_color-mix(in_oklch,var(--primary)_45%,transparent)]"
         initial={{ width: 0 }}
         animate={{ width: `${clamped}%` }}
         transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}

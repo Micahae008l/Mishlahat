@@ -26,10 +26,10 @@ export function DashboardActionCard({
     <Link
       to={to}
       dir="rtl"
-      className={`group flex flex-row items-center gap-4 p-5 transition-colors sm:p-8 ${
+      className={`group flex flex-row items-center gap-4 border bg-card p-5 transition-colors sm:p-8 ${
         primary
-          ? "border border-primary/30 bg-primary/[0.04] hover:bg-primary/[0.08]"
-          : "border border-iron/30 bg-card hover:border-primary/30 hover:bg-primary/[0.04]"
+          ? "border-primary/40 hover:border-primary/55"
+          : "border-iron/30 hover:border-iron/50"
       }`}
     >
       <div className="min-w-0 flex-1 text-right">

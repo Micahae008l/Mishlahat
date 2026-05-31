@@ -9,6 +9,8 @@ type Props = {
   disabled?: boolean;
   autoFocus?: boolean;
   id?: string;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
 export function OtpInput({
@@ -18,6 +20,8 @@ export function OtpInput({
   disabled = false,
   autoFocus = true,
   id: idProp,
+  invalid = false,
+  describedBy,
 }: Props) {
   const groupId = useId();
   const legendId = `${groupId}-legend`;
@@ -112,11 +116,13 @@ export function OtpInput({
       className="border-0 p-0 m-0"
       disabled={disabled}
       aria-labelledby={legendId}
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
     >
       <legend id={legendId} className="sr-only">
         קוד אימות בן {length} ספרות
       </legend>
-      <div dir="ltr" className="flex justify-center gap-2 sm:gap-2.5">
+      <div dir="ltr" className="mx-auto flex w-fit max-w-full flex-wrap justify-center gap-2 sm:gap-2.5">
         {digits.map((digit, index) => (
           <input
             key={index}
@@ -131,7 +137,7 @@ export function OtpInput({
             value={digit}
             disabled={disabled}
             aria-label={`ספרה ${index + 1} מתוך ${length}`}
-            className="input-field h-12 w-11 shrink-0 p-0 text-center font-mono text-xl font-bold tabular-nums sm:h-14 sm:w-12 sm:text-2xl"
+            className={`input-field input-field--otp h-12 font-mono text-xl font-bold tabular-nums sm:h-14 sm:text-2xl${invalid ? " input-field--invalid" : ""}`}
             onChange={(e) => handleDigitChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onFocus={(e) => e.target.select()}

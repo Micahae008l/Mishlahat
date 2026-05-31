@@ -30,7 +30,7 @@ export default defineConfig({
                 ? (req as import("http").IncomingMessage).url
                 : "";
               const msg = refused
-                ? `שרת ה-API לא זמין ב־http://localhost:3001 (בקשה: ${path || "/api/…"}). מהשורש הריצו npm run dev (מפעיל API + אתר) — או בשני חלונות: npm run server ואז npm run dev:web. ודאו ש־MongoDB רץ וש־JWT_SECRET מוגדר ב־server/.env.`
+                ? `שרת ה-API לא זמין ב־http://localhost:3001 (בקשה: ${path || "/api/…"}). מהשורש הריצו npm run dev (מפעיל API + אתר) — או בשני חלונות: npm run server ואז npm run dev:web. ודאו ש־MongoDB רץ ושהגדרות השרת ב־server/.env.`
                 : reset
                   ? `שרת ה-API מתעדכן (הפעלה מחדש). המתינו 2–3 שניות ונסו שוב.`
                   : `שגיאת רשת מול שרת ה-API: ${err instanceof Error ? err.message : String(err)}`;

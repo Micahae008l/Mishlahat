@@ -30,7 +30,7 @@ export function PreferenceOptionGrid<T extends string>({
             transition={{ delay: 0.03 + idx * 0.03 }}
             className={`border px-4 py-4 text-right transition-colors ${
               isOn
-                ? "border-primary bg-primary/[0.06] text-primary"
+                ? "border-primary bg-card text-primary"
                 : "border-iron/30 bg-card text-foreground hover:border-primary/40"
             }`}
           >

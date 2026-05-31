@@ -5,26 +5,58 @@ import User from "../models/User.js";
 import MilitaryStats from "../models/MilitaryStats.js";
 import Preferences from "../models/Preferences.js";
 import EmailOtp from "../models/EmailOtp.js";
+import RefreshToken from "../models/RefreshToken.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { applyUserPatch, applyStatsPatch, applyPreferencesPatch } from "../utils/profileApply.js";
 import { sendOtpEmail } from "../utils/email.js";
+import {
+  REFRESH_TOKEN_COOKIE,
+  clearRefreshCookie,
+  createRefreshTokenSession,
+  hashRefreshToken,
+  readCookie,
+  refreshCookieOptions,
+  revokeRefreshToken,
+} from "../utils/refreshTokens.js";
 
 const OTP_TTL_MINUTES = 10;
 const OTP_MAX_ATTEMPTS = 5;
 const OTP_RESEND_SECONDS = 45;
+const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "15m";
 
 function bootstrapAdminEmail() {
-  return (process.env.ADMIN_EMAIL || "mike.haddad.08@gmail.com").trim().toLowerCase();
+  const email = String(process.env.ADMIN_EMAIL || "")
+    .trim()
+    .toLowerCase();
+  return email.includes("@") ? email : null;
 }
 
 function normalizeEmail(email) {
-  return String(email || "").trim().toLowerCase();
+  return String(email || "")
+    .trim()
+    .toLowerCase();
 }
 
 function signToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: ACCESS_TOKEN_TTL,
   });
+}
+
+function userSessionPayload(user, extra = {}) {
+  return {
+    token: signToken(user._id),
+    userId: String(user._id),
+    status: user.status,
+    role: user.role || "user",
+    ...extra,
+  };
+}
+
+async function setRefreshCookieForUser(req, res, userId) {
+  const session = await createRefreshTokenSession(userId, req);
+  res.cookie(REFRESH_TOKEN_COOKIE, session.token, refreshCookieOptions());
+  return session;
 }
 
 function createOtpCode() {
@@ -32,17 +64,19 @@ function createOtpCode() {
 }
 
 async function ensureUserScaffold(userId) {
-  await MilitaryStats.findOneAndUpdate({ userId }, { $setOnInsert: { userId } }, { upsert: true, new: true });
-  await Preferences.findOneAndUpdate({ userId }, { $setOnInsert: { userId } }, { upsert: true, new: true });
+  await MilitaryStats.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { upsert: true, new: true },
+  );
+  await Preferences.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { upsert: true, new: true },
+  );
 }
 
-const SIGNUP_ACCOUNT_EXISTS_MSG =
-  "כבר יש חשבון עם האימייל הזה. השתמשו בדף הכניסה במקום הרשמה.";
-
-function parseAuthIntent(body) {
-  const raw = String(body?.intent || "login").trim().toLowerCase();
-  return raw === "signup" ? "signup" : "login";
-}
+const SIGNUP_ACCOUNT_EXISTS_MSG = "כבר יש חשבון עם האימייל הזה. השתמשו בדף הכניסה במקום הרשמה.";
 
 /** True when signup must be denied — existing user with a complete profile. */
 async function existingUserBlocksSignup(email) {
@@ -106,14 +140,66 @@ export async function getSession(req, res) {
   }
 }
 
+export async function refreshSession(req, res) {
+  try {
+    const rawToken = readCookie(req, REFRESH_TOKEN_COOKIE);
+    if (!rawToken) {
+      return res
+        .status(401)
+        .json({ error: "Refresh token required", code: "REFRESH_TOKEN_REQUIRED" });
+    }
+
+    const tokenHash = hashRefreshToken(rawToken);
+    const existing = await RefreshToken.findOne({
+      tokenHash,
+      revokedAt: null,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!existing) {
+      clearRefreshCookie(res);
+      return res
+        .status(401)
+        .json({ error: "Invalid or expired refresh token", code: "REFRESH_TOKEN_INVALID" });
+    }
+
+    const user = await User.findById(existing.userId).select("email role preferredName status");
+    if (!user) {
+      await revokeRefreshToken(rawToken);
+      clearRefreshCookie(res);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const replacement = await createRefreshTokenSession(user._id, req);
+    existing.revokedAt = new Date();
+    existing.replacedByTokenHash = replacement.tokenHash;
+    await existing.save();
+    res.cookie(REFRESH_TOKEN_COOKIE, replacement.token, refreshCookieOptions());
+
+    res.json(userSessionPayload(user));
+  } catch (err) {
+    console.error("[auth/refresh]", err);
+    res.status(500).json({ error: err?.message || "Server error" });
+  }
+}
+
+export async function logout(req, res) {
+  try {
+    const rawToken = readCookie(req, REFRESH_TOKEN_COOKIE);
+    if (rawToken) await revokeRefreshToken(rawToken);
+    clearRefreshCookie(res);
+    res.json({ message: "Logged out" });
+  } catch (err) {
+    console.error("[auth/logout]", err);
+    clearRefreshCookie(res);
+    res.status(500).json({ error: err?.message || "Server error" });
+  }
+}
+
 export async function requestOtp(req, res) {
   try {
-    const email = normalizeEmail(req.body?.email);
-    const intent = parseAuthIntent(req.body);
-
-    if (!email || !email.includes("@")) {
-      return res.status(400).json({ error: "נא להזין אימייל תקין" });
-    }
+    const email = normalizeEmail(req.body.email);
+    const { intent } = req.body;
 
     if (intent === "signup" && (await existingUserBlocksSignup(email))) {
       return rejectSignupExistingAccount(res);
@@ -126,14 +212,20 @@ export async function requestOtp(req, res) {
       createdAt: { $gt: new Date(Date.now() - OTP_RESEND_SECONDS * 1000) },
     }).sort({ createdAt: -1 });
     if (recent) {
-      return res.status(429).json({ error: `אפשר לשלוח קוד חדש בעוד ${OTP_RESEND_SECONDS} שניות` });
+      return res.status(429).json({
+        error: `אפשר לשלוח קוד חדש בעוד ${OTP_RESEND_SECONDS} שניות`,
+        code: "OTP_RESEND_COOLDOWN",
+      });
     }
 
     const code = createOtpCode();
     const codeHash = await bcrypt.hash(code, 12);
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
-    await EmailOtp.updateMany({ email, purpose: "login", consumedAt: null }, { $set: { consumedAt: new Date() } });
+    await EmailOtp.updateMany(
+      { email, purpose: "login", consumedAt: null },
+      { $set: { consumedAt: new Date() } },
+    );
     const otpDoc = new EmailOtp({
       email,
       codeHash,
@@ -151,15 +243,19 @@ export async function requestOtp(req, res) {
       return res.status(502).json({
         error:
           "לא הצלחנו לשלוח את האימייל. בדקו את הגדרת ה-SMTP (למשל Gmail: סיסמת אפליקציה, כתובת שולח תואמת ל-SMTP_USER) או נסו שוב.",
+        code: "EMAIL_DELIVERY_FAILED",
       });
     }
 
-    res.json({
+    const payload = {
       message: "קוד נשלח לאימייל",
       expiresInSeconds: OTP_TTL_MINUTES * 60,
       delivery: delivery.delivered ? "email" : "console",
-      devCode: process.env.NODE_ENV === "production" ? undefined : delivery.devCode,
-    });
+    };
+    if (!delivery.delivered && process.env.NODE_ENV !== "production") {
+      payload.devCode = code;
+    }
+    res.json(payload);
   } catch (err) {
     console.error("[auth/request-otp]", err);
     res.status(500).json({ error: err?.message || "Server error" });
@@ -168,13 +264,9 @@ export async function requestOtp(req, res) {
 
 export async function verifyOtp(req, res) {
   try {
-    const email = normalizeEmail(req.body?.email);
-    const code = String(req.body?.code || "").replace(/\D/g, "");
-    const intent = parseAuthIntent(req.body);
-
-    if (!email || !email.includes("@") || code.length !== 6) {
-      return res.status(400).json({ error: "אימייל או קוד לא תקינים" });
-    }
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code ?? "").replace(/[^0-9]/g, "");
+    const { intent } = req.body;
 
     if (intent === "signup" && (await existingUserBlocksSignup(email))) {
       return rejectSignupExistingAccount(res);
@@ -188,33 +280,44 @@ export async function verifyOtp(req, res) {
     }).sort({ createdAt: -1 });
 
     if (!otp) {
-      return res.status(400).json({ error: "הקוד פג תוקף או לא נמצא. שלחו קוד חדש." });
+      console.warn(`[auth/verify-otp] no active code for ${email} (expired, used, or never sent) — codeLen=${code.length}`);
+      return res.status(400).json({
+        error: "הקוד פג תוקף או לא נמצא. שלחו קוד חדש.",
+        code: "OTP_EXPIRED",
+      });
     }
     if (otp.attempts >= OTP_MAX_ATTEMPTS) {
       otp.consumedAt = new Date();
       await otp.save();
-      return res.status(429).json({ error: "יותר מדי ניסיונות. שלחו קוד חדש." });
+      console.warn(`[auth/verify-otp] code locked for ${email} (${otp.attempts} attempts) — auto-sending a fresh code is required`);
+      return res.status(429).json({
+        error: "יותר מדי ניסיונות. שלחו קוד חדש.",
+        code: "OTP_MAX_ATTEMPTS",
+      });
     }
 
     const valid = await bcrypt.compare(code, otp.codeHash);
     if (!valid) {
       otp.attempts += 1;
       await otp.save();
-      return res.status(401).json({ error: "קוד שגוי" });
+      console.warn(`[auth/verify-otp] MISMATCH for ${email} — entered codeLen=${code.length}, attempt ${otp.attempts}/${OTP_MAX_ATTEMPTS}`);
+      return res.status(401).json({ error: "קוד שגוי", code: "OTP_INVALID" });
     }
+    console.log(`[auth/verify-otp] OK for ${email}`);
 
     otp.consumedAt = new Date();
     await otp.save();
 
     const setFields = { emailVerifiedAt: new Date() };
-    if (email === bootstrapAdminEmail()) {
+    const adminEmail = bootstrapAdminEmail();
+    if (adminEmail && email === adminEmail) {
       setFields.role = "admin";
     }
 
     const user = await User.findOneAndUpdate(
       { email },
       { $setOnInsert: { email }, $set: setFields },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
     await ensureUserScaffold(user._id);
 
@@ -224,11 +327,10 @@ export async function verifyOtp(req, res) {
     const { ready: profileFieldsReady } = computeAiProfileMissing(stats, preferences);
     const profileComplete = preferred.length > 0 && profileFieldsReady;
 
+    await setRefreshCookieForUser(req, res, user._id);
+
     res.json({
-      token: signToken(user._id),
-      userId: user._id,
-      status: user.status,
-      role: user.role || "user",
+      ...userSessionPayload(user),
       /** True until profile is complete enough for AI (same gate as match-roles). */
       isNewUser: !profileComplete,
     });

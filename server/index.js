@@ -11,14 +11,21 @@ import reportsRoutes from "./routes/reports.js";
 import { isSmtpConfigured } from "./utils/email.js";
 import { corsOptions } from "./utils/corsOptions.js";
 import { SITE_NAME_EN, SITE_NAME_HE } from "./utils/brand.js";
+import { apiLimiter } from "./middleware/rateLimit.js";
+import { requireEnv, requireProductionEnv } from "./utils/requireEnv.js";
+import { rejectOversizedUrl, jsonErrorHandler } from "./middleware/rejectMalformed.js";
 
 const app = express();
+const JSON_BODY_LIMIT = "256kb";
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || "http://localhost:8080/";
 
 // Middleware
+app.set("trust proxy", 1);
+app.use(rejectOversizedUrl);
 app.use(cors(corsOptions()));
-app.use(express.json());
+app.use(express.json({ limit: JSON_BODY_LIMIT }));
+app.use("/api", apiLimiter);
 
 // Root — this process is the JSON API only; the UI is Vite (default :8080)
 app.get("/", (_req, res) => {
@@ -45,12 +52,12 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.use(jsonErrorHandler);
+
 // Start server
 async function start() {
-  if (!process.env.JWT_SECRET?.trim()) {
-    console.error("[api] FATAL: JWT_SECRET is missing or empty. Add it to server/.env (see server/.env.example if present).");
-    process.exit(1);
-  }
+  requireEnv(["JWT_SECRET"]);
+  requireProductionEnv();
   await connectDB();
   app.listen(PORT, () => {
     console.log(`API:  http://localhost:${PORT}  (GET / shows hints)`);
@@ -59,7 +66,7 @@ async function start() {
       console.log("[email] SMTP מוגדר — קודי OTP יישלחו באימייל.");
     } else {
       console.warn(
-        "[email] SMTP לא מוגדר (SMTP_HOST / SMTP_USER / SMTP_PASS ב־server/.env). קודי OTP לא יישלחו ל-Gmail; בפיתוח יופיעו בלוג ובממשק."
+        "[email] SMTP לא מוגדר (SMTP_HOST / SMTP_USER / SMTP_PASS ב־server/.env). קודי OTP לא יישלחו במייל; בפיתוח הקוד מודפס ללוג השרת בלבד."
       );
     }
   });

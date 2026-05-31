@@ -77,26 +77,26 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
       .role-card { break-inside: avoid; }
       h2 { break-after: avoid; }
     }
-    .brand { font-size: 22pt; font-weight: 800; color: #9a7b2f; }
+    .brand { font-size: 22pt; font-weight: 800; color: #6b7c52; }
     .subtitle { font-size: 14pt; font-weight: 700; margin-top: 4px; }
     .meta { font-size: 9.5pt; color: #666; margin-top: 8px; }
-    hr { border: none; border-top: 1px solid #e0dcd4; margin: 16px 0; }
+    hr { border: none; border-top: 1px solid #d8ddd0; margin: 16px 0; }
     h2 {
       font-size: 11pt;
       font-weight: 700;
-      color: #9a7b2f;
+      color: #6b7c52;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin-bottom: 8px;
     }
     .direction-box {
-      background: linear-gradient(135deg, #faf8f3 0%, #f0ebe0 100%);
-      border: 1px solid #d4c9a8;
+      background: linear-gradient(135deg, #f4f6ef 0%, #e8ece0 100%);
+      border: 1px solid #b8c4a4;
       border-radius: 6px;
       padding: 14px 16px;
       margin-bottom: 16px;
     }
-    .direction-title { font-size: 16pt; font-weight: 800; color: #9a7b2f; }
+    .direction-title { font-size: 16pt; font-weight: 800; color: #6b7c52; }
     .direction-desc { margin-top: 6px; color: #444; }
     .grid-2 {
       display: grid;
@@ -105,7 +105,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
       margin-bottom: 16px;
     }
     .card {
-      border: 1px solid #e0dcd4;
+      border: 1px solid #d8ddd0;
       border-radius: 6px;
       padding: 12px 14px;
       background: #fafaf8;
@@ -114,15 +114,15 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     ul { padding-right: 1.2em; }
     li { margin-bottom: 4px; }
     .callout {
-      border-right: 3px solid #9a7b2f;
+      border-right: 3px solid #6b7c52;
       padding: 10px 14px;
-      background: #faf8f3;
+      background: #f4f6ef;
       margin-bottom: 12px;
       border-radius: 0 6px 6px 0;
     }
     .callout p { color: #333; }
     .role-card {
-      border: 1px solid #e0dcd4;
+      border: 1px solid #d8ddd0;
       border-radius: 6px;
       padding: 12px 14px;
       margin-bottom: 10px;
@@ -138,13 +138,13 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     .role-rank {
       font-size: 9pt;
       font-weight: 700;
-      color: #9a7b2f;
+      color: #6b7c52;
       font-family: monospace;
     }
     .role-head h3 { flex: 1; font-size: 12pt; font-weight: 700; text-align: right; }
     .role-pct {
-      background: #ede6d4;
-      color: #7a6320;
+      background: #e2e8d4;
+      color: #4a5638;
       font-weight: 800;
       font-size: 10pt;
       padding: 2px 8px;
@@ -154,7 +154,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     .role-meta { font-size: 9pt; color: #777; margin-top: 6px; }
     .role-summary { font-size: 10pt; color: #555; margin-top: 4px; }
     .role-desc { font-size: 10pt; margin-top: 8px; color: #333; }
-    .role-fit { font-size: 9.5pt; color: #7a6320; margin-top: 6px; font-weight: 600; }
+    .role-fit { font-size: 9.5pt; color: #5a6844; margin-top: 6px; font-weight: 600; }
     .role-risk { font-size: 9.5pt; color: #8b2500; margin-top: 4px; }
     .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; justify-content: flex-start; }
     .tags span {
@@ -165,8 +165,8 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
       color: #555;
     }
     .parent-box {
-      border: 1px solid #d4c9a8;
-      background: #faf8f3;
+      border: 1px solid #b8c4a4;
+      background: #f4f6ef;
       border-radius: 6px;
       padding: 14px 16px;
       margin-top: 16px;
@@ -174,7 +174,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     .footer {
       margin-top: 24px;
       padding-top: 12px;
-      border-top: 1px solid #e0dcd4;
+      border-top: 1px solid #d8ddd0;
       font-size: 8.5pt;
       color: #888;
       text-align: center;
@@ -189,7 +189,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     .print-hint button {
       margin-top: 8px;
       padding: 8px 20px;
-      background: #9a7b2f;
+      background: #6b7c52;
       color: #fff;
       border: none;
       border-radius: 4px;

@@ -50,8 +50,17 @@ export async function applyStatsPatch(userId, stats) {
   setDateField(update, "serviceStartDate", stats.serviceStartDate);
   setDateField(update, "serviceEndDate", stats.serviceEndDate);
 
-  if (stats.daparScore !== undefined) update.daparScore = stats.daparScore;
-  if (stats.medicalProfile !== undefined) update.medicalProfile = stats.medicalProfile;
+  const DAPAR = new Set([10, 20, 30, 40, 50, 60, 70, 80, 90]);
+  const MEDICAL = new Set([21, 45, 64, 72, 82, 97]);
+  if (stats.daparScore !== undefined && (stats.daparScore === null || DAPAR.has(stats.daparScore))) {
+    update.daparScore = stats.daparScore;
+  }
+  if (
+    stats.medicalProfile !== undefined &&
+    (stats.medicalProfile === null || MEDICAL.has(stats.medicalProfile))
+  ) {
+    update.medicalProfile = stats.medicalProfile;
+  }
 
   if (Array.isArray(stats.yomQuestionnaire) && stats.yomQuestionnaire.length > 0) {
     update.yomQuestionnaire = stats.yomQuestionnaire.map((x) => ({
@@ -96,15 +105,44 @@ export async function applyStatsPatch(userId, stats) {
  * @param {import("mongoose").Types.ObjectId} userId
  * @param {Record<string, unknown>} preferences
  */
+const COMBAT_PREFS = new Set([
+  "Kravi",
+  "Jobnik",
+  "Undecided",
+  "Mixed",
+  "FieldCombat",
+  "SupportHQ",
+  "TechTrack",
+  "MedicalInstruction",
+]);
+const SCHEDULES = new Set(["Yomiyot", "Hamshushim", "Any"]);
+const FOCUS_OPTS = new Set(["Tech", "Physical", "Research", "Medical", "Any"]);
+const LOCATIONS = new Set(["Close to home", "Anywhere"]);
+const FITNESS_LEVELS = new Set(["Low", "Medium", "High", "Unspecified"]);
+const YOM_SOURCES = new Set(["official", "self", "unspecified"]);
+
 export async function applyPreferencesPatch(userId, preferences) {
   if (!preferences || typeof preferences !== "object") return;
   const p = {};
-  if (preferences.combatPreference !== undefined) p.combatPreference = preferences.combatPreference;
-  if (preferences.schedule !== undefined) p.schedule = preferences.schedule;
-  if (preferences.focus !== undefined) p.focus = preferences.focus;
-  if (preferences.location !== undefined) p.location = preferences.location;
-  if (preferences.physicalActivityLevel !== undefined) p.physicalActivityLevel = preferences.physicalActivityLevel;
-  if (preferences.yomHameahSource === "official" || preferences.yomHameahSource === "self" || preferences.yomHameahSource === "unspecified") {
+  if (preferences.combatPreference !== undefined && COMBAT_PREFS.has(preferences.combatPreference)) {
+    p.combatPreference = preferences.combatPreference;
+  }
+  if (preferences.schedule !== undefined && SCHEDULES.has(preferences.schedule)) {
+    p.schedule = preferences.schedule;
+  }
+  if (preferences.focus !== undefined && FOCUS_OPTS.has(preferences.focus)) {
+    p.focus = preferences.focus;
+  }
+  if (preferences.location !== undefined && LOCATIONS.has(preferences.location)) {
+    p.location = preferences.location;
+  }
+  if (
+    preferences.physicalActivityLevel !== undefined &&
+    FITNESS_LEVELS.has(preferences.physicalActivityLevel)
+  ) {
+    p.physicalActivityLevel = preferences.physicalActivityLevel;
+  }
+  if (preferences.yomHameahSource !== undefined && YOM_SOURCES.has(preferences.yomHameahSource)) {
     p.yomHameahSource = preferences.yomHameahSource;
   }
   if (Object.keys(p).length) {

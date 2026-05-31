@@ -136,7 +136,7 @@ export function ReportResultView({ data, onPrint, onServerDownload, pdfLoading, 
         ) : null}
 
         {report.rolesTheyAskedAbout && (
-          <motion.div variants={fadeUp} className="border border-primary/20 bg-primary/[0.03] p-5">
+          <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-5">
             <div className="mb-3 flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
               <span className="font-mono text-xs tracking-widest text-dust uppercase">לגבי התפקידים שציינתם</span>
@@ -215,7 +215,7 @@ export function ReportResultView({ data, onPrint, onServerDownload, pdfLoading, 
         </motion.div>
 
         {report.parentSummary && (
-          <motion.div variants={fadeUp} className="border border-primary/30 bg-primary/5 p-6">
+          <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-6">
             <div className="mb-3 flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" aria-hidden />
               <span className="font-mono text-xs tracking-widest text-dust uppercase">סיכום להורים</span>

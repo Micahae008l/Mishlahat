@@ -99,7 +99,7 @@ function RoleCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: rank * 0.05, ease }}
       className={`overflow-hidden border text-right ${
-        featured ? "border-primary/35 bg-primary/[0.04]" : "border-iron/30 bg-card"
+        featured ? "border-primary/45 bg-card" : "border-iron/30 bg-card"
       }`}
     >
       <div className={`grid ${featured ? "md:grid-cols-[1fr_220px]" : "grid-cols-1"}`}>

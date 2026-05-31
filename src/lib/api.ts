@@ -1,4 +1,4 @@
-import { clearToken, getToken } from "./auth";
+import { clearToken, getToken, setStoredRole, setToken } from "./auth";
 
 function apiBase(): string {
   const raw = import.meta.env.VITE_API_URL as string | undefined;
@@ -18,6 +18,8 @@ export class ApiError extends Error {
 
 export type ApiFetchOptions = RequestInit & { skipAuth?: boolean; retries?: number };
 
+let refreshPromise: Promise<string | null> | null = null;
+
 function retryDelayMs(attempt: number, status?: number): number {
   if (status === 503 || status === 0) {
     return Math.min(4000, 800 * 2 ** attempt);
@@ -29,6 +31,7 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
   const { skipAuth, retries = 2, ...rest } = init ?? {};
   const maxAttempts = Math.max(1, retries + 1);
   let lastError: ApiError | null = null;
+  let didRefresh = false;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) {
@@ -44,7 +47,11 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
 
     let res: Response;
     try {
-      res = await fetch(`${apiBase()}${path}`, { ...rest, headers });
+      res = await fetch(`${apiBase()}${path}`, {
+        ...rest,
+        headers,
+        credentials: rest.credentials ?? "include",
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Network error";
       lastError = new ApiError(msg, 0);
@@ -63,7 +70,10 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
     }
     if (!res.ok) {
       let msg =
-        typeof json === "object" && json !== null && "error" in json && typeof (json as { error: unknown }).error === "string"
+        typeof json === "object" &&
+        json !== null &&
+        "error" in json &&
+        typeof (json as { error: unknown }).error === "string"
           ? (json as { error: string }).error
           : res.statusText;
       if ((!msg || msg === "Internal Server Error") && (res.status === 500 || res.status === 502)) {
@@ -71,13 +81,24 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
       }
       if ((!msg || msg === "Service Unavailable") && res.status === 503) {
         msg =
-          "השרת לא זמין (503). בפיתוח: הריצו מהשורש npm run dev, או npm run server (פורט 3001) לצד npm run dev:web. ודאו ש־MongoDB רץ וש־JWT_SECRET ב־server/.env.";
+          "השרת לא זמין (503). בפיתוח: הריצו מהשורש npm run dev, או npm run server (פורט 3001) לצד npm run dev:web. ודאו ש־MongoDB רץ ושהגדרות השרת ב־server/.env.";
       }
-      if (token && res.status === 401) clearToken();
       const errCode =
-        typeof json === "object" && json !== null && "code" in json && typeof (json as { code: unknown }).code === "string"
+        typeof json === "object" &&
+        json !== null &&
+        "code" in json &&
+        typeof (json as { code: unknown }).code === "string"
           ? (json as { code: string }).code
           : undefined;
+      if (!skipAuth && token && res.status === 401 && !didRefresh && path !== "/api/auth/refresh") {
+        const refreshedToken = await refreshAccessToken();
+        if (refreshedToken) {
+          didRefresh = true;
+          attempt -= 1;
+          continue;
+        }
+        clearToken();
+      }
       lastError = new ApiError(msg, res.status, errCode);
       const retryable = res.status === 503 || res.status === 502 || res.status === 504;
       if (retryable && attempt < maxAttempts - 1) continue;
@@ -97,6 +118,46 @@ export type LoginResponse = {
   isNewUser?: boolean;
 };
 
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch(`${apiBase()}/api/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+        });
+        const text = await res.text();
+        const json = text ? (JSON.parse(text) as Partial<LoginResponse>) : {};
+        if (!res.ok || typeof json.token !== "string") {
+          clearToken();
+          return null;
+        }
+        setToken(json.token);
+        setStoredRole(json.role);
+        return json.token;
+      } catch {
+        clearToken();
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
+
+export async function logoutRequest() {
+  clearToken();
+  try {
+    await fetch(`${apiBase()}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // Local logout should still complete even if the API is temporarily unavailable.
+  }
+}
+
 export type SessionResponse = {
   userId: string;
   email: string;
@@ -113,6 +174,7 @@ export type OtpRequestResponse = {
   message: string;
   expiresInSeconds: number;
   delivery?: "email" | "console";
+  /** Dev only — when SMTP is off, so you can copy the code in the UI */
   devCode?: string;
 };
 
@@ -221,13 +283,28 @@ export type PreferencesDto = {
   yomHameahSource?: string;
 };
 
+export type AiTokenCapStatus = {
+  used: number;
+  cap: number | null;
+  remaining: number | null;
+  unlimited: boolean;
+  capped: boolean;
+};
+
 export type DashboardResponse = {
-  user: { email: string; preferredName?: string; phone?: string; status: string; createdAt?: string };
+  user: {
+    email: string;
+    preferredName?: string;
+    phone?: string;
+    status: string;
+    createdAt?: string;
+  };
   stats: MilitaryStatsDto | null;
   preferences: PreferencesDto | null;
   daysRemaining: number | null;
   aiReady?: boolean;
   aiProfileMissing?: string[];
+  aiTokens?: AiTokenCapStatus;
 };
 
 export function getDashboardStats() {
@@ -367,16 +444,29 @@ export function generateFullReport(fitness: FitnessData) {
 }
 
 export async function downloadReportPdf(report: FullReport, userName: string): Promise<Blob> {
-  const token = getToken();
+  let token = getToken();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
-  const res = await fetch(`${base}/api/ai/report-pdf`, {
+  let res = await fetch(`${base}/api/ai/report-pdf`, {
     method: "POST",
     headers,
+    credentials: "include",
     body: JSON.stringify({ report, userName }),
   });
+  if (token && res.status === 401) {
+    token = await refreshAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+      res = await fetch(`${base}/api/ai/report-pdf`, {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ report, userName }),
+      });
+    }
+  }
   if (!res.ok) {
     throw new ApiError("PDF generation failed", res.status);
   }
@@ -421,6 +511,8 @@ export type AdminUserRow = {
   phone: string;
   status: string;
   role: "user" | "admin";
+  tokenCap: number | null;
+  effectiveTokenCap: number | null;
   emailVerifiedAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -432,6 +524,7 @@ export type AdminUserRow = {
     estimatedCostUsd: number;
     lastCallAt: string | null;
   };
+  aiTokens: AiTokenCapStatus;
 };
 
 export type AdminUsersResponse = {
@@ -439,6 +532,7 @@ export type AdminUsersResponse = {
   total: number;
   skip: number;
   limit: number;
+  defaults?: { tokenCap: number | null };
 };
 
 export function getAdminMe() {
@@ -458,19 +552,36 @@ export function getAdminUsers(params?: { q?: string; skip?: number; limit?: numb
   return apiFetch<AdminUsersResponse>(`/api/admin/users${qs ? `?${qs}` : ""}`);
 }
 
+export function updateAdminUserTokenCap(userId: string, tokenCap: number | null) {
+  return apiFetch<{
+    message: string;
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      tokenCap: number | null;
+      effectiveTokenCap: number | null;
+    };
+    aiTokens: AiTokenCapStatus;
+  }>(`/api/admin/users/${userId}/token-cap`, {
+    method: "PATCH",
+    body: JSON.stringify({ tokenCap }),
+  });
+}
+
 export function updateAdminUserRole(userId: string, role: "user" | "admin") {
   return apiFetch<{ message: string; user: { id: string; email: string; role: string } }>(
     `/api/admin/users/${userId}/role`,
     {
       method: "PATCH",
       body: JSON.stringify({ role }),
-    }
+    },
   );
 }
 
 export function deleteAdminUser(userId: string) {
   return apiFetch<{ message: string; deletedUserId: string; email: string }>(
     `/api/admin/users/${userId}`,
-    { method: "DELETE" }
+    { method: "DELETE" },
   );
 }

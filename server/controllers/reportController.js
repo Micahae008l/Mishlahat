@@ -44,15 +44,15 @@ export async function generateReport(req, res) {
       });
     }
 
-    const fitness = req.body?.fitness || {};
+    const fitness = req.body.fitness || {};
     const run3km = fitness.run3km || null;
     const pullUps = fitness.pullUps ?? null;
     const pushUps = fitness.pushUps ?? null;
     const sitUps = fitness.sitUps ?? null;
-    const motivation = String(fitness.motivation || "").trim();
-    const interests = String(fitness.interests || "").trim();
-    const languages = String(fitness.languages || "").trim();
-    const notes = String(fitness.notes || "").trim();
+    const motivation = fitness.motivation || "";
+    const interests = fitness.interests || "";
+    const languages = fitness.languages || "";
+    const notes = fitness.notes || "";
 
     const yom = migrateLegacyYomHameahTo12(stats.yomHameah);
 
@@ -308,13 +308,9 @@ ${JSON.stringify(
 
 export async function downloadReportPdf(req, res) {
   try {
-    const { report, userName } = req.body || {};
-    if (!report || !report.roles) {
-      return res.status(400).json({ error: "Missing report data" });
-    }
-
+    const { report, userName } = req.body;
     const name = userName || "משתמש";
-    const format = String(req.query.format || "pdf").toLowerCase();
+    const format = req.query.format || "pdf";
 
     if (format === "html") {
       const html = buildReportHtml(report, name);

@@ -48,8 +48,10 @@ export async function sendOtpEmail(email, code) {
         "[email] אין SMTP — לא נשלח מייל. הוסיפו SMTP_HOST, SMTP_USER, SMTP_PASS ב־server/.env (ראו server/.env.example, Gmail: סיסמת אפליקציה)."
       );
     }
-    console.log(`[auth/otp] dev code for ${email}: ${code}`);
-    return { delivered: false, devCode: code };
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[auth/otp] dev code for ${email}: ${code}`);
+    }
+    return { delivered: false };
   }
 
   const subject = `קוד הכניסה שלך ל${SITE_NAME_HE}`;

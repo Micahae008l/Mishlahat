@@ -24,6 +24,8 @@ import {
   draftDateToYmd,
 } from "@/lib/profile-resume";
 import { ARIA } from "@/lib/a11y";
+import { FieldError } from "@/components/FormField";
+import { getErrorMessage } from "@/lib/api-errors";
 import { OnboardingSkeleton } from "@/components/skeletons/PageSkeletons";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { idfPhotoAt } from "@/lib/idf-images";
@@ -72,6 +74,7 @@ function OnboardingPage() {
   const [dapar, setDapar] = useState<number | null>(null);
   const [medical, setMedical] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
   const hydratedRef = useRef(false);
 
   useEffect(() => {
@@ -102,20 +105,21 @@ function OnboardingPage() {
   }, [dash, navigate]);
 
   function next() {
+    setStepError(null);
     if (step === STEP_COMBAT && !combat) {
-      toast.error("נא לבחור כיוון שירות");
+      setStepError("נא לבחור כיוון שירות לפני המשך");
       return;
     }
     if (step === STEP_FOCUS && !focus) {
-      toast.error("נא לבחור מיקוד");
+      setStepError("נא לבחור מיקוד אחד לפני המשך");
       return;
     }
     if (step === STEP_FITNESS && !fitness) {
-      toast.error("נא לבחור רמת כושר");
+      setStepError("נא לבחור רמת כושר לפני המשך");
       return;
     }
     if (step === STEP_DRAFT && !draftDate.trim()) {
-      toast.error("נא לבחור תאריך גיוס משוער");
+      setStepError("נא לבחור תאריך גיוס משוער");
       return;
     }
     setDirection(1);
@@ -123,18 +127,41 @@ function OnboardingPage() {
   }
 
   function prev() {
+    setStepError(null);
     setDirection(-1);
     if (step > 0) setStep((s) => s - 1);
   }
 
   async function finish() {
+    setStepError(null);
     if (!getToken()) {
       toast.error("יש להתחבר לפני שמירת הפרופיל");
       navigate({ to: "/post-signup" });
       return;
     }
-    if (!combat || !focus || !fitness || !draftDate.trim() || dapar == null || medical == null) {
-      toast.error("חסרים שדות");
+    if (!combat) {
+      setStepError("חסר כיוון שירות");
+      setStep(STEP_COMBAT);
+      return;
+    }
+    if (!focus) {
+      setStepError("חסר מיקוד");
+      setStep(STEP_FOCUS);
+      return;
+    }
+    if (!fitness) {
+      setStepError("חסרה רמת כושר");
+      setStep(STEP_FITNESS);
+      return;
+    }
+    if (!draftDate.trim()) {
+      setStepError("חסר תאריך גיוס משוער");
+      setStep(STEP_DRAFT);
+      return;
+    }
+    if (dapar == null || medical == null) {
+      setStepError('נא לבחור דפ"ר ופרופיל רפואי');
+      setStep(STEP_STATS);
       return;
     }
     setSaving(true);
@@ -173,7 +200,7 @@ function OnboardingPage() {
       toast.success("הפרופיל נשמר בשרת");
       navigate({ to: "/dashboard" });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "שגיאה בשמירה");
+      setStepError(getErrorMessage(e, "שגיאה בשמירת הפרופיל"));
     } finally {
       setSaving(false);
     }
@@ -273,7 +300,10 @@ function OnboardingPage() {
               <PreferenceOptionGrid
                 options={COMBAT_PREFERENCE_OPTIONS}
                 selected={combat}
-                onSelect={setCombat}
+                onSelect={(v) => {
+                  setCombat(v);
+                  setStepError(null);
+                }}
                 columnsClass="grid-cols-1 sm:grid-cols-2"
               />
             )}
@@ -282,7 +312,10 @@ function OnboardingPage() {
               <PreferenceOptionGrid
                 options={FOCUS_PREFERENCE_OPTIONS}
                 selected={focus}
-                onSelect={setFocus}
+                onSelect={(v) => {
+                  setFocus(v);
+                  setStepError(null);
+                }}
                 columnsClass="grid-cols-1 sm:grid-cols-2"
               />
             )}
@@ -291,7 +324,10 @@ function OnboardingPage() {
               <PreferenceOptionGrid
                 options={FITNESS_PREFERENCE_OPTIONS}
                 selected={fitness}
-                onSelect={setFitness}
+                onSelect={(v) => {
+                  setFitness(v);
+                  setStepError(null);
+                }}
                 columnsClass="grid-cols-1 sm:grid-cols-3"
               />
             )}
@@ -302,10 +338,14 @@ function OnboardingPage() {
                 <input
                   type="date"
                   value={draftDate}
-                  onChange={(e) => setDraftDate(e.target.value)}
-                  className="input-field w-full max-w-xs text-left"
+                  onChange={(e) => {
+                    setDraftDate(e.target.value);
+                    setStepError(null);
+                  }}
+                  className={`input-field w-full max-w-xs text-left${stepError ? " input-field--invalid" : ""}`}
                   min="2000-01-01"
                   max="2038-12-31"
+                  aria-invalid={stepError ? true : undefined}
                 />
               </div>
             )}
@@ -318,7 +358,10 @@ function OnboardingPage() {
                     <button
                       key={n}
                       type="button"
-                      onClick={() => setDapar(n)}
+                      onClick={() => {
+                        setDapar(n);
+                        setStepError(null);
+                      }}
                       aria-pressed={dapar === n}
                       aria-label={ARIA.scoreChip(n, dapar === n)}
                       className={`rounded-sm border px-3.5 py-2 font-mono text-sm font-bold tabular-nums transition-colors ${
@@ -337,7 +380,10 @@ function OnboardingPage() {
                     <button
                       key={n}
                       type="button"
-                      onClick={() => setMedical(n)}
+                      onClick={() => {
+                        setMedical(n);
+                        setStepError(null);
+                      }}
                       aria-pressed={medical === n}
                       aria-label={ARIA.scoreChip(n, medical === n)}
                       className={`rounded-sm border px-3.5 py-2 font-mono text-sm font-bold tabular-nums transition-colors ${
@@ -352,6 +398,8 @@ function OnboardingPage() {
                 </div>
               </div>
             )}
+
+            {stepError ? <FieldError message={stepError} className="justify-center" /> : null}
 
             <div className="flex items-center justify-center gap-3 pt-2">
               {step === STEP_STATS ? (

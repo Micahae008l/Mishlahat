@@ -1,14 +1,22 @@
-import mongoose from "mongoose";
 import User from "../models/User.js";
 import MilitaryStats from "../models/MilitaryStats.js";
 import Preferences from "../models/Preferences.js";
 import EmailOtp from "../models/EmailOtp.js";
 import AiUsageLog from "../models/AiUsageLog.js";
+import RefreshToken from "../models/RefreshToken.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { pricingMeta } from "../utils/openaiPricing.js";
+import {
+  buildTokenCapStatus,
+  getDefaultTokenCap,
+  getTokenCapStatusForUserId,
+  resolveTokenCap,
+} from "../utils/tokenCap.js";
 
 function normalizeEmail(email) {
-  return String(email || "").trim().toLowerCase();
+  return String(email || "")
+    .trim()
+    .toLowerCase();
 }
 
 function formatUsd(n) {
@@ -100,9 +108,11 @@ export async function getOverview(req, res) {
 
 export async function listUsers(req, res) {
   try {
-    const q = String(req.query.q || "").trim().toLowerCase();
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
-    const skip = Math.max(0, Number(req.query.skip) || 0);
+    const q = String(req.query.q || "")
+      .trim()
+      .toLowerCase();
+    const limit = Number(req.query.limit) || 50;
+    const skip = Number(req.query.skip) || 0;
 
     const filter = {};
     if (q) {
@@ -117,7 +127,9 @@ export async function listUsers(req, res) {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select("email preferredName phone status role emailVerifiedAt createdAt updatedAt")
+        .select(
+          "email preferredName phone status role tokenCap emailVerifiedAt createdAt updatedAt",
+        )
         .lean(),
       User.countDocuments(filter),
     ]);
@@ -148,8 +160,14 @@ export async function listUsers(req, res) {
       const id = String(u._id);
       const stats = statsMap.get(id) ?? null;
       const preferences = prefsMap.get(id) ?? null;
-      const { ready: aiReady, missing: aiProfileMissing } = computeAiProfileMissing(stats, preferences);
+      const { ready: aiReady, missing: aiProfileMissing } = computeAiProfileMissing(
+        stats,
+        preferences,
+      );
       const usage = usageMap.get(id);
+      const usedTokens = usage?.totalTokens ?? 0;
+      const effectiveCap = resolveTokenCap(u);
+      const tokenStatus = buildTokenCapStatus(usedTokens, effectiveCap);
       return {
         id,
         email: u.email,
@@ -157,6 +175,8 @@ export async function listUsers(req, res) {
         phone: u.phone || "",
         status: u.status,
         role: u.role || "user",
+        tokenCap: u.tokenCap ?? null,
+        effectiveTokenCap: effectiveCap,
         emailVerifiedAt: u.emailVerifiedAt,
         createdAt: u.createdAt,
         updatedAt: u.updatedAt,
@@ -164,16 +184,56 @@ export async function listUsers(req, res) {
         aiProfileMissing,
         aiUsage: {
           callCount: usage?.callCount ?? 0,
-          totalTokens: usage?.totalTokens ?? 0,
+          totalTokens: usedTokens,
           estimatedCostUsd: formatUsd(usage?.estimatedCostUsd ?? 0),
           lastCallAt: usage?.lastCallAt ?? null,
         },
+        aiTokens: tokenStatus,
       };
     });
 
-    res.json({ users: rows, total, skip, limit });
+    res.json({
+      users: rows,
+      total,
+      skip,
+      limit,
+      defaults: { tokenCap: getDefaultTokenCap() },
+    });
   } catch (err) {
     console.error("[admin/users]", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function updateUserTokenCap(req, res) {
+  try {
+    const targetId = req.params.id;
+    const { tokenCap } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      targetId,
+      { $set: { tokenCap } },
+      { new: true },
+    ).select("email role tokenCap");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const aiTokens = await getTokenCapStatusForUserId(targetId);
+
+    res.json({
+      message: tokenCap == null ? "User token cap reset to default" : "User token cap updated",
+      user: {
+        id: String(user._id),
+        email: user.email,
+        role: user.role,
+        tokenCap: user.tokenCap ?? null,
+        effectiveTokenCap: resolveTokenCap(user),
+      },
+      aiTokens,
+    });
+  } catch (err) {
+    console.error("[admin/updateUserTokenCap]", err);
     res.status(500).json({ error: err.message });
   }
 }
@@ -181,21 +241,14 @@ export async function listUsers(req, res) {
 export async function updateUserRole(req, res) {
   try {
     const targetId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(targetId)) {
-      return res.status(400).json({ error: "Invalid user id" });
-    }
-
-    const role = String(req.body?.role || "").trim();
-    if (role !== "user" && role !== "admin") {
-      return res.status(400).json({ error: 'role must be "user" or "admin"' });
-    }
+    const { role } = req.body;
 
     if (String(req.adminUser._id) === String(targetId) && role !== "admin") {
       return res.status(400).json({ error: "Cannot demote your own admin account" });
     }
 
     const user = await User.findByIdAndUpdate(targetId, { $set: { role } }, { new: true }).select(
-      "email role preferredName"
+      "email role preferredName",
     );
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -218,9 +271,6 @@ export async function updateUserRole(req, res) {
 export async function deleteUser(req, res) {
   try {
     const targetId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(targetId)) {
-      return res.status(400).json({ error: "Invalid user id" });
-    }
 
     if (String(req.adminUser._id) === String(targetId)) {
       return res.status(400).json({ error: "Cannot delete your own admin account" });
@@ -237,6 +287,7 @@ export async function deleteUser(req, res) {
       MilitaryStats.deleteOne({ userId: targetId }),
       Preferences.deleteOne({ userId: targetId }),
       AiUsageLog.deleteMany({ userId: targetId }),
+      RefreshToken.deleteMany({ userId: targetId }),
       EmailOtp.deleteMany({ email }),
       User.deleteOne({ _id: targetId }),
     ]);

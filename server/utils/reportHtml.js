@@ -49,11 +49,11 @@ export function buildReportHtml(report, userName) {
   <title>${esc(SITE_NAME_HE)} — דוח</title>
   <style>
     body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; direction: rtl; margin: 24px; color: #1a1a1a; line-height: 1.5; }
-    h1 { color: #9a7b2f; font-size: 24px; }
-    h2 { color: #9a7b2f; font-size: 13px; margin-top: 20px; }
-    .direction { background: #faf8f3; border: 1px solid #d4c9a8; padding: 12px; border-radius: 6px; }
-    .role-card { border: 1px solid #e0dcd4; padding: 10px; margin: 8px 0; border-radius: 6px; }
-    .role-pct { float: left; background: #ede6d4; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+    h1 { color: #6b7c52; font-size: 24px; }
+    h2 { color: #6b7c52; font-size: 13px; margin-top: 20px; }
+    .direction { background: #f4f6ef; border: 1px solid #b8c4a4; padding: 12px; border-radius: 6px; }
+    .role-card { border: 1px solid #d8ddd0; padding: 10px; margin: 8px 0; border-radius: 6px; }
+    .role-pct { float: left; background: #e2e8d4; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
     ul { padding-right: 20px; }
     .footer { margin-top: 24px; font-size: 11px; color: #888; text-align: center; }
   </style>

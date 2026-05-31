@@ -4,7 +4,7 @@ export function authenticateToken(req, res, next) {
   const header = req.headers.authorization;
   const token = header && header.split(" ")[1]; // "Bearer <token>"
 
-  if (!token) {
+  if (!token || token.length > 4096) {
     return res.status(401).json({ error: "Access token required" });
   }
 
@@ -13,6 +13,8 @@ export function authenticateToken(req, res, next) {
     req.userId = payload.userId;
     next();
   } catch {
-    return res.status(403).json({ error: "Invalid or expired token" });
+    return res
+      .status(401)
+      .json({ error: "Invalid or expired token", code: "ACCESS_TOKEN_INVALID" });
   }
 }

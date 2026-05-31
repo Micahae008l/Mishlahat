@@ -183,6 +183,7 @@ function ReportPage() {
     enabled: mounted && !!token,
   });
   const aiReady = Boolean(dash?.aiReady);
+  const tokenCapped = Boolean(dash?.aiTokens?.capped);
   const dashBooting = mounted && !!token && dashPending && !dash;
 
   useEffect(() => {
@@ -202,6 +203,10 @@ function ReportPage() {
   }, [mounted, token, dash, navigate]);
 
   async function submitReport() {
+    if (tokenCapped) {
+      toast.error("הגעתם למכסת הטוקנים ליצירת דוח AI");
+      return;
+    }
     setPhase("loading");
     const fitness: FitnessData = {
       run3km: run3kmBand && run3kmBand !== "לא יודע/ת" ? run3kmBand : undefined,
@@ -308,6 +313,13 @@ function ReportPage() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
         {/* Header */}
         <motion.div variants={fadeUp} className="border-b border-iron/30 pb-5 text-right">
+          <Link
+            to="/dashboard"
+            className="mb-3 inline-flex items-center gap-1 text-sm text-dust transition hover:text-primary"
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden />
+            חזרה לדשבורד
+          </Link>
           <p className="mb-2 font-mono text-xs tracking-widest text-primary uppercase">דוח כיוון אישי</p>
           <h1 className="text-2xl font-black sm:text-3xl">בואו נכיר אתכם</h1>
           <p className="mt-2 max-w-lg text-sm text-dust">
@@ -318,6 +330,20 @@ function ReportPage() {
         <motion.div variants={fadeUp}>
           <ReportHistoryPanel />
         </motion.div>
+
+        {tokenCapped ? (
+          <motion.div
+            variants={fadeUp}
+            className="border border-destructive/30 bg-destructive/5 p-5 text-right text-sm"
+          >
+            <p className="font-semibold text-foreground">מכסת הטוקנים נוצלה</p>
+            <p className="mt-1 text-dust">
+              לא ניתן ליצור דוח חדש עד שמנהל המערכת יגדיל את המכסה (
+              {dash?.aiTokens?.used?.toLocaleString("he-IL")} / {dash?.aiTokens?.cap?.toLocaleString("he-IL")}{" "}
+              טוקנים).
+            </p>
+          </motion.div>
+        ) : null}
 
         {/* Progress */}
         <motion.div variants={fadeUp} className="space-y-2">
@@ -531,7 +557,8 @@ function ReportPage() {
               <button
                 type="button"
                 onClick={submitReport}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+                disabled={tokenCapped}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
               >
                 <FileText className="h-4 w-4" aria-hidden />
                 צרו לי את הדוח
@@ -550,7 +577,8 @@ function ReportPage() {
               <button
                 type="button"
                 onClick={submitReport}
-                className="text-sm text-dust transition hover:text-foreground"
+                disabled={tokenCapped}
+                className="text-sm text-dust transition hover:text-foreground disabled:opacity-40"
               >
                 דלגו ליצירת הדוח
               </button>

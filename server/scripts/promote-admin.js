@@ -1,21 +1,20 @@
 /**
  * Promote a user to admin by email.
  * Usage: node scripts/promote-admin.js [email]
- * Default email: mike.haddad.08@gmail.com
+ * Or set ADMIN_EMAIL in server/.env and run without args.
  */
 import "../env.js";
 import { connectDB } from "../config/db.js";
 import User from "../models/User.js";
 
-const DEFAULT_EMAIL = "mike.haddad.08@gmail.com";
-
 async function main() {
-  const email = String(process.argv[2] || DEFAULT_EMAIL)
+  const email = String(process.argv[2] || process.env.ADMIN_EMAIL || "")
     .trim()
     .toLowerCase();
 
   if (!email.includes("@")) {
-    console.error("Invalid email:", email);
+    console.error("Usage: node scripts/promote-admin.js <email>");
+    console.error("Or set ADMIN_EMAIL in server/.env and run without arguments.");
     process.exit(1);
   }
 

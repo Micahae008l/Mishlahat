@@ -12,6 +12,7 @@ import { RoleMatchCards } from "@/components/RoleMatchCards";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
 import { matchRolesRequest, type RoleMatch } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api-errors";
 import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { AI_PROFILE_MISSING_LABELS } from "@/lib/profile-preference-data";
@@ -60,6 +61,7 @@ function AiCounselorPage() {
   });
 
   const aiReady = Boolean(dash?.aiReady);
+  const tokenCapped = Boolean(dash?.aiTokens?.capped);
   const missingLabels =
     dash?.aiProfileMissing?.map((k) => AI_PROFILE_MISSING_LABELS[k] ?? k).filter(Boolean) ?? [];
 
@@ -84,6 +86,10 @@ function AiCounselorPage() {
       toast.error("השלימו את הפרופיל לפני שימוש ביועץ");
       return;
     }
+    if (tokenCapped) {
+      toast.error("הגעתם למכסת הטוקנים לשימוש ביועץ AI");
+      return;
+    }
     setLoading(true);
     setRoles(null);
     setMessages((prev) => [...prev, { role: "user", text: "בקשת התאמת תפקידים" }]);
@@ -99,8 +105,8 @@ function AiCounselorPage() {
       ]);
       toast.success("ההמלצות מוכנות");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "שגיאה";
-      setMessages((prev) => [...prev, { role: "ai", text: `שגיאה מהשרת: ${msg}` }]);
+      const msg = getErrorMessage(e, "שגיאה בהתאמת תפקידים");
+      setMessages((prev) => [...prev, { role: "ai", text: msg }]);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -131,7 +137,17 @@ function AiCounselorPage() {
           </p>
         </div>
 
-        {!aiReady && token && (
+        {tokenCapped && token && (
+          <div className="border border-destructive/30 bg-destructive/5 p-5 text-right">
+            <p className="font-semibold text-foreground text-sm">מכסת הטוקנים נוצלה</p>
+            <p className="mt-1 text-sm text-dust">
+              נוצלו {dash?.aiTokens?.used?.toLocaleString("he-IL") ?? "—"} מתוך{" "}
+              {dash?.aiTokens?.cap?.toLocaleString("he-IL") ?? "—"} טוקנים. פנו למנהל המערכת להגדלת המכסה.
+            </p>
+          </div>
+        )}
+
+        {!aiReady && token && !tokenCapped && (
           <div className="border border-iron/30 bg-card p-5 text-right">
             <p className="font-semibold text-foreground text-sm">נדרש פרופיל מלא לפני התאמת תפקידים</p>
             {missingLabels.length > 0 ? (
@@ -166,7 +182,7 @@ function AiCounselorPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            disabled={loading || !aiReady || !token}
+            disabled={loading || !aiReady || !token || tokenCapped}
             onClick={runMatch}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-40 active:scale-[0.97]"
           >

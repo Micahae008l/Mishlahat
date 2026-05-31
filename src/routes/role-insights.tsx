@@ -102,7 +102,7 @@ function RoleInsightsPage() {
       </div>
 
       {/* CTA bar */}
-      <div className="flex flex-col items-stretch justify-between gap-4 border border-primary/20 bg-primary/[0.03] p-6 text-right sm:flex-row sm:items-center sm:justify-end">
+      <div className="flex flex-col items-stretch justify-between gap-4 border border-iron/30 bg-card p-6 text-right sm:flex-row sm:items-center sm:justify-end">
         <p className="text-sm text-dust">
           מוכנים לנסות התאמה ראשונית? היועץ משתמש בדפ״ר וברפואי מהפרופיל.
         </p>

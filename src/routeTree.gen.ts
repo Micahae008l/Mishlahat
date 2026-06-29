@@ -9,18 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RoleInsightsRouteImport } from './routes/role-insights'
 import { Route as ReportRouteImport } from './routes/report'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PostSignupRouteImport } from './routes/post-signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AiSecretaryRouteImport } from './routes/ai-secretary'
 import { Route as AiCounselorRouteImport } from './routes/ai-counselor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportReportIdRouteImport } from './routes/report.$reportId'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoleInsightsRoute = RoleInsightsRouteImport.update({
   id: '/role-insights',
   path: '/role-insights',
@@ -29,6 +38,21 @@ const RoleInsightsRoute = RoleInsightsRouteImport.update({
 const ReportRoute = ReportRouteImport.update({
   id: '/report',
   path: '/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostSignupRoute = PostSignupRouteImport.update({
@@ -41,14 +65,14 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiSecretaryRoute = AiSecretaryRouteImport.update({
@@ -82,12 +106,16 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/ai-secretary': typeof AiSecretaryRoute
+  '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRoutesByTo {
@@ -95,12 +123,16 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/ai-secretary': typeof AiSecretaryRoute
+  '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRoutesById {
@@ -109,12 +141,16 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/ai-counselor': typeof AiCounselorRoute
   '/ai-secretary': typeof AiSecretaryRoute
+  '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
 export interface FileRouteTypes {
@@ -124,12 +160,16 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai-counselor'
     | '/ai-secretary'
+    | '/checkout'
     | '/dashboard'
-    | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/pricing'
+    | '/privacy'
+    | '/profile'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/report/$reportId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,12 +177,16 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai-counselor'
     | '/ai-secretary'
+    | '/checkout'
     | '/dashboard'
-    | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/pricing'
+    | '/privacy'
+    | '/profile'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/report/$reportId'
   id:
     | '__root__'
@@ -150,12 +194,16 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai-counselor'
     | '/ai-secretary'
+    | '/checkout'
     | '/dashboard'
-    | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/pricing'
+    | '/privacy'
+    | '/profile'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/report/$reportId'
   fileRoutesById: FileRoutesById
 }
@@ -164,16 +212,27 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AiCounselorRoute: typeof AiCounselorRoute
   AiSecretaryRoute: typeof AiSecretaryRoute
+  CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PostSignupRoute: typeof PostSignupRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
   ReportRoute: typeof ReportRouteWithChildren
   RoleInsightsRoute: typeof RoleInsightsRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/role-insights': {
       id: '/role-insights'
       path: '/role-insights'
@@ -186,6 +245,27 @@ declare module '@tanstack/react-router' {
       path: '/report'
       fullPath: '/report'
       preLoaderRoute: typeof ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post-signup': {
@@ -202,18 +282,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-secretary': {
@@ -270,12 +350,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AiCounselorRoute: AiCounselorRoute,
   AiSecretaryRoute: AiSecretaryRoute,
+  CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PostSignupRoute: PostSignupRoute,
+  PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
   ReportRoute: ReportRouteWithChildren,
   RoleInsightsRoute: RoleInsightsRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

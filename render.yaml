@@ -42,3 +42,14 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
+      # Payments — "mock" is blocked in production, so set the real provider here.
+      - key: PAYMENTS_PROVIDER
+        value: grow
+      - key: GROW_ENV
+        value: prod
+      - key: GROW_PAGE_CODE
+        sync: false
+      - key: GROW_USER_ID
+        sync: false
+      - key: GROW_API_KEY
+        sync: false

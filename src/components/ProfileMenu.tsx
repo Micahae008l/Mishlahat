@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, LayoutDashboard, LogOut, Shield, User } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Pencil, Shield, User } from "lucide-react";
 
 type Props = {
   displayName?: string;
@@ -53,6 +53,14 @@ export function ProfileMenu({
       >
         <LayoutDashboard className="h-4 w-4 shrink-0 text-dust" aria-hidden />
         דשבורד
+      </Link>
+      <Link
+        to="/profile"
+        onClick={close}
+        className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition hover:bg-iron/10"
+      >
+        <Pencil className="h-4 w-4 shrink-0 text-dust" aria-hidden />
+        עריכת פרופיל
       </Link>
       {isAdmin ? (
         <Link

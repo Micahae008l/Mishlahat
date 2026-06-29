@@ -185,6 +185,7 @@ export function requestOtp(email: string, options?: { intent?: AuthIntent }) {
     method: "POST",
     body: JSON.stringify({ email, intent: options?.intent ?? "login" }),
     skipAuth: true,
+    retries: 4,
   });
 }
 
@@ -193,6 +194,7 @@ export function verifyOtp(email: string, code: string, options?: { intent?: Auth
     method: "POST",
     body: JSON.stringify({ email, code, intent: options?.intent ?? "login" }),
     skipAuth: true,
+    retries: 4,
   });
 }
 
@@ -291,6 +293,15 @@ export type AiTokenCapStatus = {
   capped: boolean;
 };
 
+export type Entitlement = {
+  isAdmin: boolean;
+  plan: "free" | "pro";
+  planActive: boolean;
+  planExpiresAt: string | null;
+  reportCredits: number;
+  canGenerateReport: boolean;
+};
+
 export type DashboardResponse = {
   user: {
     email: string;
@@ -305,6 +316,7 @@ export type DashboardResponse = {
   aiReady?: boolean;
   aiProfileMissing?: string[];
   aiTokens?: AiTokenCapStatus;
+  entitlement?: Entitlement;
 };
 
 export function getDashboardStats() {
@@ -352,12 +364,57 @@ export type RoleMatch = {
   summary?: string;
   description: string;
   tags: string[];
+  /** Deterministic, data-grounded reasons from the server pre-filter */
+  matchFactors?: string[];
+};
+
+export type MatchConfidence = "high" | "medium" | "low";
+
+export type MatchRolesResponse = {
+  roles: RoleMatch[];
+  confidence?: MatchConfidence;
+  confidenceNotes?: string[];
+  historyId?: string | null;
+  generatedAt?: string;
 };
 
 export function matchRolesRequest() {
-  return apiFetch<{ roles: RoleMatch[] }>("/api/ai/match-roles", {
+  return apiFetch<MatchRolesResponse>("/api/ai/match-roles", {
     method: "POST",
     body: JSON.stringify({}),
+  });
+}
+
+// ── Match History ───────────────────────────────────────────────────────────
+
+export type MatchHistoryItem = {
+  id: string;
+  topRole: string;
+  topMatch: number | null;
+  confidence: MatchConfidence;
+  createdAt: string;
+};
+
+export type MatchHistoryDetail = {
+  id: string;
+  roles: RoleMatch[];
+  confidence: MatchConfidence;
+  confidenceNotes: string[];
+  profileSnapshot: Record<string, unknown> | null;
+  generatedAt: string;
+};
+
+export function listMatchHistory() {
+  return apiFetch<{ matches: MatchHistoryItem[] }>("/api/ai/match-history");
+}
+
+export function getMatchHistory(id: string) {
+  return apiFetch<MatchHistoryDetail>(`/api/ai/match-history/${id}`);
+}
+
+export function deleteMatchHistory(id: string) {
+  return apiFetch<{ message: string; id: string }>(`/api/ai/match-history/${id}`, {
+    method: "DELETE",
   });
 }
 
@@ -471,6 +528,101 @@ export async function downloadReportPdf(report: FullReport, userName: string): P
     throw new ApiError("PDF generation failed", res.status);
   }
   return res.blob();
+}
+
+// ── Reviews ────────────────────────────────────────────────────────────────
+
+export type RoleReviewDto = {
+  _id: string;
+  roleSlug: string;
+  roleTitle: string;
+  rating: number;
+  difficulty: number;
+  wouldRecommend: boolean;
+  pros: string;
+  cons: string;
+  tip: string;
+  createdAt: string;
+};
+
+export type RoleReviewStats = {
+  count: number;
+  avgRating: number;
+  avgDifficulty: number;
+  recommendPct: number;
+};
+
+export type CreateReviewPayload = {
+  roleSlug: string;
+  roleTitle: string;
+  rating: number;
+  difficulty: number;
+  wouldRecommend: boolean;
+  pros?: string;
+  cons?: string;
+  tip?: string;
+};
+
+export function getReviewsByRole(roleSlug: string) {
+  return apiFetch<{ reviews: RoleReviewDto[] }>(`/api/reviews?roleSlug=${encodeURIComponent(roleSlug)}`);
+}
+
+export function getAllReviewStats() {
+  return apiFetch<{ stats: Record<string, RoleReviewStats> }>("/api/reviews/all-stats");
+}
+
+export function createReview(payload: CreateReviewPayload) {
+  return apiFetch<{ message: string; review: RoleReviewDto }>("/api/reviews", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteReview(id: string) {
+  return apiFetch<{ message: string }>(`/api/reviews/${id}`, { method: "DELETE" });
+}
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+
+export type Product = {
+  id: string;
+  type: "credits" | "subscription";
+  nameHe: string;
+  descHe: string;
+  priceAgorot: number;
+  priceIls: number;
+  currency: string;
+  grant: { reportCredits?: number; planDays?: number };
+};
+
+export type ProductsResponse = {
+  products: Product[];
+  currency: string;
+  provider: string;
+  testMode: boolean;
+};
+
+export function getProducts() {
+  return apiFetch<ProductsResponse>("/api/payments/products", { skipAuth: true });
+}
+
+export function getEntitlement() {
+  return apiFetch<{ entitlement: Entitlement }>("/api/payments/entitlement");
+}
+
+export function createCheckout(productId: string) {
+  return apiFetch<{ checkoutUrl: string; orderId: string; testMode: boolean }>(
+    "/api/payments/checkout",
+    { method: "POST", body: JSON.stringify({ productId }) },
+  );
+}
+
+/** TEST MODE ONLY — simulate a successful payment so the flow is end-to-end testable. */
+export function mockConfirmPayment(orderId: string) {
+  return apiFetch<{ ok: boolean; entitlement: Entitlement }>("/api/payments/mock/confirm", {
+    method: "POST",
+    body: JSON.stringify({ orderId }),
+  });
 }
 
 // ── Admin ───────────────────────────────────────────────────────────────────

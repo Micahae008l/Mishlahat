@@ -12,9 +12,16 @@ export function FormField({ label, error, children, className = "" }: Props) {
   const id = useId();
   const errorId = `${id}-error`;
 
+  type ControlProps = {
+    id?: string;
+    className?: string;
+    "aria-invalid"?: boolean;
+    "aria-describedby"?: string;
+  };
+
   const control =
     isValidElement(children) && (children.props as { id?: string }).id == null
-      ? cloneElement(children as ReactElement<{ id?: string; className?: string }>, {
+      ? cloneElement(children as ReactElement<ControlProps>, {
           id,
           "aria-invalid": error ? true : undefined,
           "aria-describedby": error ? errorId : undefined,

@@ -47,6 +47,24 @@ const userSchema = new mongoose.Schema(
       default: null,
       min: 0,
     },
+    /** Paid plan. "pro" = active subscription (see planExpiresAt). Admins bypass all gates. */
+    plan: {
+      type: String,
+      enum: ["free", "pro"],
+      default: "free",
+      index: true,
+    },
+    /** When the "pro" plan lapses. null while on free. */
+    planExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    /** Prepaid full-report generations remaining. Consumed one per successful report. */
+    reportCredits: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

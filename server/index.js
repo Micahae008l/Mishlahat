@@ -8,6 +8,9 @@ import dashboardRoutes from "./routes/dashboard.js";
 import aiRoutes from "./routes/ai.js";
 import adminRoutes from "./routes/admin.js";
 import reportsRoutes from "./routes/reports.js";
+import reviewsRoutes from "./routes/reviews.js";
+import paymentsRoutes from "./routes/payments.js";
+import { assertPaymentsSafeForEnv } from "./services/payments/index.js";
 import { isSmtpConfigured } from "./utils/email.js";
 import { corsOptions } from "./utils/corsOptions.js";
 import { SITE_NAME_EN, SITE_NAME_HE } from "./utils/brand.js";
@@ -46,6 +49,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/reviews", reviewsRoutes);
+app.use("/api/payments", paymentsRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {
@@ -58,6 +63,7 @@ app.use(jsonErrorHandler);
 async function start() {
   requireEnv(["JWT_SECRET"]);
   requireProductionEnv();
+  assertPaymentsSafeForEnv();
   await connectDB();
   app.listen(PORT, () => {
     console.log(`API:  http://localhost:${PORT}  (GET / shows hints)`);

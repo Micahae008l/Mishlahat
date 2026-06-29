@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kachkivun.com/sitemap.xml

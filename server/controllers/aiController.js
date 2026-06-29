@@ -14,39 +14,52 @@ import {
 } from "../utils/yomHameah12Keys.js";
 import { getIdfRoleCatalogParsed } from "../utils/idfRoleCatalog.js";
 import { preFilterRoles } from "../utils/rolePreFilter.js";
+import {
+  MATCH_ROLE_COUNT,
+  CANDIDATE_POOL_SIZE,
+  reconcileAiSelectedRoles,
+} from "../utils/matchRolesAnchor.js";
+import MatchHistory from "../models/MatchHistory.js";
+import { trimUserMatchHistory } from "./matchHistoryController.js";
+import { mapOpenAiError } from "../utils/openaiErrors.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Bump when match-roles-system.txt or the user-prompt structure changes. */
+export const MATCH_PROMPT_VERSION = "match-v4";
 
 function loadSystemPrompt() {
   try {
     return fs.readFileSync(path.join(__dirname, "../prompts/match-roles-system.txt"), "utf8");
   } catch {
-    return `You are an expert IDF placement counselor. Respond with ONLY a valid JSON object: {"roles":[...]} with 5 role objects (roleTitle, matchPercentage, summary, description, tags). summary = one Hebrew sentence; description = 2-3 Hebrew sentences.`;
+    return `You are an expert IDF placement counselor. Respond with ONLY a valid JSON object: {"roles":[...]} with ${MATCH_ROLE_COUNT} role objects (roleTitle, matchPercentage, summary, description, tags). summary = one Hebrew sentence; description = 2-3 Hebrew sentences.`;
   }
 }
 
 const BASE_SYSTEM_PROMPT = loadSystemPrompt();
 
 /**
- * Build the system prompt with an inline filtered catalog subset.
- * Much smaller than the full 302-role dump → model can reason properly.
+ * Build the system prompt with an inline candidate pool the AI chooses from.
+ * The pool is pre-screened for eligibility; the AI does the actual selection + ranking.
  */
-function buildSystemPrompt(filteredRoles) {
-  const catalogSection = filteredRoles?.length
+function buildSystemPrompt(candidatePool) {
+  const catalogSection = candidatePool?.length
     ? `
 
 ---
 
-## מאגר תפקידים מסונן (JSON — חובת עבודה)
+## מאגר מועמדים — ${candidatePool.length} תפקידים זמינים לבחירה
 
-להלן ${filteredRoles.length} תפקידי צה"ל שסוננו מראש כמתאימים פוטנציאלית לפרופיל המועמד. זהו מקור העדפתכם — בחרו מתוכו.
+להלן ${candidatePool.length} תפקידים שעברו סינון התאמה ראשוני (דפ״ר, רפואי, העדפות קשיחות). בחרו מתוכם את התפקידים שבאמת מתאימים למועמד ודרגו אותם.
 
 חובות:
-- בחרו roleTitle שמופיע במדויק (או כמעט) מתוך הרשומות למטה.
-- אל תמציאו תפקידים שלא ברשימה; אם חסר — השתמשו ברשומה הכי קרובה.
-- שימו לב לשדות signals ו-aiRecommendationHint — הם מנחים את ההתאמה.
+- בחרו עד ${MATCH_ROLE_COUNT} התפקידים המתאימים ביותר, מהחזק לחלש.
+- מותר ורצוי לא לכלול תפקיד שלא תואם את החוזקות/ההעדפות של המועמד — גם אם הוא יוקרתי או סלקטיבי.
+- השתמשו אך ורק ב-roleTitle שמופיע ברשימה למטה — אסור להמציא תפקידים.
+- כתבו summary, description ו-tags בעברית לכל תפקיד שנבחר.
+- שימו לב לשדות signals ו-aiRecommendationHint — הם מנחים את ההתאמה והתיאור.
 
-${JSON.stringify(filteredRoles.map(r => ({
+${JSON.stringify(candidatePool.map(r => ({
   roleTitle: r.roleTitle,
   category: r.category,
   combat: r.combat,
@@ -98,6 +111,54 @@ function parseRolesArray(raw) {
   return null;
 }
 
+/** Loose Hebrew title normalization for matching AI output back to catalog rows. */
+function normalizeTitle(s) {
+  return String(s || "")
+    .replace(/["'״׳()]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Find the pre-filtered catalog row the AI most likely referenced. */
+function findFilteredRole(filteredRoles, roleTitle) {
+  const target = normalizeTitle(roleTitle);
+  if (!target) return null;
+  let best = null;
+  for (const r of filteredRoles) {
+    const cand = normalizeTitle(r.roleTitle);
+    if (cand === target) return r;
+    if (!best && (cand.includes(target) || target.includes(cand))) best = r;
+  }
+  return best;
+}
+
+/**
+ * Confidence is deterministic and honest: it reflects data quality,
+ * not how good the recommendations "sound".
+ */
+function computeMatchConfidence({ yomSource, filteredRoleCount, matchedToCatalog, totalRoles }) {
+  const notes = [];
+  let level = "high";
+
+  if (yomSource !== "official") {
+    level = "medium";
+    notes.push("ציוני המא״ה הם הערכה עצמית — הזנת ציונים רשמיים תשפר משמעותית את הדיוק.");
+  }
+  if (filteredRoleCount < 15) {
+    level = "low";
+    notes.push("הפרופיל הנוכחי מצמצם מאוד את מאגר התפקידים הרלוונטי — ייתכן שהעדפות גמישות יותר יפתחו אפשרויות נוספות.");
+  }
+  if (totalRoles > 0 && matchedToCatalog < totalRoles) {
+    if (level === "high") level = "medium";
+    notes.push("חלק מהתפקידים שהוצעו לא זוהו במאגר המאומת — התייחסו אליהם כהכוונה כללית.");
+  }
+  if (level === "high") {
+    notes.push("הפרופיל מלא וציוני המא״ה רשמיים — ההמלצות מבוססות על נתונים מאומתים.");
+  }
+  return { level, notes };
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const AI_MODEL = process.env.AI_MATCH_MODEL || "gpt-4o";
@@ -128,13 +189,16 @@ export async function matchRoles(req, res) {
     // Migrate yom hameah to 12-key format
     const yom = migrateLegacyYomHameahTo12(stats.yomHameah);
 
-    // Pre-filter the catalog from 302 → ~40 best candidates
+    // Pre-filter the catalog 302 → eligible candidates, then hand the AI a pool to choose from.
     const catalog = getIdfRoleCatalogParsed();
     const allRoles = catalog?.roles || [];
     const filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
     filteredRoleCount = filteredRoles.length;
+    const candidatePool = filteredRoles.slice(0, CANDIDATE_POOL_SIZE);
 
-    console.log(`[ai/match-roles] Pre-filtered ${allRoles.length} → ${filteredRoles.length} roles for user ${userId}`);
+    console.log(
+      `[ai/match-roles] Pre-filtered ${allRoles.length} → ${filteredRoles.length} eligible; AI choosing from pool of ${candidatePool.length} for user ${userId}`,
+    );
 
     const legacyQ =
       stats.yomQuestionnaire?.length > 0
@@ -171,35 +235,36 @@ export async function matchRoles(req, res) {
       ? `ממדים נמוכים: ${lowDims.map(d => `${d.label} (${d.score})`).join(", ")}`
       : "אין ציונים בולטים נמוכים";
 
+    const poolLines = candidatePool
+      .map((r, i) => `${i + 1}. ${r.roleTitle}`)
+      .join("\n");
+
     const userPrompt = `ענה לפי כללי המערכת (JSON בלבד, טקסטים בעברית).
 
-החזר אובייקט JSON עם מפתח יחיד "roles" (מערך של 5 תפקידים), בדיוק כפי שמוגדר בהוראות המערכת.
+החזר אובייקט JSON עם מפתח יחיד "roles" — מערך של עד ${MATCH_ROLE_COUNT} תפקידים, מהמתאים ביותר לפחות מתאים.
+
+## מאגר מועמדים — בחרו ודרגו
+
+לפניכם ${candidatePool.length} תפקידים שעברו סינון ראשוני. בחרו מתוכם את התפקידים שבאמת מתאימים למועמד הזה ודרגו אותם. מותר (ועדיף) לא לכלול תפקידים שלא תואמים את החוזקות וההעדפות — גם אם הם יוקרתיים או סלקטיביים. השתמשו אך ורק ב-roleTitle מהרשימה; אל תמציאו תפקידים.
+
+${poolLines}
 
 ## הנחיות חשיבה
 
-לפני שתבחר תפקידים, חשוב שלב-אחר-שלב:
+1. מה הדפ״ר (${stats.daparScore}) מאפשר ומגביל?
+2. מה הפרופיל הרפואי (${stats.medicalProfile}) מאפשר?
+3. חוזקות במא״ה: ${strengthsLine}
+4. ממדים נמוכים: ${weaknessLine} — הימנעו מתפקידים שנשענים בעיקר על הממדים האלה.
+5. העדפות: ${preferences?.combatPreference || "—"} (קרביות), ${preferences?.focus || "—"} (מיקוד), ${preferences?.physicalActivityLevel || "—"} (כושר)
 
-1. מה הדפ״ר (${stats.daparScore}) מאפשר ומגביל? דפ״ר גבוה (65+) פותח מסלולים טכנולוגיים, מודיעיניים וקצונה. דפ״ר נמוך יותר מכוון לתפקידי שטח, תמיכה ולוגיסטיקה.
+## חובה בכל description
 
-2. מה הפרופיל הרפואי (${stats.medicalProfile}) מאפשר? 97=קרבי מלא, 82=רוב קרבי, 72=חלק מקרבי, 64=מוגבל, 45/21=עורפי בלבד.
+(1) ציטוט דפ״ר ${stats.daparScore} והשפעתו.
+(2) ציטוט פרופיל רפואי ${stats.medicalProfile} וזכאות.
+(3) ממד מא״ה ספציפי שמתאים.
+(4) משפט על יומיום בתפקיד.
 
-3. מה החוזקות הבולטות במא״ה? ${strengthsLine}. התאימו תפקידים שמנצלים חוזקות אלה.
-
-4. מה הממדים הנמוכים? ${weaknessLine}. הימנעו מתפקידים שדורשים בדיוק את הממדים הנמוכים.
-
-5. מה ההעדפות? ${preferences?.combatPreference || "—"} (קרביות), ${preferences?.focus || "—"} (מיקוד), ${preferences?.physicalActivityLevel || "—"} (כושר). כבדו העדפות אבל ציינו בכנות אם משהו סותר.
-
-6. סרקו את ${filteredRoles.length} התפקידים המסוננים ובחרו 5 שמתאימים הכי טוב לשילוב של כל הנ״ל. תפקיד #1 חייב להיות ההתאמה החזקה ביותר, ולאחריו סדר יורד.
-
-## חובה בכל תיאור
-
-בשדה description של כל תפקיד חייבים להופיע במפורש:
-(1) לפחות משפט שמצטט את דפ״ר ${stats.daparScore} ומסביר מה מאפשר/מגביל.
-(2) לפחות משפט שמצטט את פרופיל רפואי ${stats.medicalProfile} ומסביר זכאות.
-(3) לפחות התייחסות לממד אחד ספציפי מהמא״ה שמתאים לתפקיד.
-(4) הסבר קצר מה עושים ביומיום בתפקיד.
-
-matchPercentage: סדרו מ-#1 (הגבוה ביותר) ל-#5 (הנמוך). #1 יהיה 85-95 רק אם ההתאמה מצוינת. טווחים: 85-95 (מצוין), 72-84 (חזק), 58-71 (סביר).
+matchPercentage: ההערכה שלכם להתאמה — יורד מהחזק לחלש. טווחים: 85-95 (מצוין), 72-84 (חזק), 58-71 (סביר).
 
 ## פרופיל מועמד
 
@@ -216,12 +281,12 @@ ${yomLines}${legacyQ}
 - מיקום: ${preferences?.location || "כל מקום"}
 - פעילות גופנית: ${preferences?.physicalActivityLevel || "לא צוין"}
 
-המלץ על 5 תפקידי צה"ל. שמות ותיאורים — בעברית בלבד.`;
+החזירו את התפקידים המתאימים ביותר מתוך המאגר — roleTitle זהה לרשומה במאגר, מדורגים מהחזק לחלש, טקסטים בעברית.`;
 
     const completion = await openai.chat.completions.create({
       model: AI_MODEL,
       messages: [
-        { role: "system", content: buildSystemPrompt(filteredRoles) },
+        { role: "system", content: buildSystemPrompt(candidatePool) },
         { role: "user", content: userPrompt },
       ],
       temperature: AI_TEMPERATURE,
@@ -261,6 +326,7 @@ ${yomLines}${legacyQ}
         finishReason,
         openaiRequestId: completion.id ?? null,
         filteredRoleCount,
+        promptVersion: MATCH_PROMPT_VERSION,
         errorMessage: "Unparseable or empty roles",
       });
       return res.status(502).json({
@@ -281,28 +347,50 @@ ${yomLines}${legacyQ}
       finishReason,
       openaiRequestId: completion.id ?? null,
       filteredRoleCount,
+      promptVersion: MATCH_PROMPT_VERSION,
     });
 
-    // Ensure roles are sorted by matchPercentage descending
-    roles.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+    // AI selected + ranked from the candidate pool; validate titles against real roles.
+    const normalized = reconcileAiSelectedRoles(candidatePool, roles, MATCH_ROLE_COUNT);
+    const matchedToCatalog = normalized.length;
 
-    const normalized = roles.map((r) => {
-      const description = String(r.description || "").trim();
-      let summary = String(r.summary || "").trim();
-      if (!summary && description) {
-        const first = description.split(/(?<=[.!?])\s+/)[0]?.trim();
-        summary = first && first.length <= 140 ? first : `${description.slice(0, 120).trim()}…`;
-      }
-      return {
-        roleTitle: String(r.roleTitle || "").trim(),
-        matchPercentage: Math.round(Number(r.matchPercentage) || 0),
-        summary,
-        description,
-        tags: Array.isArray(r.tags) ? r.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 6) : [],
-      };
+    const { level: confidence, notes: confidenceNotes } = computeMatchConfidence({
+      yomSource: preferences?.yomHameahSource,
+      filteredRoleCount,
+      matchedToCatalog,
+      totalRoles: normalized.length,
     });
 
-    res.json({ roles: normalized });
+    let historyId = null;
+    let generatedAt = new Date().toISOString();
+    try {
+      const saved = await MatchHistory.create({
+        userId,
+        topRole: normalized[0]?.roleTitle || "",
+        topMatch: normalized[0]?.matchPercentage ?? null,
+        confidence,
+        confidenceNotes,
+        roles: normalized,
+        profileSnapshot: {
+          daparScore: stats.daparScore,
+          medicalProfile: stats.medicalProfile,
+          combatPreference: preferences?.combatPreference ?? null,
+          focus: preferences?.focus ?? null,
+          physicalActivityLevel: preferences?.physicalActivityLevel ?? null,
+          yomHameahSource: preferences?.yomHameahSource ?? null,
+        },
+        promptVersion: MATCH_PROMPT_VERSION,
+        model: modelUsed,
+      });
+      historyId = String(saved._id);
+      generatedAt = saved.createdAt.toISOString();
+      void trimUserMatchHistory(userId);
+    } catch (saveErr) {
+      // History persistence must never block returning results to the user.
+      console.error("[ai/match-roles] history save failed:", saveErr);
+    }
+
+    res.json({ roles: normalized, confidence, confidenceNotes, historyId, generatedAt });
   } catch (err) {
     await recordAiUsage({
       userId,
@@ -315,10 +403,15 @@ ${yomLines}${legacyQ}
       durationMs: Date.now() - startedAt,
       status: "api_error",
       filteredRoleCount,
+      promptVersion: MATCH_PROMPT_VERSION,
       errorMessage: err?.message || "Unknown error",
     });
     if (err?.status === 401) {
       return res.status(503).json({ error: "OpenAI API key is invalid or missing." });
+    }
+    const mapped = mapOpenAiError(err);
+    if (mapped) {
+      return res.status(mapped.status).json({ error: mapped.error, code: mapped.code });
     }
     console.error("[ai/match-roles]", err);
     res.status(500).json({ error: err.message });

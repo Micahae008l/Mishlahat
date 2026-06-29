@@ -6,6 +6,7 @@ import {
   getDashboardStats,
   getReportHistory,
   getSession,
+  listMatchHistory,
   listReportHistory,
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
@@ -17,6 +18,7 @@ export const STALE = {
   dashboard: 5 * MIN,
   reportHistory: 3 * MIN,
   reportDetail: 10 * MIN,
+  matchHistory: 3 * MIN,
   admin: 2 * MIN,
 } as const;
 
@@ -50,6 +52,14 @@ export const reportHistoryDetailQueryOptions = (reportId: string, token: string 
     queryFn: () => getReportHistory(reportId),
     enabled: !!token && !!reportId,
     staleTime: STALE.reportDetail,
+  });
+
+export const matchHistoryQueryOptions = (token: string | null) =>
+  queryOptions({
+    queryKey: queryKeys.matchHistory(token),
+    queryFn: listMatchHistory,
+    enabled: !!token,
+    staleTime: STALE.matchHistory,
   });
 
 export const adminMeQueryOptions = (token: string | null) =>

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, Crosshair } from "lucide-react";
 import { toast } from "sonner";
-import { updateProfile, type YomHameah } from "@/lib/api";
+import { getDashboardStats, updateProfile, type YomHameah } from "@/lib/api";
 import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
@@ -221,12 +221,12 @@ function OnboardingPage() {
     step === STEP_COMBAT
       ? "בחרו את הכיוון שמתקרב למציאות שלכם."
       : step === STEP_FOCUS
-        ? "מיקוד אחד עוזר ליועץ AI להתאים תפקידים."
+        ? "מיקוד אחד עוזר לדייק את התאמת התפקידים."
         : step === STEP_FITNESS
           ? "הערכה עצמית."
           : step === STEP_DRAFT
             ? "בחרו תאריך משוער. אפשר לעדכן אחר כך."
-            : "נדרש לפני שימוש ביועץ AI.";
+            : "נדרש לפני הרצת התאמת תפקידים.";
 
   if (!mounted || (token && showSkeleton)) {
     return <OnboardingSkeleton />;

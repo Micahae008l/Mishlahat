@@ -4,6 +4,9 @@ import Preferences from "../models/Preferences.js";
 import EmailOtp from "../models/EmailOtp.js";
 import AiUsageLog from "../models/AiUsageLog.js";
 import RefreshToken from "../models/RefreshToken.js";
+import ReportHistory from "../models/ReportHistory.js";
+import MatchHistory from "../models/MatchHistory.js";
+import RoleReview from "../models/RoleReview.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { pricingMeta } from "../utils/openaiPricing.js";
 import {
@@ -288,6 +291,9 @@ export async function deleteUser(req, res) {
       Preferences.deleteOne({ userId: targetId }),
       AiUsageLog.deleteMany({ userId: targetId }),
       RefreshToken.deleteMany({ userId: targetId }),
+      ReportHistory.deleteMany({ userId: targetId }),
+      MatchHistory.deleteMany({ userId: targetId }),
+      RoleReview.deleteMany({ userId: targetId }),
       EmailOtp.deleteMany({ email }),
       User.deleteOne({ _id: targetId }),
     ]);

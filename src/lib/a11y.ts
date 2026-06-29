@@ -20,8 +20,8 @@ export const ARIA = {
   heroPause: "השהה מצגת",
   heroPlay: "המשך מצגת",
   heroSlideStatus: (index: number, total: number) => `שקופית ${index} מתוך ${total}`,
-  chatLog: "הודעות יועץ התאמה",
-  chatLoading: "טוען תשובה מהיועץ",
+  chatLog: "הודעות התאמת תפקידים",
+  chatLoading: "מחשב התאמה",
   roleResults: "תוצאות התאמת תפקידים",
   deleteReport: (title: string) => `מחק דוח: ${title}`,
   expandRole: (title: string, expanded: boolean) =>

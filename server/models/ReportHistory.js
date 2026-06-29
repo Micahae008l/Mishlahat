@@ -16,6 +16,8 @@ const reportHistorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       required: true,
     },
+    promptVersion: { type: String, default: "" },
+    model: { type: String, default: "" },
   },
   { timestamps: true }
 );

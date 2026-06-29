@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateToken } from "../middleware/auth.js";
-import { authLimiter } from "../middleware/rateLimit.js";
+import { authLimiter, otpRequestLimiter, otpVerifyLimiter } from "../middleware/rateLimit.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 import { validateRequestOtp, validateVerifyOtp } from "../validators/auth.js";
 import {
@@ -18,8 +18,8 @@ const router = Router();
 router.get("/me", authenticateToken, getSession);
 router.post("/refresh", refreshSession);
 router.post("/logout", logout);
-router.post("/request-otp", authLimiter, validateRequest(validateRequestOtp), requestOtp);
-router.post("/verify-otp", authLimiter, validateRequest(validateVerifyOtp), verifyOtp);
+router.post("/request-otp", authLimiter, otpRequestLimiter, validateRequest(validateRequestOtp), requestOtp);
+router.post("/verify-otp", authLimiter, otpVerifyLimiter, validateRequest(validateVerifyOtp), verifyOtp);
 router.post("/register", authLimiter, register);
 router.post("/login", authLimiter, login);
 

@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev:web"],
       "port": 8081,
       "autoPort": false
+    },
+    {
+      "name": "mcd-ranking",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "mcdonalds-ranking", "-l", "4321"],
+      "port": 4321
     }
   ]
 }

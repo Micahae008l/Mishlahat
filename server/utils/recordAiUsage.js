@@ -32,6 +32,7 @@ export async function recordAiUsage(entry) {
       finishReason: entry.finishReason ?? null,
       openaiRequestId: entry.openaiRequestId ?? null,
       filteredRoleCount: entry.filteredRoleCount ?? null,
+      promptVersion: entry.promptVersion || "",
       errorMessage: entry.errorMessage ? String(entry.errorMessage).slice(0, 500) : null,
     });
   } catch (err) {

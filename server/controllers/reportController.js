@@ -15,21 +15,29 @@ import ReportHistory from "../models/ReportHistory.js";
 import { trimUserReportHistory } from "./reportHistoryController.js";
 import { generateReportPdf } from "../utils/reportPdf.js";
 import { buildReportHtml } from "../utils/reportHtml.js";
+import { mapOpenAiError } from "../utils/openaiErrors.js";
 import { SITE_NAME_HE } from "../utils/brand.js";
+import { resolveEntitlement, consumeReportCredit, refundReportCredit } from "../utils/entitlements.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const REPORT_MODEL = process.env.AI_REPORT_MODEL || "gpt-4o";
 const REPORT_TEMPERATURE = parseFloat(process.env.AI_REPORT_TEMPERATURE) || 0.25;
 
+/** Bump when the report system/user prompt structure changes. */
+export const REPORT_PROMPT_VERSION = "report-v2";
+
 export async function generateReport(req, res) {
   const userId = req.userId;
   let userEmail = "";
   let filteredRoleCount = 0;
+  let creditConsumed = false;
   const startedAt = Date.now();
 
   try {
-    const user = await User.findById(userId).select("email preferredName");
+    const user = await User.findById(userId).select(
+      "email preferredName role plan planExpiresAt reportCredits"
+    );
     userEmail = user?.email || "";
     const userName = user?.preferredName?.trim() || userEmail.split("@")[0] || "משתמש";
 
@@ -42,6 +50,20 @@ export async function generateReport(req, res) {
         error: "השלימו את הפרופיל לפני יצירת דוח מלא.",
         missing,
       });
+    }
+
+    // Paywall: the full report is a paid product. Reserve a credit now (after the
+    // profile check, before spending OpenAI tokens) so failures can refund it.
+    const entitlement = resolveEntitlement(user);
+    if (!entitlement.isAdmin && !entitlement.planActive) {
+      const ok = await consumeReportCredit(userId);
+      if (!ok) {
+        return res.status(402).json({
+          error: "יצירת דוח מלא דורשת רכישה. בחרו חבילה כדי להמשיך.",
+          code: "PAYMENT_REQUIRED",
+        });
+      }
+      creditConsumed = true;
     }
 
     const fitness = req.body.fitness || {};
@@ -185,9 +207,10 @@ ${JSON.stringify(
     roleTitle: r.roleTitle,
     category: r.category,
     combat: r.combat,
-    minDapar: r.minDapar,
-    minMedical: r.minMedical,
-    tags: r.tags?.slice(0, 4),
+    selective: r.selective,
+    preferenceTags: r.preferenceTags?.slice(0, 6),
+    signals: r.signals,
+    bestFor: r.bestFor,
     aiRecommendationHint: r.aiRecommendationHint,
   })),
   null,
@@ -243,8 +266,10 @@ ${JSON.stringify(
         finishReason,
         openaiRequestId: completion.id ?? null,
         filteredRoleCount,
+        promptVersion: REPORT_PROMPT_VERSION,
         errorMessage: "JSON parse failed",
       });
+      if (creditConsumed) await refundReportCredit(userId);
       return res.status(502).json({ error: "AI returned invalid format. Try again." });
     }
 
@@ -261,6 +286,7 @@ ${JSON.stringify(
       finishReason,
       openaiRequestId: completion.id ?? null,
       filteredRoleCount,
+      promptVersion: REPORT_PROMPT_VERSION,
     });
 
     if (Array.isArray(report.roles)) {
@@ -275,6 +301,8 @@ ${JSON.stringify(
       topRole: String(top?.roleTitle || "").slice(0, 200),
       topMatch: top?.matchPercentage ?? null,
       report,
+      promptVersion: REPORT_PROMPT_VERSION,
+      model: modelUsed,
     });
     void trimUserReportHistory(userId);
 
@@ -285,6 +313,7 @@ ${JSON.stringify(
       historyId: String(saved._id),
     });
   } catch (err) {
+    if (creditConsumed) await refundReportCredit(userId);
     await recordAiUsage({
       userId,
       userEmail,
@@ -296,10 +325,15 @@ ${JSON.stringify(
       durationMs: Date.now() - startedAt,
       status: "api_error",
       filteredRoleCount,
+      promptVersion: REPORT_PROMPT_VERSION,
       errorMessage: err?.message || "Unknown error",
     });
     if (err?.status === 401) {
       return res.status(503).json({ error: "OpenAI API key is invalid or missing." });
+    }
+    const mapped = mapOpenAiError(err);
+    if (mapped) {
+      return res.status(mapped.status).json({ error: mapped.error, code: mapped.code });
     }
     console.error("[ai/full-report]", err);
     res.status(500).json({ error: err.message });

@@ -1,17 +1,23 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useCallback } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { trackShare } from "@/lib/analytics";
 import {
+  BookOpen,
   Bot,
   Briefcase,
   ChevronDown,
   Cpu,
   Heart,
   MapPin,
+  Share2,
   Shield,
   Sparkles,
   Users,
   Waves,
 } from "lucide-react";
+import { findInsightForRole } from "@/lib/role-insights-data";
+import { SITE_NAME_HE } from "@/lib/brand";
 import { IdfPhotoCredit } from "@/components/IdfPhotoCredit";
 import type { RoleMatch } from "@/lib/api";
 import { pickRolePhoto, type IdfPhoto } from "@/lib/idf-photo-catalog";
@@ -92,6 +98,7 @@ function RoleCard({
   const [expanded, setExpanded] = useState(false);
   const detailId = useId();
   const headline = role.summary?.trim() || role.description.split(/(?<=[.!?])\s+/)[0] || role.roleTitle;
+  const insight = useMemo(() => findInsightForRole(role.roleTitle, role.tags), [role.roleTitle, role.tags]);
 
   return (
     <motion.article
@@ -148,6 +155,35 @@ function RoleCard({
             })}
           </div>
 
+          {role.matchFactors && role.matchFactors.length > 0 ? (
+            <div className="rounded-sm border border-primary/15 bg-primary/[0.04] p-3 text-right" dir="rtl">
+              <p className="font-mono text-[10px] tracking-widest text-primary/80 uppercase">
+                לפי הנתונים שלך
+              </p>
+              <ul className="mt-1.5 space-y-1.5 text-[11px] leading-relaxed text-dust">
+                {role.matchFactors.map((f) => (
+                  <li key={f} className="flex flex-row items-start gap-2">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                    <span className="min-w-0 flex-1">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {insight ? (
+            <div className="flex justify-end">
+              <Link
+                to="/role-insights"
+                search={{ role: insight.slug }}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <BookOpen className="h-3.5 w-3.5" aria-hidden />
+                מדריך מלא: {insight.title}
+              </Link>
+            </div>
+          ) : null}
+
           {role.description && role.description !== headline ? (
             <div>
               <button
@@ -181,6 +217,20 @@ function RoleCard({
   );
 }
 
+function buildWhatsAppShareUrl(roles: RoleMatch[]) {
+  const top = roles[0];
+  if (!top) return null;
+  const lines = [
+    `${SITE_NAME_HE} — התאמת תפקידים`,
+    `התפקיד הכי מתאים לי: ${top.roleTitle} (${top.matchPercentage}%)`,
+  ];
+  if (roles.length > 1) {
+    lines.push(`עוד תוצאות: ${roles.slice(1, 3).map((r) => r.roleTitle).join(", ")}`);
+  }
+  lines.push("", "נסו גם: https://kachkivun.com");
+  return `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
 export function RoleMatchCards({ roles }: { roles: RoleMatch[] }) {
   const photos = useMemo(() => {
     const used = new Set<string>();
@@ -191,19 +241,34 @@ export function RoleMatchCards({ roles }: { roles: RoleMatch[] }) {
 
   const [top, ...rest] = roles;
   const [topPhoto, ...restPhotos] = photos;
+  const whatsappUrl = buildWhatsAppShareUrl(roles);
 
   return (
     <section className="space-y-5" aria-labelledby="role-match-results-heading">
       <div className="flex items-center justify-end gap-2 text-right">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] tracking-widest text-primary uppercase">תוצאות</p>
           <h2 id="role-match-results-heading" className="text-xl font-bold text-foreground">
-            5 תפקידים מותאמים לפרופיל שלכם
+            {roles.length} תפקידים מותאמים לפרופיל שלכם
           </h2>
           <p className="mt-1 text-[11px] text-dust/70">לכל תפקיד תמונה שונה · קרדיט לצלם/מקור בתחתית התמונה</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10 text-primary" aria-hidden>
-          <Bot className="h-5 w-5" />
+        <div className="flex items-center gap-2">
+          {whatsappUrl && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackShare("whatsapp")}
+              className="flex h-10 w-10 items-center justify-center rounded-sm border border-iron/30 text-dust transition hover:border-primary/40 hover:text-primary"
+              aria-label="שתפו בוואטסאפ"
+            >
+              <Share2 className="h-4 w-4" />
+            </a>
+          )}
+          <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10 text-primary" aria-hidden>
+            <Bot className="h-5 w-5" />
+          </div>
         </div>
       </div>
 

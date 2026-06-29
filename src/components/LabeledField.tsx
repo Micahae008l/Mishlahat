@@ -28,7 +28,7 @@ export function LabeledField({
   }
 
   const control =
-    isValidElement(children) && children.props.id == null
+    isValidElement(children) && (children.props as { id?: string }).id == null
       ? cloneElement(children as ReactElement<{ id?: string }>, { id })
       : children;
 

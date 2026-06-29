@@ -33,13 +33,7 @@ export function DashboardActionCard({
       }`}
     >
       <div className="min-w-0 flex-1 text-right">
-        <p
-          className={`font-mono text-[10px] tracking-widest uppercase mb-1 ${
-            primary ? "text-primary" : "text-dust"
-          }`}
-        >
-          {badge}
-        </p>
+        <p className={`eyebrow mb-1.5 ${primary ? "eyebrow-accent" : ""}`}>{badge}</p>
         <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
           <Icon className={`h-5 w-5 shrink-0 ${primary ? "text-primary" : "text-primary"}`} />
           <span>{title}</span>

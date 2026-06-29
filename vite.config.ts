@@ -26,13 +26,9 @@ export default defineConfig({
                   : undefined;
               const refused = code === "ECONNREFUSED";
               const reset = code === "ECONNRESET" || code === "EPIPE";
-              const path = req && typeof req === "object" && "url" in req && typeof (req as import("http").IncomingMessage).url === "string"
-                ? (req as import("http").IncomingMessage).url
-                : "";
-              const msg = refused
-                ? `שרת ה-API לא זמין ב־http://localhost:3001 (בקשה: ${path || "/api/…"}). מהשורש הריצו npm run dev (מפעיל API + אתר) — או בשני חלונות: npm run server ואז npm run dev:web. ודאו ש־MongoDB רץ ושהגדרות השרת ב־server/.env.`
-                : reset
-                  ? `שרת ה-API מתעדכן (הפעלה מחדש). המתינו 2–3 שניות ונסו שוב.`
+              const msg =
+                refused || reset
+                  ? "שרת ה-API מתעדכן (הפעלה מחדש). המתינו 2–3 שניות ונסו שוב — אם זה חוזר, הריצו מהשורש npm run dev."
                   : `שגיאת רשת מול שרת ה-API: ${err instanceof Error ? err.message : String(err)}`;
               out.writeHead(503, { "Content-Type": "application/json; charset=utf-8" });
               out.end(JSON.stringify({ error: msg }));

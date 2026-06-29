@@ -3,6 +3,7 @@ import MilitaryStats from "../models/MilitaryStats.js";
 import Preferences from "../models/Preferences.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { getTokenCapStatusForUserId } from "../utils/tokenCap.js";
+import { resolveEntitlement } from "../utils/entitlements.js";
 
 export async function getStats(req, res) {
   try {
@@ -18,6 +19,7 @@ export async function getStats(req, res) {
 
     const { ready: aiReady, missing: aiProfileMissing } = computeAiProfileMissing(stats, preferences);
     const aiTokens = await getTokenCapStatusForUserId(userId);
+    const entitlement = resolveEntitlement(user);
 
     let daysRemaining = null;
     const now = new Date();
@@ -44,6 +46,7 @@ export async function getStats(req, res) {
       aiReady,
       aiProfileMissing,
       aiTokens,
+      entitlement,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

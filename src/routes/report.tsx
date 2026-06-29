@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { trackReportGenerate } from "@/lib/analytics";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ReportHistoryPanel } from "@/components/ReportHistoryPanel";
-import { ReportResultView } from "@/components/ReportResultView";
+
+const ReportHistoryPanel = lazy(() => import("@/components/ReportHistoryPanel").then((m) => ({ default: m.ReportHistoryPanel })));
+const ReportResultView = lazy(() => import("@/components/ReportResultView").then((m) => ({ default: m.ReportResultView })));
 import {
   FileText,
   ChevronLeft,
@@ -17,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  ApiError,
   downloadReportPdf,
   generateFullReport,
   type FitnessData,
@@ -184,6 +187,11 @@ function ReportPage() {
   });
   const aiReady = Boolean(dash?.aiReady);
   const tokenCapped = Boolean(dash?.aiTokens?.capped);
+  const entitlement = dash?.entitlement;
+  const needsPurchase = entitlement ? !entitlement.canGenerateReport : false;
+  const blocked = tokenCapped || needsPurchase;
+  const creditsLeft =
+    entitlement && !entitlement.planActive && !entitlement.isAdmin ? entitlement.reportCredits : null;
   const dashBooting = mounted && !!token && dashPending && !dash;
 
   useEffect(() => {
@@ -207,6 +215,10 @@ function ReportPage() {
       toast.error("הגעתם למכסת הטוקנים ליצירת דוח AI");
       return;
     }
+    if (needsPurchase) {
+      navigate({ to: "/pricing" });
+      return;
+    }
     setPhase("loading");
     const fitness: FitnessData = {
       run3km: run3kmBand && run3kmBand !== "לא יודע/ת" ? run3kmBand : undefined,
@@ -225,10 +237,17 @@ function ReportPage() {
       setJustSaved(true);
       setPhase("result");
       void queryClient.invalidateQueries({ queryKey: ["report-history"] });
+      trackReportGenerate();
       toast.success("הדוח מוכן ונשמר בהיסטוריה");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "שגיאה ביצירת הדוח");
       setPhase("questions");
+      if (err instanceof ApiError && err.code === "PAYMENT_REQUIRED") {
+        toast.error("יצירת דוח מלא דורשת רכישה");
+        void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        navigate({ to: "/pricing" });
+        return;
+      }
+      toast.error(err instanceof Error ? err.message : "שגיאה ביצירת הדוח");
     }
   }
 
@@ -295,13 +314,15 @@ function ReportPage() {
 
   if (phase === "result" && result) {
     return (
-      <ReportResultView
-        data={result}
-        onPrint={handlePrintPdf}
-        onServerDownload={handleServerPdfDownload}
-        pdfLoading={pdfLoading}
-        savedBadge={justSaved}
-      />
+      <Suspense fallback={<ReportGeneratingSkeleton />}>
+        <ReportResultView
+          data={result}
+          onPrint={handlePrintPdf}
+          onServerDownload={handleServerPdfDownload}
+          pdfLoading={pdfLoading}
+          savedBadge={justSaved}
+        />
+      </Suspense>
     );
   }
 
@@ -328,7 +349,9 @@ function ReportPage() {
         </motion.div>
 
         <motion.div variants={fadeUp}>
-          <ReportHistoryPanel />
+          <Suspense fallback={null}>
+            <ReportHistoryPanel />
+          </Suspense>
         </motion.div>
 
         {tokenCapped ? (
@@ -342,6 +365,25 @@ function ReportPage() {
               {dash?.aiTokens?.used?.toLocaleString("he-IL")} / {dash?.aiTokens?.cap?.toLocaleString("he-IL")}{" "}
               טוקנים).
             </p>
+          </motion.div>
+        ) : null}
+
+        {needsPurchase ? (
+          <motion.div
+            variants={fadeUp}
+            className="rounded-sm border border-primary/40 bg-primary/5 p-5 text-right text-sm"
+          >
+            <p className="font-bold text-foreground">הדוח המלא דורש רכישה</p>
+            <p className="mt-1 text-dust">
+              דוח כיוון אישי ומקיף — 10 תפקידים מדורגים, טיפים למיון/ראיון, חוזקות, חולשות וסיכום
+              להורים. ההתאמה הבסיסית והפרופיל נשארים חינם.
+            </p>
+            <Link
+              to="/pricing"
+              className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-bold text-primary-foreground transition hover:brightness-110"
+            >
+              לתוכניות והמחירים
+            </Link>
           </motion.div>
         ) : null}
 
@@ -557,7 +599,7 @@ function ReportPage() {
               <button
                 type="button"
                 onClick={submitReport}
-                disabled={tokenCapped}
+                disabled={blocked}
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
               >
                 <FileText className="h-4 w-4" aria-hidden />
@@ -577,7 +619,7 @@ function ReportPage() {
               <button
                 type="button"
                 onClick={submitReport}
-                disabled={tokenCapped}
+                disabled={blocked}
                 className="text-sm text-dust transition hover:text-foreground disabled:opacity-40"
               >
                 דלגו ליצירת הדוח
@@ -595,6 +637,12 @@ function ReportPage() {
             </button>
           )}
         </motion.div>
+
+        {creditsLeft != null && creditsLeft > 0 ? (
+          <motion.div variants={fadeUp} className="text-center text-xs text-primary/80">
+            נותרו לכם {creditsLeft.toLocaleString("he-IL")} דוחות מלאים
+          </motion.div>
+        ) : null}
 
         <motion.div variants={fadeUp} className="text-center text-xs text-dust/60">
           הכל אופציונלי. אפשר ללחוץ «דלגו ליצירת הדוח» בכל שלב.

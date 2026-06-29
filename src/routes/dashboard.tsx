@@ -2,9 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Target, Calendar } from "lucide-react";
+import { Target, Calendar, FileText, Compass, CheckCircle2, CircleDot, Circle } from "lucide-react";
 import { DashboardAccountPreferences } from "@/components/DashboardAccountPreferences";
 import { DashboardActionCard } from "@/components/DashboardActionCard";
+import { OfficialScoresNudge } from "@/components/OfficialScoresNudge";
+import { computeMatchAccuracy } from "@/lib/match-accuracy";
+import { computePrepTimeline } from "@/lib/prep-timeline";
 import { migrateLegacyYomHameahTo12, YOM_HAMEAH_12_KEYS } from "@/lib/yom-hameah-12";
 import { progressBarProps } from "@/lib/a11y";
 import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
@@ -13,6 +16,7 @@ import { getToken } from "@/lib/auth";
 import { AI_PROFILE_MISSING_LABELS } from "@/lib/profile-preference-data";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
+import { MATCH_TOOL_DESC, MATCH_TOOL_NAME, SECRETARY_COMING } from "@/lib/voice";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -131,6 +135,10 @@ function DashboardPage() {
   const missingLabels =
     data?.aiProfileMissing?.map((k) => AI_PROFILE_MISSING_LABELS[k] ?? k).filter(Boolean) ?? [];
 
+  const accuracy = computeMatchAccuracy(data);
+  const isPreDraft = data?.user?.status === "Pre-Draft";
+  const prepTimeline = isPreDraft && countdownTarget ? computePrepTimeline(days) : null;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 topo-lines">
       {!mounted ? (
@@ -166,15 +174,15 @@ function DashboardPage() {
           {/* Header bar */}
           <motion.div variants={fadeUp} className="flex flex-col-reverse gap-3 border-b border-iron/30 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="text-right">
-              <p className="font-mono text-xs tracking-widest text-dust uppercase mb-2">דשבורד</p>
+              <p className="eyebrow mb-2">הדשבורד שלך</p>
               <h1 className="text-2xl font-black sm:text-4xl">
-                שלום,{" "}
+                היי,{" "}
                 <span className="text-primary">
                   {data.user.preferredName?.trim()
                     ? data.user.preferredName.trim()
                     : data.user.email
                       ? displayName(data.user.email)
-                      : "חבר/ה"}
+                      : "שם טרם הוגדר"}
                 </span>
               </h1>
             </div>
@@ -182,6 +190,10 @@ function DashboardPage() {
               <span className="h-2 w-2 rounded-full bg-olive" />
               <span className="text-xs font-semibold text-olive-foreground">{statusHebrew(data.user.status)}</span>
             </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <OfficialScoresNudge dash={data} />
           </motion.div>
 
           {/* Main grid: countdown + metrics */}
@@ -253,8 +265,82 @@ function DashboardPage() {
                 value={dapar != null ? String(dapar) : "—"}
                 pct={dapar != null ? Math.min(100, Math.round(((dapar - 10) / 80) * 100)) : 0}
               />
+              <MetricRow
+                label="דיוק התאמה (שלמות הפרופיל)"
+                value={`${accuracy.pct}%`}
+                pct={accuracy.pct}
+              />
             </motion.div>
           </div>
+
+          {accuracy.level !== "high" && accuracy.notes.length > 0 ? (
+            <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-5 text-right" dir="rtl">
+              <p className="eyebrow mb-2">איך משפרים את דיוק ההתאמה</p>
+              <ul className="space-y-1 text-sm text-dust">
+                {accuracy.notes.map((n) => (
+                  <li key={n} className="flex flex-row items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                    <span>{n}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/profile" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+                עדכון הפרופיל →
+              </Link>
+            </motion.div>
+          ) : null}
+
+          {prepTimeline ? (
+            <motion.section variants={fadeUp} className="border border-iron/30 bg-card" aria-labelledby="prep-timeline-heading" dir="rtl">
+              <div className="border-b border-iron/20 px-5 py-3 text-right">
+                <p className="eyebrow mb-1">ציר הכנה עד הגיוס</p>
+                <h2 id="prep-timeline-heading" className="text-base font-bold text-foreground sm:text-lg">
+                  מה כדאי לעשות בשלב הנוכחי
+                </h2>
+              </div>
+              <div className="grid gap-px bg-iron/15 sm:grid-cols-2 lg:grid-cols-4">
+                {prepTimeline.map((phase) => {
+                  const PhaseIcon =
+                    phase.status === "done" ? CheckCircle2 : phase.status === "active" ? CircleDot : Circle;
+                  return (
+                    <div
+                      key={phase.id}
+                      className={`bg-card p-4 text-right ${phase.status === "active" ? "bg-primary/[0.06]" : ""} ${
+                        phase.status === "upcoming" ? "opacity-60" : ""
+                      }`}
+                    >
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <PhaseIcon
+                          className={`h-4 w-4 shrink-0 ${
+                            phase.status === "active"
+                              ? "text-primary"
+                              : phase.status === "done"
+                                ? "text-olive"
+                                : "text-dust/50"
+                          }`}
+                          aria-hidden
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-foreground">{phase.title}</p>
+                          <p className="font-mono text-[10px] text-dust/70">{phase.window}</p>
+                        </div>
+                      </div>
+                      {phase.status === "active" ? (
+                        <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-dust">
+                          {phase.tasks.map((t) => (
+                            <li key={t} className="flex flex-row items-start gap-1.5">
+                              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                              <span>{t}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.section>
+          ) : null}
 
           <motion.div variants={fadeUp}>
             <DashboardAccountPreferences data={data} />
@@ -262,38 +348,56 @@ function DashboardPage() {
 
           <motion.div variants={fadeUp} className="flex justify-start" dir="rtl">
             <Link
-              to="/onboarding"
+              to="/profile"
               className="text-sm text-dust transition hover:text-primary hover:underline"
             >
-              עריכת מא״ה מלאה (12 ממדים) →
+              עריכת פרופיל מלא →
             </Link>
           </motion.div>
 
           {/* Hub — התאמת תפקידים */}
           <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="dashboard-tools-heading">
             <div className="text-right">
-              <p className="font-mono text-[10px] tracking-widest text-dust uppercase">כלי AI</p>
+              <p className="eyebrow mb-1">המשך מהדשבורד</p>
               <h2 id="dashboard-tools-heading" className="text-lg font-bold text-foreground sm:text-xl">
-                התאמת תפקידים
+                {MATCH_TOOL_NAME}
               </h2>
-              <p className="mt-1 text-sm text-dust">מזכיר AI בקרוב — בינתיים הפעילו את יוצר ההתאמה מהכותרת.</p>
+              <p className="mt-1 text-sm leading-relaxed text-dust">{SECRETARY_COMING}. {MATCH_TOOL_DESC}</p>
             </div>
 
             {aiReady ? (
-              <DashboardActionCard
-                to="/ai-counselor"
-                variant="primary"
-                badge="מוכן להפעלה"
-                title="יוצר התאמת תפקידים"
-                description="ניתוח הפרופיל שלכם מול מאגר תפקידים והמלצות עם ציון התאמה."
-                icon={Target}
-              />
+              <div className="space-y-4">
+                <DashboardActionCard
+                  to="/ai-counselor"
+                  variant="primary"
+                  badge="הפרופיל מלא"
+                  title={MATCH_TOOL_NAME}
+                  description={MATCH_TOOL_DESC}
+                  icon={Target}
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DashboardActionCard
+                    to="/report"
+                    badge="דוח מקיף"
+                    title="דוח מוכנות מלא"
+                    description="דוח אישי מעמיק: כיוון מומלץ, 10 תפקידים, חוזקות, טיפים למיונים וסיכום להורים. כולל PDF."
+                    icon={FileText}
+                  />
+                  <DashboardActionCard
+                    to="/role-insights"
+                    badge="מאגר ידע"
+                    title="תובנות תפקידים"
+                    description="מדריכי תפקידים, יומיום, מסלולי הכשרה וביקורות של חיילים ששירתו בתפקיד."
+                    icon={Compass}
+                  />
+                </div>
+              </div>
             ) : (
               <div className="border border-iron/30 bg-card p-5 text-right sm:p-8" dir="rtl">
-                <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">התאמת תפקידים</p>
+                <p className="eyebrow mb-2">{MATCH_TOOL_NAME}</p>
                 <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
                   <Target className="h-5 w-5 shrink-0 text-dust" />
-                  <span>השלימו פרטים כדי להפעיל את היוצר</span>
+                  <span>עוד כמה שדות ואפשר להריץ התאמה</span>
                 </h3>
                 {missingLabels.length > 0 ? (
                   <ul className="mt-3 list-disc pr-5 text-sm text-dust">
@@ -306,6 +410,16 @@ function DashboardPage() {
                 )}
               </div>
             )}
+
+            {!aiReady ? (
+              <DashboardActionCard
+                to="/role-insights"
+                badge="זמין גם בלי פרופיל מלא"
+                title="תובנות תפקידים"
+                description="מדריכי תפקידים, יומיום, מסלולי הכשרה וביקורות של חיילים ששירתו בתפקיד."
+                icon={Compass}
+              />
+            ) : null}
           </motion.section>
         </motion.div>
       )}
@@ -315,11 +429,11 @@ function DashboardPage() {
 
 function DashboardProgress({
   value,
-  label,
+  label = "התקדמות",
   size = "md",
 }: {
   value: number;
-  label: string;
+  label?: string;
   size?: "md" | "lg";
 }) {
   const clamped = Math.min(100, Math.max(0, value));

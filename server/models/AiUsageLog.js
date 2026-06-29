@@ -36,6 +36,7 @@ const aiUsageLogSchema = new mongoose.Schema(
     finishReason: { type: String, default: null },
     openaiRequestId: { type: String, default: null },
     filteredRoleCount: { type: Number, default: null },
+    promptVersion: { type: String, default: "" },
     errorMessage: { type: String, default: null },
   },
   { timestamps: true }

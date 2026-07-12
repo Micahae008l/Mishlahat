@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { logSecurityEvent } from "../utils/securityLog.js";
 
 /** Requires authenticateToken first — sets req.adminUser when role is admin. */
 export async function requireAdmin(req, res, next) {
@@ -12,6 +13,12 @@ export async function requireAdmin(req, res, next) {
       return res.status(404).json({ error: "User not found" });
     }
     if (user.role !== "admin") {
+      logSecurityEvent("admin_denied", req, {
+        statusCode: 403,
+        email: user.email,
+        userId: user._id,
+        message: "non-admin attempted admin endpoint",
+      });
       return res.status(403).json({ error: "Admin access required" });
     }
 

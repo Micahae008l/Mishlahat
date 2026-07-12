@@ -585,3 +585,110 @@ export function deleteAdminUser(userId: string) {
     { method: "DELETE" },
   );
 }
+
+export type SecurityEventType =
+  | "rate_limit_api"
+  | "rate_limit_auth"
+  | "otp_failed"
+  | "otp_locked"
+  | "invalid_token"
+  | "admin_denied"
+  | "oversized_url"
+  | "payload_too_large"
+  | "invalid_json"
+  | "suspicious_path"
+  | "not_found_probe"
+  | "blocked_ip_hit";
+
+export type SecuritySeverity = "low" | "medium" | "high" | "critical";
+
+export type SecurityEventRow = {
+  id: string;
+  type: SecurityEventType;
+  severity: SecuritySeverity;
+  ip: string;
+  method: string;
+  path: string;
+  userAgent: string;
+  email: string;
+  statusCode: number | null;
+  message: string;
+  createdAt: string;
+};
+
+export type SecurityOverviewResponse = {
+  totals: { last24h: number; last7d: number; allTime: number };
+  blockedIpCount: number;
+  byType: Array<{ type: SecurityEventType; count: number; lastAt: string }>;
+  bySeverity: Array<{ severity: SecuritySeverity; count: number }>;
+  timeline: Array<{ hour: string; count: number; severe: number }>;
+  topIps: Array<{
+    ip: string;
+    count: number;
+    severe: number;
+    types: SecurityEventType[];
+    lastAt: string;
+    blocked: boolean;
+  }>;
+  recentEvents: SecurityEventRow[];
+};
+
+export type SecurityEventsResponse = {
+  events: SecurityEventRow[];
+  total: number;
+  skip: number;
+  limit: number;
+};
+
+export type BlockedIpRow = {
+  id: string;
+  ip: string;
+  reason: string;
+  blockedBy: string;
+  hitCount: number;
+  lastHitAt: string | null;
+  createdAt: string;
+};
+
+export function getSecurityOverview() {
+  return apiFetch<SecurityOverviewResponse>("/api/admin/security/overview");
+}
+
+export type SecurityEventsFilters = {
+  type?: SecurityEventType | "";
+  severity?: SecuritySeverity | "";
+  ip?: string;
+  skip?: number;
+  limit?: number;
+};
+
+export function getSecurityEvents(params?: SecurityEventsFilters) {
+  const sp = new URLSearchParams();
+  if (params?.type) sp.set("type", params.type);
+  if (params?.severity) sp.set("severity", params.severity);
+  if (params?.ip) sp.set("ip", params.ip);
+  if (params?.skip != null) sp.set("skip", String(params.skip));
+  if (params?.limit != null) sp.set("limit", String(params.limit));
+  const qs = sp.toString();
+  return apiFetch<SecurityEventsResponse>(`/api/admin/security/events${qs ? `?${qs}` : ""}`);
+}
+
+export function getBlockedIps() {
+  return apiFetch<{ blockedIps: BlockedIpRow[] }>("/api/admin/security/blocked-ips");
+}
+
+export function blockIpRequest(ip: string, reason?: string) {
+  return apiFetch<{ message: string; blockedIp: BlockedIpRow }>(
+    "/api/admin/security/blocked-ips",
+    {
+      method: "POST",
+      body: JSON.stringify({ ip, reason: reason || "" }),
+    },
+  );
+}
+
+export function unblockIpRequest(id: string) {
+  return apiFetch<{ message: string; ip: string }>(`/api/admin/security/blocked-ips/${id}`, {
+    method: "DELETE",
+  });
+}

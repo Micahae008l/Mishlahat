@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   Users,
   Shield,
+  ShieldAlert,
   Sparkles,
   DollarSign,
   Search,
@@ -210,6 +211,13 @@ function AdminPage() {
                 <RefreshCw className="h-3.5 w-3.5" />
                 רענון
               </button>
+              <Link
+                to="/admin/security"
+                className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-card px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/10"
+              >
+                <ShieldAlert className="h-3.5 w-3.5" />
+                מרכז אבטחה
+              </Link>
               <Link
                 to="/dashboard"
                 className="rounded-md border border-iron/40 bg-card px-3 py-1.5 text-xs font-medium text-dust transition hover:text-foreground"

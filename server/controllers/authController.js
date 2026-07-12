@@ -18,6 +18,7 @@ import {
   refreshCookieOptions,
   revokeRefreshToken,
 } from "../utils/refreshTokens.js";
+import { logSecurityEvent } from "../utils/securityLog.js";
 
 const OTP_TTL_MINUTES = 10;
 const OTP_MAX_ATTEMPTS = 5;
@@ -289,6 +290,11 @@ export async function verifyOtp(req, res) {
     if (otp.attempts >= OTP_MAX_ATTEMPTS) {
       otp.consumedAt = new Date();
       await otp.save();
+      logSecurityEvent("otp_locked", req, {
+        statusCode: 429,
+        email,
+        message: `code locked after ${otp.attempts} failed attempts`,
+      });
       console.warn(`[auth/verify-otp] code locked for ${email} (${otp.attempts} attempts) — auto-sending a fresh code is required`);
       return res.status(429).json({
         error: "יותר מדי ניסיונות. שלחו קוד חדש.",
@@ -300,6 +306,11 @@ export async function verifyOtp(req, res) {
     if (!valid) {
       otp.attempts += 1;
       await otp.save();
+      logSecurityEvent("otp_failed", req, {
+        statusCode: 401,
+        email,
+        message: `wrong code, attempt ${otp.attempts}/${OTP_MAX_ATTEMPTS}`,
+      });
       console.warn(`[auth/verify-otp] MISMATCH for ${email} — entered codeLen=${code.length}, attempt ${otp.attempts}/${OTP_MAX_ATTEMPTS}`);
       return res.status(401).json({ error: "קוד שגוי", code: "OTP_INVALID" });
     }

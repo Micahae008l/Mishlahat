@@ -9,4 +9,8 @@ export const queryKeys = {
   adminMe: (token: string | null) => ["admin-me", token] as const,
   adminOverview: (token: string | null) => ["admin-overview", token] as const,
   adminUsers: (token: string | null, search: string) => ["admin-users", token, search] as const,
+  adminSecurityOverview: (token: string | null) => ["admin-security-overview", token] as const,
+  adminSecurityEvents: (token: string | null, filters: string) =>
+    ["admin-security-events", token, filters] as const,
+  adminBlockedIps: (token: string | null) => ["admin-blocked-ips", token] as const,
 };

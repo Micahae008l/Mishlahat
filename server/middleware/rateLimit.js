@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { logSecurityEvent } from "../utils/securityLog.js";
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
@@ -14,7 +15,8 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === "GET" && (req.path === "/health" || req.originalUrl === "/api/health"),
-  handler: (_req, res, _next, options) => {
+  handler: (req, res, _next, options) => {
+    logSecurityEvent("rate_limit_api", req, { statusCode: options.statusCode });
     res.status(options.statusCode).json({
       error: "יותר מדי בקשות. נסו שוב בעוד כמה דקות.",
       code: "RATE_LIMIT_API",
@@ -28,7 +30,11 @@ export const authLimiter = rateLimit({
   max: parsePositiveInt(process.env.AUTH_RATE_LIMIT_MAX, 5),
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (_req, res, _next, options) => {
+  handler: (req, res, _next, options) => {
+    logSecurityEvent("rate_limit_auth", req, {
+      statusCode: options.statusCode,
+      email: req.body?.email,
+    });
     res.status(options.statusCode).json({
       error: "יותר מדי ניסיונות כניסה. נסו שוב בעוד 15 דקות.",
       code: "RATE_LIMIT_AUTH",

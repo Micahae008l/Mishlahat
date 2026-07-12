@@ -4,7 +4,9 @@ import {
   validateAdminUserRole,
   validateAdminUserTokenCap,
   validateAdminUsersQuery,
+  validateBlockIp,
   validateObjectIdParam,
+  validateSecurityEventsQuery,
 } from "../validators/admin.js";
 import { authenticateToken } from "../middleware/auth.js";
 import { requireAdmin } from "../middleware/admin.js";
@@ -16,6 +18,13 @@ import {
   updateUserTokenCap,
   deleteUser,
 } from "../controllers/adminController.js";
+import {
+  getSecurityOverview,
+  listSecurityEvents,
+  listBlockedIps,
+  blockIp,
+  unblockIp,
+} from "../controllers/securityController.js";
 
 const router = Router();
 
@@ -31,5 +40,15 @@ router.patch(
   updateUserTokenCap
 );
 router.delete("/users/:id", validateRequest(validateObjectIdParam("id")), deleteUser);
+
+router.get("/security/overview", getSecurityOverview);
+router.get("/security/events", validateRequest(validateSecurityEventsQuery), listSecurityEvents);
+router.get("/security/blocked-ips", listBlockedIps);
+router.post("/security/blocked-ips", validateRequest(validateBlockIp), blockIp);
+router.delete(
+  "/security/blocked-ips/:id",
+  validateRequest(validateObjectIdParam("id")),
+  unblockIp
+);
 
 export default router;

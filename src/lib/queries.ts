@@ -3,10 +3,14 @@ import {
   getAdminMe,
   getAdminOverview,
   getAdminUsers,
+  getBlockedIps,
   getDashboardStats,
   getReportHistory,
+  getSecurityEvents,
+  getSecurityOverview,
   getSession,
   listReportHistory,
+  type SecurityEventsFilters,
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -18,6 +22,7 @@ export const STALE = {
   reportHistory: 3 * MIN,
   reportDetail: 10 * MIN,
   admin: 2 * MIN,
+  security: 30_000,
 } as const;
 
 export const sessionQueryOptions = (tokenPresent: boolean) =>
@@ -74,6 +79,30 @@ export const adminUsersQueryOptions = (token: string | null, search: string) =>
     queryFn: () => getAdminUsers({ q: search || undefined, limit: 50 }),
     enabled: !!token,
     staleTime: STALE.admin,
+  });
+
+export const securityOverviewQueryOptions = (token: string | null) =>
+  queryOptions({
+    queryKey: queryKeys.adminSecurityOverview(token),
+    queryFn: getSecurityOverview,
+    enabled: !!token,
+    staleTime: STALE.security,
+  });
+
+export const securityEventsQueryOptions = (token: string | null, filters: SecurityEventsFilters) =>
+  queryOptions({
+    queryKey: queryKeys.adminSecurityEvents(token, JSON.stringify(filters)),
+    queryFn: () => getSecurityEvents(filters),
+    enabled: !!token,
+    staleTime: STALE.security,
+  });
+
+export const blockedIpsQueryOptions = (token: string | null) =>
+  queryOptions({
+    queryKey: queryKeys.adminBlockedIps(token),
+    queryFn: getBlockedIps,
+    enabled: !!token,
+    staleTime: STALE.security,
   });
 
 /** Warm caches after login and on navigation (no-op if data is still fresh). */

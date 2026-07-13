@@ -30,12 +30,11 @@ type ScoreChipRowProps = {
   onSelect: (n: number) => void;
 };
 
-/** RTL row: highest score on the right, chips flow right → left */
+/** RTL row: lowest score on the right (reading start), highest on the left */
 function ScoreChipRow({ scores, selected, onSelect }: ScoreChipRowProps) {
-  const ordered = [...scores].reverse();
   return (
     <div className="flex flex-wrap justify-start gap-2" dir="rtl">
-      {ordered.map((n) => (
+      {scores.map((n) => (
         <button
           key={n}
           type="button"

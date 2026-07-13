@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 type Props = {
   to: string;
@@ -11,7 +11,7 @@ type Props = {
   variant?: "primary" | "default";
 };
 
-/** RTL action row: text on the right, arrow on the left */
+/** RTL action row: arrow on the right, text block on the left */
 export function DashboardActionCard({
   to,
   badge,
@@ -32,30 +32,24 @@ export function DashboardActionCard({
           : "border-iron/30 hover:border-iron/50"
       }`}
     >
-      <div className="min-w-0 flex-1 text-right">
-        <p
-          className={`font-mono text-[10px] tracking-widest uppercase mb-1 ${
-            primary ? "text-primary" : "text-dust"
-          }`}
-        >
-          {badge}
-        </p>
-        <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
-          <Icon className={`h-5 w-5 shrink-0 ${primary ? "text-primary" : "text-primary"}`} />
-          <span>{title}</span>
-        </h3>
-        <p className="mt-1 text-sm leading-relaxed text-dust">{description}</p>
-      </div>
-
       <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center border transition group-hover:-translate-x-0.5 ${
+        className={`flex h-10 w-10 shrink-0 items-center justify-center border transition group-hover:translate-x-0.5 ${
           primary
             ? "border-primary/30 text-primary"
             : "border-iron/30 text-dust group-hover:border-primary/30 group-hover:text-primary"
         }`}
         aria-hidden
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronRight className="h-5 w-5" />
+      </div>
+
+      <div className="min-w-0 flex-1 text-right">
+        <p className={`eyebrow mb-1.5 ${primary ? "eyebrow-accent" : ""}`}>{badge}</p>
+        <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
+          <Icon className={`h-5 w-5 shrink-0 ${primary ? "text-primary" : "text-primary"}`} />
+          <span>{title}</span>
+        </h3>
+        <p className="mt-1 text-sm leading-relaxed text-dust">{description}</p>
       </div>
     </Link>
   );

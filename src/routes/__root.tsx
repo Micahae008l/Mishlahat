@@ -21,12 +21,16 @@ import { queryClient } from "@/lib/query-client";
 import { clearToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
 import { KachKivunLogo } from "@/components/KachKivunLogo";
 import { SITE_DESCRIPTION, SITE_NAME_HE } from "@/lib/brand";
+import { MATCH_TOOL_SHORT } from "@/lib/voice";
 import { ARIA, MAIN_CONTENT_ID, MOBILE_NAV_ID } from "@/lib/a11y";
 import { IDF_BACKDROP_IMAGE_URLS, preloadIdfBackdropImages } from "@/lib/idf-images";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { getPlausibleDomain, getPlausibleScriptUrl, trackError } from "@/lib/analytics";
 
 export const Route = createRootRoute({
   shellComponent: RootDocument,
   component: RootLayout,
+  notFoundComponent: NotFoundPage,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -44,14 +48,23 @@ export const Route = createRootRoute({
       { property: "og:site_name", content: SITE_NAME_HE },
       { property: "og:title", content: SITE_DESCRIPTION },
       { property: "og:description", content: SITE_DESCRIPTION },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: SITE_DESCRIPTION },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
       ...IDF_BACKDROP_IMAGE_URLS.slice(0, 2).map((href) => ({
         rel: "preload" as const,
@@ -63,10 +76,16 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
+  const plausibleSrc = getPlausibleScriptUrl();
+  const plausibleDomain = getPlausibleDomain();
+
   return (
     <html lang="he" dir="rtl">
       <head>
         <HeadContent />
+        {plausibleSrc && plausibleDomain && (
+          <script defer data-domain={plausibleDomain} src={plausibleSrc} />
+        )}
       </head>
       <body className="min-h-dvh font-sans antialiased text-foreground">
         {children}
@@ -77,11 +96,29 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
+  useEffect(() => {
+    function onError(event: ErrorEvent) {
+      trackError(event.message, event.filename ?? "global");
+    }
+    function onUnhandledRejection(event: PromiseRejectionEvent) {
+      const msg = event.reason instanceof Error ? event.reason.message : String(event.reason);
+      trackError(msg, "unhandledrejection");
+    }
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    };
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <RootLayoutInner />
-      <Toaster richColors position="top-center" />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RootLayoutInner />
+        <Toaster richColors position="top-center" />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
@@ -128,20 +165,30 @@ function RootLayoutInner() {
       </main>
       {!isBareShell && (
         <footer className="border-t border-iron/30 mt-20" aria-label={ARIA.footer}>
-          <div className="mx-auto flex max-w-7xl flex-col-reverse items-center gap-4 px-4 py-6 text-xs text-dust/60 sm:flex-row sm:justify-between sm:px-6 sm:py-8">
-            <span className="text-dust/50">
-              &copy; {new Date().getFullYear()} {SITE_NAME_HE}
-            </span>
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 text-xs text-dust/60 sm:flex-row sm:justify-between sm:px-6 sm:py-8">
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <Link to="/" className="transition hover:text-foreground">
                 ראשי
               </Link>
+              <Link to="/about" className="transition hover:text-foreground">
+                אודות
+              </Link>
+              <a href="/about#contact-heading" className="transition hover:text-foreground">
+                צור קשר
+              </a>
               <Link to="/role-insights" className="transition hover:text-foreground">
                 תובנות
               </Link>
-              <span className="cursor-default">פרטיות</span>
-              <span className="cursor-default">תנאי שימוש</span>
+              <Link to="/privacy" className="transition hover:text-foreground">
+                פרטיות
+              </Link>
+              <Link to="/terms" className="transition hover:text-foreground">
+                תנאי שימוש
+              </Link>
             </div>
+            <span className="text-dust/50">
+              &copy; {new Date().getFullYear()} {SITE_NAME_HE}
+            </span>
           </div>
         </footer>
       )}
@@ -150,10 +197,13 @@ function RootLayoutInner() {
 }
 
 /** Main tools in header — profile lives in ProfileMenu */
-const NAV_AUTHED = [
-  { to: "/ai-secretary", label: "מזכיר AI" },
-  { to: "/ai-counselor", label: "התאמת תפקידים" },
-] as const;
+type NavItem = { to: string; label: string; exact?: boolean };
+
+const NAV_AUTHED: readonly NavItem[] = [
+  { to: "/ai-counselor", label: MATCH_TOOL_SHORT },
+  { to: "/report", label: "דוח מוכנות" },
+  { to: "/role-insights", label: "תובנות תפקידים" },
+];
 
 function SiteHeader({
   authed,
@@ -230,7 +280,7 @@ function SiteHeader({
           ) : (
             <Link
               to="/post-signup"
-              className="shrink-0 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+              className="btn-primary shrink-0 px-4 py-1.5 text-sm"
             >
               התחברו
             </Link>
@@ -257,7 +307,7 @@ function SiteHeader({
           ) : (
             <Link
               to="/post-signup"
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+              className="btn-primary px-3 py-1.5 text-xs"
             >
               התחברו
             </Link>
@@ -310,6 +360,21 @@ function SiteHeader({
         )}
       </AnimatePresence>
     </motion.header>
+  );
+}
+
+function NotFoundPage() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+      <p className="font-mono text-6xl font-black tabular-nums text-primary">404</p>
+      <h1 className="mt-4 text-xl font-bold text-foreground">העמוד לא נמצא</h1>
+      <p className="mt-2 text-sm text-dust">
+        הכתובת לא קיימת או שהעמוד הוסר.
+      </p>
+      <Link to="/" className="btn-primary mt-8 px-6 py-2.5">
+        חזרה לדף הראשי
+      </Link>
+    </div>
   );
 }
 

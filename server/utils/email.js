@@ -8,14 +8,17 @@ const OTP_TTL_MINUTES = 10;
 
 /** Brand colors as hex — email clients ignore oklch/CSS vars. */
 const C = {
-  bg: "#0f1210",
-  card: "#1a1f1b",
-  border: "#2e362f",
-  text: "#f2f0ea",
-  muted: "#a8aea4",
-  olive: "#6b8f5e",
-  codeBg: "#0c0e0c",
-  codeBorder: "#6b8f5e",
+  bg: "#0a0d0b",
+  card: "#161a17",
+  cardTop: "#1b201c",
+  border: "#2b322c",
+  text: "#f3f1eb",
+  muted: "#9aa197",
+  faint: "#6f766c",
+  olive: "#7d9c55",
+  oliveDark: "#5f7d43",
+  codeBg: "#0c0f0d",
+  codeBorder: "#3a4a2c",
   white: "#ffffff",
 };
 
@@ -61,10 +64,11 @@ function escapeHtml(value) {
 
 /**
  * Build OTP HTML.
- * Note: Gmail/Outlook block JS — no real clipboard API.
- * We use user-select:all so one click/tap selects the whole code for copy,
- * plus a large tap target and clear Hebrew hint.
- * Digits stay continuous (letter-spacing only) so paste into the OTP field works.
+ * Note: Gmail/Outlook block JS — no real clipboard API, so there is no true
+ * one-click "copy" button possible in email. The code is rendered as a single
+ * continuous, user-select:all chip: one tap (desktop) / long-press (mobile)
+ * selects the whole thing to copy. Digits stay continuous (letter-spacing
+ * only, no separators) so pasted values need no cleanup.
  */
 function buildOtpHtml({ siteName, code, ttlMinutes, appUrl }) {
   const safeName = escapeHtml(siteName);
@@ -85,61 +89,84 @@ function buildOtpHtml({ siteName, code, ttlMinutes, appUrl }) {
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">
     קוד הכניסה שלך ל${safeName}: ${safeCode}. תקף ל־${ttlMinutes} דקות.
   </div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg};padding:32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg};padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background:${C.card};border:1px solid ${C.border};border-radius:16px;overflow:hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background:${C.card};border:1px solid ${C.border};border-radius:20px;overflow:hidden;">
           <tr>
-            <td style="height:4px;background:${C.olive};font-size:0;line-height:0;">&nbsp;</td>
+            <td style="height:3px;background:${C.olive};font-size:0;line-height:0;">&nbsp;</td>
           </tr>
           <tr>
-            <td style="padding:36px 28px 28px;font-family:Arial,Helvetica,sans-serif;color:${C.text};text-align:center;" dir="rtl">
-              <p style="margin:0 0 6px;font-size:13px;letter-spacing:0.12em;color:${C.olive};font-weight:700;">
+            <td style="padding:40px 32px 8px;font-family:Arial,Helvetica,sans-serif;text-align:center;" dir="rtl">
+              <p style="margin:0;font-size:12px;letter-spacing:0.22em;color:${C.olive};font-weight:700;text-transform:uppercase;">
                 ${safeName}
-              </p>
-              <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;font-weight:700;color:${C.white};">
-                קוד הכניסה שלך
-              </h1>
-              <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:${C.muted};">
-                הזינו את הקוד במסך ההתחברות. הקוד חד־פעמי ותקף ל־${ttlMinutes} דקות.
-              </p>
-
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px;">
-                <tr>
-                  <td align="center" style="background:${C.codeBg};border:1px solid ${C.codeBorder};border-radius:12px;padding:22px 16px;">
-                    <p style="margin:0 0 10px;font-size:12px;color:${C.muted};">
-                      לחצו על הקוד כדי לסמן אותו — ואז העתיקו
-                    </p>
-                    <a href="#otp-code" id="otp-code" style="display:inline-block;font-family:'Courier New',Consolas,monospace;font-size:36px;font-weight:700;letter-spacing:0.35em;line-height:1.2;color:${C.white};text-decoration:none;direction:ltr;-webkit-user-select:all;-moz-user-select:all;user-select:all;cursor:pointer;padding:4px 8px 4px 18px;">${safeCode}</a>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin:0 0 24px;font-size:13px;line-height:1.5;color:${C.muted};">
-                בטלפון: לחיצה ארוכה על הקוד ← העתקה · במחשב: לחיצה אחת ← Ctrl+C / ⌘C
-              </p>
-
-              ${
-                loginHref
-                  ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 24px;">
-                <tr>
-                  <td align="center" style="border-radius:10px;background:${C.olive};">
-                    <a href="${loginHref}" style="display:inline-block;padding:12px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:${C.white};text-decoration:none;border-radius:10px;">
-                      חזרה להתחברות
-                    </a>
-                  </td>
-                </tr>
-              </table>`
-                  : ""
-              }
-
-              <p style="margin:0;font-size:12px;line-height:1.55;color:${C.muted};">
-                לא ביקשתם קוד? התעלמו מהמייל — אל תשתפו את הקוד עם אף אחד.
               </p>
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 28px 22px;border-top:1px solid ${C.border};font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${C.muted};text-align:center;" dir="rtl">
+            <td style="padding:20px 32px 0;font-family:Arial,Helvetica,sans-serif;color:${C.text};text-align:center;" dir="rtl">
+              <h1 style="margin:0 0 10px;font-size:26px;line-height:1.3;font-weight:800;color:${C.white};">
+                קוד הכניסה שלך
+              </h1>
+              <p style="margin:0 auto 28px;max-width:340px;font-size:15px;line-height:1.65;color:${C.muted};">
+                הזינו את הקוד במסך ההתחברות כדי להמשיך.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;" dir="rtl">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.codeBg};border:1px solid ${C.codeBorder};border-radius:16px;">
+                <tr>
+                  <td align="center" style="padding:26px 16px 22px;font-family:Arial,Helvetica,sans-serif;">
+                    <p style="margin:0 0 14px;font-size:11px;letter-spacing:0.18em;color:${C.faint};font-weight:700;text-transform:uppercase;">
+                      קוד חד־פעמי
+                    </p>
+                    <span style="display:inline-block;font-family:'Courier New',Consolas,monospace;font-size:40px;font-weight:700;letter-spacing:0.32em;line-height:1;color:${C.white};direction:ltr;-webkit-user-select:all;-moz-user-select:all;user-select:all;cursor:pointer;padding:12px 10px 12px 26px;border-radius:12px;background:${C.card};border:1px solid ${C.border};">${safeCode}</span>
+                    <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:${C.muted};">
+                      הקישו על הקוד כדי לסמן אותו, ואז העתיקו
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 32px 0;font-family:Arial,Helvetica,sans-serif;text-align:center;" dir="rtl">
+              <p style="margin:0;font-size:13px;line-height:1.6;color:${C.muted};">
+                ⏱ הקוד תקף ל־<span style="color:${C.text};font-weight:700;">${ttlMinutes} דקות</span>.
+              </p>
+            </td>
+          </tr>
+
+          ${
+            loginHref
+              ? `<tr>
+            <td align="center" style="padding:24px 32px 4px;" dir="rtl">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="border-radius:12px;background:${C.olive};">
+                    <a href="${loginHref}" style="display:inline-block;padding:14px 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:${C.white};text-decoration:none;border-radius:12px;">
+                      חזרה להתחברות
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`
+              : ""
+          }
+
+          <tr>
+            <td style="padding:24px 32px 32px;font-family:Arial,Helvetica,sans-serif;text-align:center;" dir="rtl">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:${C.faint};">
+                לא ביקשתם קוד? אפשר להתעלם מהמייל. אל תשתפו את הקוד עם אף אחד.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 24px;border-top:1px solid ${C.border};font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${C.faint};text-align:center;" dir="rtl">
               © ${year} ${safeName}
             </td>
           </tr>

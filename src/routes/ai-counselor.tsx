@@ -164,7 +164,10 @@ function AiCounselorPage() {
         )}
 
         {dash && aiReady && (
-          <div className="flex flex-wrap justify-center gap-3 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:justify-end sm:px-4">
+          <div
+            dir="rtl"
+            className="flex flex-wrap justify-start gap-3 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:px-4"
+          >
             <span>
               דפ״ר: <strong className="text-foreground">{dash.stats?.daparScore ?? "—"}</strong>
             </span>
@@ -179,7 +182,14 @@ function AiCounselorPage() {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div dir="rtl" className="flex flex-wrap items-center justify-start gap-3">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 rounded-md border border-iron/40 px-5 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
+          >
+            דשבורד
+            <ArrowLeft className="h-3.5 w-3.5 rotate-180" aria-hidden />
+          </Link>
           <button
             type="button"
             disabled={loading || !aiReady || !token || tokenCapped}
@@ -189,13 +199,6 @@ function AiCounselorPage() {
             <Award className="h-4 w-4" aria-hidden />
             התאמת תפקידים
           </button>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 rounded-md border border-iron/40 px-5 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            דשבורד
-          </Link>
         </div>
 
         <section className="border border-iron/30 bg-card overflow-hidden" aria-labelledby="ai-chat-heading">

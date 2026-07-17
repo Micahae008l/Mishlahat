@@ -73,7 +73,7 @@ const STEP_META: Record<StepId, { icon: typeof Target; title: string; subtitle: 
   style: { icon: Brain, title: "סגנון", subtitle: "2 שאלות קצרות" },
   combat: { icon: Dumbbell, title: "כושר וקרביות", subtitle: "כי בחרתם כיוון קרבי / שטח" },
   tech: { icon: Monitor, title: "טכנולוגיה", subtitle: "כי בחרתם כיוון מחשבים / סייבר" },
-  finish: { icon: Heart, title: "סיום", subtitle: "מוטיבציה — כמעט נגמר" },
+  finish: { icon: Heart, title: "סיום", subtitle: "מוטיבציה, כמעט נגמר" },
 };
 
 const ROLE_INTEREST_CHIPS = [
@@ -98,13 +98,13 @@ const ROLE_AVOID_CHIPS = [
   "מונוטוני / משעמם",
 ];
 
-/** יציאות הביתה — מערכות לפי תפקיד (לא חמ"ש) */
+/** יציאות הביתה, מערכות לפי תפקיד (לא חמ"ש) */
 const EXITS_OPTIONS = [
   { value: "week_on_off", label: "שבוע בסיס / שבוע בית" },
-  { value: "hamshushim", label: "חמשושים — 4 ימים בבסיס, 3 בבית" },
-  { value: "shushim", label: "שושים — 5 ימים בבסיס, 2 בבית" },
-  { value: "12", label: "12 — 12 ימים בבסיס, 2 בבית" },
-  { value: "21", label: "21 — 19 ימים בבסיס, 2 בבית" },
+  { value: "hamshushim", label: "חמשושים, 4 ימים בבסיס, 3 בבית" },
+  { value: "shushim", label: "שושים, 5 ימים בבסיס, 2 בבית" },
+  { value: "12", label: "12, 12 ימים בבסיס, 2 בבית" },
+  { value: "21", label: "21, 19 ימים בבסיס, 2 בבית" },
   { value: "rare", label: "יציאות נדירות (לרוב קרבי / מיוחד)" },
   { value: "no_pref", label: "לא משנה לי" },
 ];
@@ -131,8 +131,8 @@ const LEADERSHIP_OPTIONS = [
 const RUN3KM_CHIPS = ["לא יודע/ת", "מעל 15 דק׳", "13–15 דק׳", "מתחת ל-13 דק׳"];
 const PULLUPS_CHIPS = ["לא יודע/ת", "0–5", "6–15", "16+"];
 const PUSHUPS_CHIPS = ["לא יודע/ת", "0–30", "31–60", "61+"];
-const COMBAT_READY_CHIPS = ["מוכן/ה פיזית", "בינוני — צריך שיפור", "חלש/ה — רוצה להשתפר", "לא בטוח/ה"];
-const TECH_LEVEL_CHIPS = ["כמעט לא", "בסיסי", "בינוני — קצת קוד", "גבוה — פרויקטים", "מומחה / CTF"];
+const COMBAT_READY_CHIPS = ["מוכן/ה פיזית", "בינוני, צריך שיפור", "חלש/ה, רוצה להשתפר", "לא בטוח/ה"];
+const TECH_LEVEL_CHIPS = ["כמעט לא", "בסיסי", "בינוני, קצת קוד", "גבוה, פרויקטים", "מומחה / CTF"];
 const TECH_AREA_CHIPS = [
   "תכנות",
   "סייבר / אבטחה",
@@ -258,7 +258,7 @@ function ReportPage() {
     if (!result) return;
     try {
       openReportPrintWindow(result.report, result.userName);
-      toast.success("נפתח חלון הדפסה — בחרו «שמור כ-PDF»");
+      toast.success("נפתח חלון הדפסה, בחרו «שמור כ-PDF»");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "לא ניתן לפתוח חלון הדפסה");
     }
@@ -323,7 +323,7 @@ function ReportPage() {
           <p className="mb-2 font-mono text-xs tracking-widest text-primary uppercase">דוח כיוון אישי</p>
           <h1 className="text-2xl font-black sm:text-3xl">בואו נכיר אתכם</h1>
           <p className="mt-2 max-w-lg text-sm text-dust">
-            רוב התשובות בלחיצה — בלי הקלדה. אפשר לדלג בכל שלב.
+            רוב התשובות בלחיצה, בלי הקלדה. אפשר לדלג בכל שלב.
           </p>
         </motion.div>
 
@@ -382,7 +382,7 @@ function ReportPage() {
           >
             {stepId === "roles" && (
               <div className="border border-iron/30 bg-card p-6 space-y-6">
-                <SectionHeader icon={Target} title="תפקידים" subtitle="אפשר לבחור כמה — בלי הקלדה" />
+                <SectionHeader icon={Target} title="תפקידים" subtitle="אפשר לבחור כמה, בלי הקלדה" />
                 <Field label="מה נשמע לכם מעניין? (בחירה מרובה)" group>
                   <MultiChip options={ROLE_INTEREST_CHIPS} values={rolesInterested} onChange={setRolesInterested} />
                 </Field>
@@ -392,10 +392,10 @@ function ReportPage() {
                 {(wantsCombat || wantsTech) && (
                   <p className="rounded-sm border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-dust">
                     {wantsCombat && wantsTech
-                      ? "בהמשך: שאלות כושר (קרבי) ושאלות טכנולוגיה — לפי מה שבחרתם."
+                      ? "בהמשך: שאלות כושר (קרבי) ושאלות טכנולוגיה, לפי מה שבחרתם."
                       : wantsCombat
-                        ? "בהמשך: נשאל על כושר ומוכנות פיזית — כי בחרתם כיוון קרבי."
-                        : "בהמשך: נשאל על ידע וטכנולוגיה — כי בחרתם כיוון מחשבים."}
+                        ? "בהמשך: נשאל על כושר ומוכנות פיזית, כי בחרתם כיוון קרבי."
+                        : "בהמשך: נשאל על ידע וטכנולוגיה, כי בחרתם כיוון מחשבים."}
                   </p>
                 )}
               </div>
@@ -406,11 +406,11 @@ function ReportPage() {
                 <SectionHeader
                   icon={MapPin}
                   title="יציאות וסביבה"
-                  subtitle="מערכת יציאות לפי תפקיד — לא אורך שירות"
+                  subtitle="מערכת יציאות לפי תפקיד, לא אורך שירות"
                 />
                 <Field label="איזו מערכת יציאות הכי מתאימה לכם?" group>
                   <p className="text-xs text-dust/80 -mt-1 mb-2">
-                    כל תפקיד עם מערכת משלו (חמשושים, שושים, 12, 21, שבוע-שבוע). חמ&quot;ש דומה לכולם — זה רק כמה יוצאים הביתה.
+                    כל תפקיד עם מערכת משלו (חמשושים, שושים, 12, 21, שבוע-שבוע). חמ&quot;ש דומה לכולם, זה רק כמה יוצאים הביתה.
                   </p>
                   <ChoiceGroup options={EXITS_OPTIONS} value={exitsPreference} onChange={setExitsPreference} />
                 </Field>
@@ -432,7 +432,7 @@ function ReportPage() {
 
             {stepId === "style" && (
               <div className="border border-iron/30 bg-card p-6 space-y-6">
-                <SectionHeader icon={Brain} title="סגנון אישי" subtitle="שתי שאלות — לחיצה" />
+                <SectionHeader icon={Brain} title="סגנון אישי" subtitle="שתי שאלות, לחיצה" />
                 <Field label="מנהיגות ופיקוד" group>
                   <div className="flex flex-wrap gap-2">
                     {LEADERSHIP_OPTIONS.map((opt) => (
@@ -540,7 +540,7 @@ function ReportPage() {
                     type="text"
                     value={extraNote}
                     onChange={(e) => setExtraNote(e.target.value)}
-                    placeholder="שורה אחת — רק אם בא לכם"
+                    placeholder="שורה אחת, רק אם בא לכם"
                     className="input-field"
                     maxLength={120}
                   />

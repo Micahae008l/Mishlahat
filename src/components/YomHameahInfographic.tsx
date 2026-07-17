@@ -14,7 +14,7 @@ const DIMENSION_CHIPS = [
 ] as const;
 
 /**
- * Visual explainer for יום המא״ה on onboarding — replaces a wall of text with scannable graphics.
+ * Visual explainer for יום המא״ה on onboarding, replaces a wall of text with scannable graphics.
  */
 export function YomHameahInfographic({ longExplainer }: Props) {
   return (
@@ -24,7 +24,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
     >
       <div className="text-right">
         <h2 id="yom-infographic-title" className="text-base font-bold tracking-tight text-foreground sm:text-lg">
-          מאה — איך לקרוא את זה?
+          מאה, איך לקרוא את זה?
         </h2>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           כל ממד הוא ציון נפרד בסולם 1–5. ב{SITE_NAME_HE} נאגדים חמישה ממדים נוחים מתוך הרשימה הארוכה של הגליון הרשמי.
@@ -51,8 +51,8 @@ export function YomHameahInfographic({ longExplainer }: Props) {
           ))}
         </div>
         <div className="mt-2 flex justify-between text-[10px] text-muted-foreground sm:text-xs" dir="rtl">
-          <span>1 — הכי נמוך</span>
-          <span>5 — הכי גבוה</span>
+          <span>1, הכי נמוך</span>
+          <span>5, הכי גבוה</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
           </div>
         </div>
         <p className="mt-2 text-right text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
-          לפי מקורות מעודכנים (למשל מתגייסים): לרוב לפחות שני מבחנים לפני שמקבעים מספר — לא רגע בודד של לחץ.
+          לפי מקורות מעודכנים (למשל מתגייסים): לרוב לפחות שני מבחנים לפני שמקבעים מספר, לא רגע בודד של לחץ.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export function YomHameahInfographic({ longExplainer }: Props) {
       <details className="group rounded-lg border border-white/10 bg-black/15 text-right">
         <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-medium text-muted-foreground transition marker:content-none hover:text-foreground [&::-webkit-details-marker]:hidden">
           <span className="inline-flex w-full items-center justify-between gap-2">
-            הרחבה — טקסט מלא
+            הרחבה, טקסט מלא
             <span className="text-[10px] text-primary/80 transition group-open:rotate-180">▼</span>
           </span>
         </summary>

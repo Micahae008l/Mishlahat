@@ -79,7 +79,7 @@ function AboutPage() {
               <span className="text-primary">עם כיוון ברור.</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-[1.75] text-dust">
-              {SITE_NAME_HE} היא פלטפורמה ישראלית שמאגדת פרופיל, מא״ה והתאמת תפקידים במקום אחד — בלי
+              {SITE_NAME_HE} היא פלטפורמה ישראלית שמאגדת פרופיל, מא״ה והתאמת תפקידים במקום אחד, בלי
               רעש, בלי מנוי, ובלי לחץ מכירות. רק נתונים, בהירות ושקיפות.
             </p>
           </motion.div>
@@ -123,14 +123,14 @@ function AboutPage() {
               </h2>
               <p className="mt-5 max-w-xl text-base leading-[1.85] text-dust">
                 {SITE_NAME_HE} ({SITE_NAME_EN}) היא פרויקט בבטא שנבנה מתוך צורך אמיתי: לעזור
-                למתגייסים להבין מה הפרופיל שלהם אומר — בשפה פשוטה, בממשק נקי, ובלי לחץ מכירות. במקום
+                למתגייסים להבין מה הפרופיל שלהם אומר, בשפה פשוטה, בממשק נקי, ובלי לחץ מכירות. במקום
                 מידע מפוזר בין קבוצות וואטסאפ וטבלאות, הכל מרוכז בכלי דיגיטלי אחד שמרגיש כמו מוצר
                 אמיתי.
               </p>
 
               <blockquote className="mt-8 border-r-2 border-primary/60 pr-5 text-right">
                 <p className="text-lg font-medium leading-[1.7] text-foreground sm:text-xl">
-                  &ldquo;הכנה טובה לשירות מתחילה בהבנה — של עצמך, של האפשרויות, ושל הדרך
+                  &ldquo;הכנה טובה לשירות מתחילה בהבנה, של עצמך, של האפשרויות, ושל הדרך
                   אליהן.&rdquo;
                 </p>
               </blockquote>
@@ -186,7 +186,7 @@ function AboutPage() {
             <Pillar
               icon={<Target className="h-5 w-5" />}
               title="התאמה ברורה"
-              desc={`${MATCH_TOOL_NAME} מחזיר רשימת תפקידים עם ציון והסבר — לא הבטחות רשמיות, אלא כיוון מבוסס נתונים.`}
+              desc={`${MATCH_TOOL_NAME} מחזיר רשימת תפקידים עם ציון והסבר, לא הבטחות רשמיות, אלא כיוון מבוסס נתונים.`}
               idx={1}
             />
             <Pillar
@@ -242,7 +242,7 @@ function AboutPage() {
             <div className="flex flex-col justify-center gap-5 p-6 text-right sm:p-10">
               <Quote className="h-8 w-8 text-primary/40" aria-hidden />
               <p className="max-w-xl text-lg font-medium leading-[1.7] text-foreground sm:text-xl">
-                בניתי את {SITE_NAME_HE} כדי להפוך את שלב ההכנה לגיוס לפחות מבולגן ויותר ברור — עם
+                בניתי את {SITE_NAME_HE} כדי להפוך את שלב ההכנה לגיוס לפחות מבולגן ויותר ברור, עם
                 כלים דיגיטליים שמרגישים כמו מוצר אמיתי, לא עוד קבוצת וואטסאפ.
               </p>
               <div className="border-t border-iron/20 pt-5">
@@ -294,7 +294,7 @@ function AboutPage() {
               דברו איתנו
             </h2>
             <p className="mt-3 max-w-2xl text-[0.9375rem] leading-[1.75] text-dust">
-              שאלות על המוצר, פרטיות, שותפויות או דיווח על באג — נשמח לשמוע.
+              שאלות על המוצר, פרטיות, שותפויות או דיווח על באג, נשמח לשמוע.
             </p>
           </motion.div>
 
@@ -319,8 +319,8 @@ function AboutPage() {
             <ContactCard
               icon={<MapPin className="h-5 w-5" />}
               title="מיקום"
-              body="ישראל · שירות דיגיטלי מלא"
-              note="אין סניף פיזי — הכל אונליין"
+              body="ישראל, שירות דיגיטלי מלא"
+              note="אין סניף פיזי, הכל אונליין"
               idx={2}
             />
           </div>
@@ -338,7 +338,7 @@ function AboutPage() {
         >
           <h2 className="text-3xl font-bold sm:text-4xl">מוכנים למצוא את הכיוון שלכם?</h2>
           <p className="mx-auto mt-4 max-w-lg text-base text-dust">
-            בחינם, בעברית, ועם פרטיות מלאה. הרשמה באימייל בלבד — בלי סיסמה.
+            בחינם, בעברית, ועם פרטיות מלאה. הרשמה באימייל בלבד, בלי סיסמה.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3">
             <div className="flex flex-wrap items-center justify-center gap-4">
@@ -358,7 +358,7 @@ function AboutPage() {
             </div>
             <p className="flex items-center gap-1.5 text-xs text-dust/70">
               <Lock className="h-3 w-3" aria-hidden />
-              ללא סיסמה — רק אימייל וקוד חד-פעמי
+              ללא סיסמה, רק אימייל וקוד חד-פעמי
             </p>
           </div>
         </motion.div>

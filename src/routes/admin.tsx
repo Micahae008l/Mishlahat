@@ -58,9 +58,9 @@ function formatTokens(n: number) {
 }
 
 function formatDate(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("he-IL");
+  return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString("he-IL");
 }
 
 function statusHebrew(status: string) {
@@ -282,8 +282,8 @@ function AdminPage() {
                       <tbody>
                         {ov.recentUsage.map((row, i) => (
                           <tr key={`${row.createdAt}-${i}`} className="border-b border-iron/10">
-                            <td className="py-2.5 pl-4 font-mono text-xs">{row.userEmail || "—"}</td>
-                            <td className="py-2.5 pl-4 text-dust">{row.model || "—"}</td>
+                            <td className="py-2.5 pl-4 font-mono text-xs">{row.userEmail || "-"}</td>
+                            <td className="py-2.5 pl-4 text-dust">{row.model || "-"}</td>
                             <td className="py-2.5 pl-4 font-mono tabular-nums">{row.totalTokens}</td>
                             <td className="py-2.5 pl-4 font-mono tabular-nums">
                               {formatUsd(Number(row.estimatedCostUsd) || 0)}
@@ -476,7 +476,7 @@ function UserRow({
   return (
     <tr className="border-b border-iron/10">
       <td className="py-3 pl-3 font-mono text-xs">{user.email}</td>
-      <td className="py-3 pl-3">{user.preferredName || "—"}</td>
+      <td className="py-3 pl-3">{user.preferredName || "-"}</td>
       <td className="py-3 pl-3 text-dust">{statusHebrew(user.status)}</td>
       <td className="py-3 pl-3">
         <span

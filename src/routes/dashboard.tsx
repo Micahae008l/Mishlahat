@@ -69,7 +69,7 @@ function statusHebrew(status: string) {
 
 function yomSummary(yom: unknown) {
   const m = migrateLegacyYomHameahTo12(yom);
-  if (!m) return { label: "—", pct: 0 };
+  if (!m) return { label: "-", pct: 0 };
   const sum = YOM_HAMEAH_12_KEYS.reduce((acc, k) => acc + m[k], 0);
   const avg = sum / 12;
   return { label: `${avg.toFixed(1)}/5`, pct: Math.min(100, Math.round((avg / 5) * 100)) };
@@ -245,12 +245,12 @@ function DashboardPage() {
               <MetricRow label="ממדי מאה (ממוצע)" value={yom.label} pct={yom.pct} />
               <MetricRow
                 label="פרופיל רפואי"
-                value={medical != null ? String(medical) : "—"}
+                value={medical != null ? String(medical) : "-"}
                 pct={medical != null ? Math.min(100, Math.round(((medical - 21) / (97 - 21)) * 100)) : 0}
               />
               <MetricRow
                 label='דפ"ר'
-                value={dapar != null ? String(dapar) : "—"}
+                value={dapar != null ? String(dapar) : "-"}
                 pct={dapar != null ? Math.min(100, Math.round(((dapar - 10) / 80) * 100)) : 0}
               />
             </motion.div>
@@ -269,28 +269,39 @@ function DashboardPage() {
             </Link>
           </motion.div>
 
-          {/* Hub — התאמת תפקידים */}
+          {/* Hub: התאמת תפקידים */}
           <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="dashboard-tools-heading">
-            <div className="text-right">
-              <p className="font-mono text-[10px] tracking-widest text-dust uppercase">כלי AI</p>
-              <h2 id="dashboard-tools-heading" className="text-lg font-bold text-foreground sm:text-xl">
-                התאמת תפקידים
-              </h2>
-              <p className="mt-1 text-sm text-dust">מזכיר AI בקרוב — בינתיים הפעילו את יוצר ההתאמה מהכותרת.</p>
+            <div className="flex flex-col gap-3 text-right sm:flex-row-reverse sm:items-end sm:justify-between">
+              <div>
+                <p className="font-mono text-[10px] tracking-widest text-dust uppercase">כלי AI</p>
+                <h2 id="dashboard-tools-heading" className="text-lg font-bold text-foreground sm:text-xl">
+                  התאמת תפקידים
+                </h2>
+                <p className="mt-1 text-sm text-dust">מזכיר AI בקרוב. בינתיים הפעילו את יוצר ההתאמה מהכרטיס.</p>
+              </div>
               {data.aiCalls && !data.aiCalls.unlimited ? (
-                <p
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-iron/40 bg-card px-3 py-1 font-mono text-[11px] text-dust"
+                <div
+                  className={`inline-flex shrink-0 items-center gap-2 self-start border px-3.5 py-2 sm:self-auto ${
+                    (data.aiCalls.remaining ?? 0) === 0
+                      ? "border-destructive/50 bg-destructive/10 text-destructive"
+                      : "border-primary/45 bg-primary/10 text-foreground"
+                  }`}
                   title="מספר ההפעלות החינמיות של יוצר ההתאמה"
+                  aria-live="polite"
                 >
                   <span
-                    className={
-                      (data.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-olive"
-                    }
+                    className={`font-mono text-xl font-bold tabular-nums leading-none ${
+                      (data.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-primary"
+                    }`}
                   >
-                    {data.aiCalls.remaining}
+                    {data.aiCalls.remaining}/{data.aiCalls.cap}
                   </span>
-                  <span>מתוך {data.aiCalls.cap} שימושים חינמיים נותרו</span>
-                </p>
+                  <span className="text-xs leading-tight text-dust">
+                    שימושים
+                    <br />
+                    חינמיים נותרו
+                  </span>
+                </div>
               ) : null}
             </div>
 

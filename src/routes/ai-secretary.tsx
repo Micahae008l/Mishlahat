@@ -7,7 +7,7 @@ export const Route = createFileRoute("/ai-secretary")({
   head: () => ({
     meta: [
       { title: "מזכיר AI | קח כיוון" },
-      { name: "description", content: "מזכיר AI אישי — שאלות על גיוס, פרופיל ותהליך. בקרוב." },
+      { name: "description", content: "מזכיר AI אישי, שאלות על גיוס, פרופיל ותהליך. בקרוב." },
     ],
   }),
 });
@@ -29,7 +29,7 @@ function AiSecretaryPage() {
         <p className="font-mono text-[10px] tracking-widest text-primary uppercase mb-2">מזכיר AI</p>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">בקרוב</h1>
         <p className="mt-3 text-sm leading-relaxed text-dust">
-          מזכיר אישי שיענה על שאלות על הגיוס, הפרופיל והתהליך — בשיחה חופשית, בעברית.
+          מזכיר אישי שיענה על שאלות על הגיוס, הפרופיל והתהליך, בשיחה חופשית, בעברית.
         </p>
         <p className="mt-4 text-sm text-dust">
           בינתיים אפשר להשתמש ב־

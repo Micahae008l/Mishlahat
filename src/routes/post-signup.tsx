@@ -159,10 +159,10 @@ function PostSignupPage() {
       if (res.devCode) {
         setDevOtpHint(res.devCode);
         setCode(res.devCode);
-        toast.success("קוד פיתוח — מוצג למטה (ללא SMTP)", { duration: 12_000 });
+        toast.success("קוד פיתוח, מוצג למטה (ללא SMTP)", { duration: 12_000 });
       } else if (res.delivery === "console") {
         setDevOtpHint(null);
-        toast.success("ללא SMTP — הקוד מודפס בלוג השרת בלבד.", { duration: 12_000 });
+        toast.success("ללא SMTP, הקוד מודפס בלוג השרת בלבד.", { duration: 12_000 });
       } else {
         setDevOtpHint(null);
         toast.success("שלחנו קוד באימייל (בדקו גם בספאם)");
@@ -216,7 +216,7 @@ function PostSignupPage() {
   function nextFromUsername() {
     clearFieldErrors("username");
     if (!username.trim()) {
-      setFieldError("username", "נא לבחור שם משתמש — איך לקרוא לכם בדשבורד");
+      setFieldError("username", "נא לבחור שם משתמש, איך לקרוא לכם בדשבורד");
       return;
     }
     setStep(4);
@@ -293,7 +293,7 @@ function PostSignupPage() {
       setFieldError("draftDate", "נא לבחור תאריך גיוס משוער");
       hasError = true;
     } else if (Number.isNaN(Date.parse(draftDate))) {
-      setFieldError("draftDate", "תאריך הגיוס לא תקין — בחרו תאריך מהלוח");
+      setFieldError("draftDate", "תאריך הגיוס לא תקין, בחרו תאריך מהלוח");
       hasError = true;
     }
     if (hasError) return;
@@ -319,7 +319,7 @@ function PostSignupPage() {
         },
       });
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("הפרופיל נשמר — אפשר להשתמש ביועץ AI");
+      toast.success("הפרופיל נשמר, אפשר להשתמש ביועץ AI");
       navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(getErrorMessage(err, "שגיאה בשמירת הפרופיל"));
@@ -675,7 +675,7 @@ function getStepMeta(step: number) {
     return {
       icon: <Mail className="h-5 w-5 text-primary" />,
       title: `התחברות ל${SITE_NAME_HE}`,
-      subtitle: "הזינו אימייל. אם כבר יש חשבון — נשלח קוד ותיכנסו לדשבורד. אם לא — נמשיך להשלמת פרופיל.",
+      subtitle: "הזינו אימייל. אם כבר יש חשבון, נשלח קוד ותיכנסו לדשבורד. אם לא, נמשיך להשלמת פרופיל.",
     };
   if (step === 2) return { icon, title: "הזינו את הקוד", subtitle: "שלחנו קוד לאימייל שלכם." };
   if (step === 3) return { icon: <User className="h-5 w-5 text-primary" />, title: "שם משתמש", subtitle: "זה השם שיופיע בדשבורד וביועץ." };

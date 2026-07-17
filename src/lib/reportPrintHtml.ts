@@ -25,7 +25,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     .map((r, i) => {
       const meta = [r.serviceLength ? `יציאות: ${esc(r.serviceLength)}` : "", r.location ? esc(r.location) : ""]
         .filter(Boolean)
-        .join(" · ");
+        .join(", ");
       return `
       <article class="role-card">
         <header class="role-head">
@@ -51,7 +51,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <title>${esc(SITE_NAME_HE)} — דוח כיוון אישי</title>
+  <title>${esc(SITE_NAME_HE)}, דוח כיוון אישי</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -206,7 +206,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
     <header>
       <div class="brand">${esc(SITE_NAME_HE)}</div>
       <div class="subtitle">דוח כיוון אישי</div>
-      <p class="meta">שם: ${esc(userName)} · תאריך: ${esc(date)}</p>
+      <p class="meta">שם: ${esc(userName)}, תאריך: ${esc(date)}</p>
     </header>
     <hr />
     <section class="direction-box">
@@ -251,7 +251,7 @@ export function buildReportPrintHtml(report: FullReport, userName: string): stri
         : ""
     }
     <p class="footer">
-      דוח זה נוצר על ידי ${esc(SITE_NAME_HE)}. מבוסס על נתונים שהוזנו — אינו המלצה רשמית של צה״ל.
+      דוח זה נוצר על ידי ${esc(SITE_NAME_HE)}. מבוסס על נתונים שהוזנו, אינו המלצה רשמית של צה״ל.
     </p>
   </div>
   <script>window.addEventListener("load", () => { setTimeout(() => window.print(), 400); });</script>
@@ -263,7 +263,7 @@ export function openReportPrintWindow(report: FullReport, userName: string): voi
   const html = buildReportPrintHtml(report, userName);
   const w = window.open("", "_blank");
   if (!w) {
-    throw new Error("חסמו חלון קופץ — אפשרו חלונות קופצים לאתר");
+    throw new Error("חסמו חלון קופץ, אפשרו חלונות קופצים לאתר");
   }
   w.document.open();
   w.document.write(html);

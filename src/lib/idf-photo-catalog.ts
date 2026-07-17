@@ -13,7 +13,7 @@ import slide8 from "@/assets/hero-slideshow/slide-8.jpg?url";
 import slide9 from "@/assets/hero-slideshow/slide-9.jpg?url";
 
 const CREDIT_SHORT = "צילום: על מדים";
-const CREDIT = "צילום שטח בצה״ל — ארכיון על מדים";
+const CREDIT = "צילום שטח בצה״ל, ארכיון על מדים";
 
 export type IdfPhoto = {
   id: string;

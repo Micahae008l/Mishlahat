@@ -28,7 +28,7 @@ export function KachKivunLogo({ size = "md", className = "", linked = false, lin
       <Link
         to={linkTo}
         className="rounded-sm transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        aria-label={linkTo === "/dashboard" ? `${SITE_NAME_HE} — דשבורד` : `${SITE_NAME_HE} — דף הבית`}
+        aria-label={linkTo === "/dashboard" ? `${SITE_NAME_HE}, דשבורד` : `${SITE_NAME_HE}, דף הבית`}
       >
         {inner}
       </Link>

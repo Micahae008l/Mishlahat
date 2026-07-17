@@ -18,10 +18,14 @@ export function resolveCallCap(user) {
   return getDefaultCallCap();
 }
 
-/** Count only successful AI calls — users are not charged for our parse/api errors. */
+/** Count successful match-roles runs only (the user-visible "free uses"). Reports use token cap separately. */
 export async function getUserCallCount(userId) {
   const oid = new mongoose.Types.ObjectId(String(userId));
-  const n = await AiUsageLog.countDocuments({ userId: oid, status: "success" });
+  const n = await AiUsageLog.countDocuments({
+    userId: oid,
+    status: "success",
+    endpoint: "match-roles",
+  });
   return Math.max(0, Number(n) || 0);
 }
 

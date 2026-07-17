@@ -45,7 +45,7 @@ const stagger = {
   show: { transition: { staggerChildren: 0.05, delayChildren: 0.06 } },
 };
 
-// One minute — frequent enough for monitoring without eating the API rate-limit budget.
+// One minute · frequent enough for monitoring without eating the API rate-limit budget.
 const AUTO_REFRESH_MS = 60_000;
 
 // Palette validated for the dark surface (CVD-safe pair, dataviz six checks).
@@ -81,9 +81,9 @@ function typeLabel(type: string) {
 }
 
 function formatDate(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("he-IL");
+  return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString("he-IL");
 }
 
 function formatHour(iso: string) {
@@ -92,7 +92,7 @@ function formatHour(iso: string) {
 }
 
 /**
- * recharts' ResponsiveContainer fails to measure under React 19 — observe the
+ * recharts' ResponsiveContainer fails to measure under React 19 · observe the
  * width ourselves. Callback ref, because the container mounts only after the
  * overview data arrives.
  */
@@ -653,18 +653,18 @@ function SecurityPage() {
                               className="font-mono text-xs text-dust transition hover:text-foreground"
                               title="סינון לפי כתובת זו"
                             >
-                              {e.ip || "—"}
+                              {e.ip || "-"}
                             </button>
                           </td>
                           <td className="max-w-[14rem] py-2.5 pl-3">
                             <span dir="ltr" className="block truncate font-mono text-xs text-dust">
                               {e.method ? `${e.method} ` : ""}
-                              {e.path || "—"}
+                              {e.path || "-"}
                             </span>
                           </td>
                           <td className="max-w-[16rem] py-2.5">
                             <span className="block truncate text-xs text-dust">
-                              {[e.email, e.message].filter(Boolean).join(" · ") || "—"}
+                              {[e.email, e.message].filter(Boolean).join(" · ") || "-"}
                             </span>
                           </td>
                         </tr>
@@ -769,11 +769,11 @@ function SecurityPage() {
                         </td>
                         <td className="max-w-[14rem] py-2.5 pl-3">
                           <span className="block truncate text-xs text-dust">
-                            {b.reason || "—"}
+                            {b.reason || "-"}
                           </span>
                         </td>
                         <td className="py-2.5 pl-3 font-mono text-xs text-dust">
-                          {b.blockedBy || "—"}
+                          {b.blockedBy || "-"}
                         </td>
                         <td className="py-2.5 pl-3 font-mono text-xs tabular-nums">{b.hitCount}</td>
                         <td className="py-2.5 pl-3 text-xs text-dust">{formatDate(b.createdAt)}</td>

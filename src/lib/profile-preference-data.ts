@@ -29,7 +29,7 @@ export const COMBAT_PREFERENCE_OPTIONS: { value: CombatPreferenceValue; title: s
   {
     value: "Mixed",
     title: "פתוח/ה לכמה סוגים",
-    subtitle: "גם שטח וגם מפקדה — נבדוק מה מתאים",
+    subtitle: "גם שטח וגם מפקדה, נבדוק מה מתאים",
   },
 ];
 

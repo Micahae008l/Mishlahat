@@ -121,7 +121,7 @@ function HomePage() {
         </div>
 
         <div className="relative z-10 mx-auto grid max-w-7xl items-stretch px-4 sm:px-6 lg:grid-cols-[5fr_7fr] lg:min-h-[calc(100vh-3.5rem)]">
-          {/* Text column — right side in RTL */}
+          {/* Text column, right side in RTL */}
           <motion.div
             variants={stagger}
             initial="hidden"
@@ -165,7 +165,7 @@ function HomePage() {
               </div>
               <p className="flex items-center gap-1.5 text-xs text-dust/70">
                 <Lock className="h-3 w-3" />
-                ללא סיסמה — רק אימייל וקוד חד-פעמי
+                ללא סיסמה, רק אימייל וקוד חד-פעמי
               </p>
             </motion.div>
 
@@ -176,7 +176,7 @@ function HomePage() {
             </motion.div>
           </motion.div>
 
-          {/* Slideshow — left side in RTL */}
+          {/* Slideshow, left side in RTL */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -193,7 +193,7 @@ function HomePage() {
 
       <div className="section-divider" />
 
-      {/* ── Capabilities — staggered asymmetric cards ── */}
+      {/* ── Capabilities, staggered asymmetric cards ── */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <motion.div
@@ -332,7 +332,7 @@ function HomePage() {
 
       <div className="section-divider" />
 
-      {/* ── Trust — horizontal bar ── */}
+      {/* ── Trust, horizontal bar ── */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.p
@@ -383,7 +383,7 @@ function HomePage() {
             <HomePrimaryCta className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]" />
             <p className="mt-3 flex items-center gap-1.5 text-xs text-dust/70">
               <Lock className="h-3 w-3" />
-              הרשמה באימייל בלבד — ללא סיסמה
+              הרשמה באימייל בלבד, ללא סיסמה
             </p>
           </div>
         </motion.div>

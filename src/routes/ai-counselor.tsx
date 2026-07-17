@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, User, ArrowLeft, Award } from "lucide-react";
 import {
@@ -38,11 +38,12 @@ interface Message {
 
 function AiCounselorPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      text: "שלום. לחצו «התאמת תפקידים» — ננתח את הפרופיל שלכם ונציג 5 המלצות עם ציון התאמה, תמונה ותקציר קצר לכל תפקיד.",
+      text: "שלום. לחצו «התאמת תפקידים» כדי שננתח את הפרופיל שלכם ונציג 5 המלצות עם ציון התאמה, תמונה ותקציר קצר לכל תפקיד.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -62,12 +63,13 @@ function AiCounselorPage() {
 
   const aiReady = Boolean(dash?.aiReady);
   const tokenCapped = Boolean(dash?.aiTokens?.capped);
+  const callCapped = Boolean(dash?.aiCalls?.capped);
   const missingLabels =
     dash?.aiProfileMissing?.map((k) => AI_PROFILE_MISSING_LABELS[k] ?? k).filter(Boolean) ?? [];
 
   const yomAvgLabel = (() => {
     const y = dash?.stats?.yomHameah ? migrateLegacyYomHameahTo12(dash.stats.yomHameah) : null;
-    if (!y) return "—";
+    if (!y) return "-";
     const avg = YOM_HAMEAH_12_KEYS.reduce((a, k) => a + y[k], 0) / 12;
     return `${avg.toFixed(1)}/5`;
   })();
@@ -86,6 +88,10 @@ function AiCounselorPage() {
       toast.error("השלימו את הפרופיל לפני שימוש ביועץ");
       return;
     }
+    if (callCapped) {
+      toast.error("השתמשתם בכל השימושים החינמיים להתאמת תפקידים");
+      return;
+    }
     if (tokenCapped) {
       toast.error("הגעתם למכסת הטוקנים לשימוש ביועץ AI");
       return;
@@ -96,11 +102,12 @@ function AiCounselorPage() {
     try {
       const { roles: list } = await matchRolesRequest();
       setRoles(list);
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: `מצאנו ${list.length} תפקידים מותאמים. גללו למטה לכרטיסים — לחצו «למה התפקיד מתאים?» לפירוט קצר.`,
+          text: `מצאנו ${list.length} תפקידים מותאמים. גללו למטה לכרטיסים, ולחצו «למה התפקיד מתאים?» לפירוט קצר.`,
         },
       ]);
       toast.success("ההמלצות מוכנות");
@@ -133,16 +140,35 @@ function AiCounselorPage() {
           <p className="font-mono text-xs tracking-widest text-primary uppercase mb-2">יועץ התאמה</p>
           <h1 className="text-xl font-bold text-foreground sm:text-3xl">התאמת תפקידים בצה&quot;ל</h1>
           <p className="mt-2 max-w-lg text-xs text-dust leading-relaxed sm:text-sm">
-            ניתוח אישי מול מאגר תפקידים — תוצאות ויזואליות, תקציר לכל תפקיד, פירוט רק כשצריך.
+            ניתוח אישי מול מאגר תפקידים. תוצאות ויזואליות, תקציר לכל תפקיד, פירוט רק כשצריך.
           </p>
+          {dash?.aiCalls && !dash.aiCalls.unlimited ? (
+            <div
+              className={`mt-4 inline-flex items-center gap-2 border px-3.5 py-2 ${
+                (dash.aiCalls.remaining ?? 0) === 0
+                  ? "border-destructive/50 bg-destructive/10"
+                  : "border-primary/45 bg-primary/10"
+              }`}
+              aria-live="polite"
+            >
+              <span
+                className={`font-mono text-xl font-bold tabular-nums ${
+                  (dash.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-primary"
+                }`}
+              >
+                {dash.aiCalls.remaining}/{dash.aiCalls.cap}
+              </span>
+              <span className="text-xs text-dust">שימושים חינמיים נותרו</span>
+            </div>
+          ) : null}
         </div>
 
         {tokenCapped && token && (
           <div className="border border-destructive/30 bg-destructive/5 p-5 text-right">
             <p className="font-semibold text-foreground text-sm">מכסת הטוקנים נוצלה</p>
             <p className="mt-1 text-sm text-dust">
-              נוצלו {dash?.aiTokens?.used?.toLocaleString("he-IL") ?? "—"} מתוך{" "}
-              {dash?.aiTokens?.cap?.toLocaleString("he-IL") ?? "—"} טוקנים. פנו למנהל המערכת להגדלת המכסה.
+              נוצלו {dash?.aiTokens?.used?.toLocaleString("he-IL") ?? "-"} מתוך{" "}
+              {dash?.aiTokens?.cap?.toLocaleString("he-IL") ?? "-"} טוקנים. פנו למנהל המערכת להגדלת המכסה.
             </p>
           </div>
         )}
@@ -169,11 +195,11 @@ function AiCounselorPage() {
             className="flex flex-wrap justify-start gap-3 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:px-4"
           >
             <span>
-              דפ״ר: <strong className="text-foreground">{dash.stats?.daparScore ?? "—"}</strong>
+              דפ״ר: <strong className="text-foreground">{dash.stats?.daparScore ?? "-"}</strong>
             </span>
             <span className="text-iron/40">|</span>
             <span>
-              רפואי: <strong className="text-foreground">{dash.stats?.medicalProfile ?? "—"}</strong>
+              רפואי: <strong className="text-foreground">{dash.stats?.medicalProfile ?? "-"}</strong>
             </span>
             <span className="text-iron/40">|</span>
             <span>
@@ -192,7 +218,7 @@ function AiCounselorPage() {
           </Link>
           <button
             type="button"
-            disabled={loading || !aiReady || !token || tokenCapped}
+            disabled={loading || !aiReady || !token || tokenCapped || callCapped}
             onClick={runMatch}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-40 active:scale-[0.97]"
           >

@@ -142,16 +142,6 @@ export function ProfileMenu({
       >
         <User className="h-4 w-4 shrink-0 text-dust" aria-hidden />
         <span className="truncate">{label}</span>
-        {showCalls ? (
-          <span
-            className={`rounded px-1 py-0.5 font-mono text-[10px] font-bold tabular-nums ${
-              depleted ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
-            }`}
-            aria-hidden
-          >
-            {remaining}/{cap}
-          </span>
-        ) : null}
         <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-dust transition ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
       {open ? (

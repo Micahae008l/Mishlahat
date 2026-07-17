@@ -277,6 +277,21 @@ function DashboardPage() {
                 התאמת תפקידים
               </h2>
               <p className="mt-1 text-sm text-dust">מזכיר AI בקרוב — בינתיים הפעילו את יוצר ההתאמה מהכותרת.</p>
+              {data.aiCalls && !data.aiCalls.unlimited ? (
+                <p
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-iron/40 bg-card px-3 py-1 font-mono text-[11px] text-dust"
+                  title="מספר ההפעלות החינמיות של יוצר ההתאמה"
+                >
+                  <span
+                    className={
+                      (data.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-olive"
+                    }
+                  >
+                    {data.aiCalls.remaining}
+                  </span>
+                  <span>מתוך {data.aiCalls.cap} שימושים חינמיים נותרו</span>
+                </p>
+              ) : null}
             </div>
 
             {aiReady ? (

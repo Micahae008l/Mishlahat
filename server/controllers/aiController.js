@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import MilitaryStats from "../models/MilitaryStats.js";
 import Preferences from "../models/Preferences.js";
 import { recordAiUsage } from "../utils/recordAiUsage.js";
+import { getCallCapStatusForUserId } from "../utils/aiCallCap.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import {
   YOM_HAMEAH_12_KEYS,
@@ -302,7 +303,10 @@ ${yomLines}${legacyQ}
       };
     });
 
-    res.json({ roles: normalized });
+    // Recompute after logging so the client shows the up-to-date remaining count.
+    const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);
+
+    res.json({ roles: normalized, aiCalls });
   } catch (err) {
     await recordAiUsage({
       userId,

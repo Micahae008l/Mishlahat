@@ -28,6 +28,32 @@ export function isSmtpConfigured() {
   return Boolean(trimEnv("SMTP_HOST") && trimEnv("SMTP_USER") && trimEnv("SMTP_PASS"));
 }
 
+/** Resend (transactional email API) — preferred when configured; better deliverability than Gmail SMTP. */
+export function isResendConfigured() {
+  return Boolean(trimEnv("RESEND_API_KEY"));
+}
+
+/** True when any real delivery channel exists (Resend or SMTP). */
+export function isEmailConfigured() {
+  return isResendConfigured() || isSmtpConfigured();
+}
+
+async function sendViaResend({ from, to, subject, html, text }) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${trimEnv("RESEND_API_KEY")}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from, to, subject, html, text }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Resend send failed: ${res.status} ${body.slice(0, 300)}`);
+  }
+  return { delivered: true };
+}
+
 function smtpReady() {
   return isSmtpConfigured();
 }
@@ -169,16 +195,32 @@ function buildOtpText({ siteName, code, ttlMinutes, appUrl }) {
 }
 
 export async function sendOtpEmail(email, code) {
+  const appUrl = trimEnv("FRONTEND_URL");
+
+  // Code first in subject → iOS/Android notification often shows it for one-tap fill/copy
+  const subject = `${code} הוא קוד הכניסה שלך ל${SITE_NAME_HE}`;
+  const text = buildOtpText({ siteName: SITE_NAME_HE, code, ttlMinutes: OTP_TTL_MINUTES, appUrl });
+  const html = buildOtpHtml({ siteName: SITE_NAME_HE, code, ttlMinutes: OTP_TTL_MINUTES, appUrl });
+
+  // Preferred path: Resend (domain-authenticated, high deliverability).
+  if (isResendConfigured()) {
+    const from =
+      trimEnv("RESEND_FROM") ||
+      trimEnv("SMTP_FROM") ||
+      `${SITE_NAME_HE} <no-reply@kachkivun.com>`;
+    return sendViaResend({ from, to: email, subject, html, text });
+  }
+
+  // Fallback: existing Gmail/SMTP transport.
   const from =
     trimEnv("SMTP_FROM") || `${SITE_NAME_HE} <${trimEnv("SMTP_USER") || "no-reply@kachkivun.local"}>`;
   const transporter = await getTransporter();
-  const appUrl = trimEnv("FRONTEND_URL");
 
   if (!transporter) {
     if (!warnedNoSmtp) {
       warnedNoSmtp = true;
       console.warn(
-        "[email] אין SMTP — לא נשלח מייל. הוסיפו SMTP_HOST, SMTP_USER, SMTP_PASS ב־server/.env (ראו server/.env.example, Gmail: סיסמת אפליקציה)."
+        "[email] אין ערוץ שליחה — הגדירו RESEND_API_KEY (מומלץ) או SMTP_HOST/SMTP_USER/SMTP_PASS ב־server/.env."
       );
     }
     if (process.env.NODE_ENV !== "production") {
@@ -187,28 +229,6 @@ export async function sendOtpEmail(email, code) {
     return { delivered: false };
   }
 
-  // Code first in subject → iOS/Android notification often shows it for one-tap fill/copy
-  const subject = `${code} הוא קוד הכניסה שלך ל${SITE_NAME_HE}`;
-  const text = buildOtpText({
-    siteName: SITE_NAME_HE,
-    code,
-    ttlMinutes: OTP_TTL_MINUTES,
-    appUrl,
-  });
-  const html = buildOtpHtml({
-    siteName: SITE_NAME_HE,
-    code,
-    ttlMinutes: OTP_TTL_MINUTES,
-    appUrl,
-  });
-
-  await transporter.sendMail({
-    from,
-    to: email,
-    subject,
-    text,
-    html,
-  });
-
+  await transporter.sendMail({ from, to: email, subject, text, html });
   return { delivered: true };
 }

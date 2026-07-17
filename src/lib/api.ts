@@ -291,6 +291,9 @@ export type AiTokenCapStatus = {
   capped: boolean;
 };
 
+/** Lifetime AI-call allowance ("X of 5 free uses"). Same shape as the token cap. */
+export type AiCallCapStatus = AiTokenCapStatus;
+
 export type DashboardResponse = {
   user: {
     email: string;
@@ -305,6 +308,7 @@ export type DashboardResponse = {
   aiReady?: boolean;
   aiProfileMissing?: string[];
   aiTokens?: AiTokenCapStatus;
+  aiCalls?: AiCallCapStatus;
 };
 
 export function getDashboardStats() {
@@ -355,7 +359,7 @@ export type RoleMatch = {
 };
 
 export function matchRolesRequest() {
-  return apiFetch<{ roles: RoleMatch[] }>("/api/ai/match-roles", {
+  return apiFetch<{ roles: RoleMatch[]; aiCalls?: AiCallCapStatus }>("/api/ai/match-roles", {
     method: "POST",
     body: JSON.stringify({}),
   });

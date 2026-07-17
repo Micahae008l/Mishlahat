@@ -8,7 +8,7 @@ import dashboardRoutes from "./routes/dashboard.js";
 import aiRoutes from "./routes/ai.js";
 import adminRoutes from "./routes/admin.js";
 import reportsRoutes from "./routes/reports.js";
-import { isSmtpConfigured } from "./utils/email.js";
+import { isEmailConfigured, isResendConfigured } from "./utils/email.js";
 import { corsOptions } from "./utils/corsOptions.js";
 import { SITE_NAME_EN, SITE_NAME_HE } from "./utils/brand.js";
 import { apiLimiter } from "./middleware/rateLimit.js";
@@ -70,11 +70,13 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`API:  http://localhost:${PORT}  (GET / shows hints)`);
     console.log(`App:  http://localhost:8080/  (npm run dev in repo root)`);
-    if (isSmtpConfigured()) {
-      console.log("[email] SMTP מוגדר — קודי OTP יישלחו באימייל.");
+    if (isEmailConfigured()) {
+      console.log(
+        `[email] ${isResendConfigured() ? "Resend" : "SMTP"} מוגדר — קודי OTP יישלחו באימייל.`
+      );
     } else {
       console.warn(
-        "[email] SMTP לא מוגדר (SMTP_HOST / SMTP_USER / SMTP_PASS ב־server/.env). קודי OTP לא יישלחו במייל; בפיתוח הקוד מודפס ללוג השרת בלבד."
+        "[email] אין ערוץ שליחה (RESEND_API_KEY או SMTP_HOST/SMTP_USER/SMTP_PASS ב־server/.env). קודי OTP לא יישלחו במייל; בפיתוח הקוד מודפס ללוג השרת בלבד."
       );
     }
   });

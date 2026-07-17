@@ -10,15 +10,14 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getToken } from "@/lib/auth";
-import { prefetchAuthedData, sessionQueryOptions } from "@/lib/queries";
+import { clearToken, getToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
+import { dashboardQueryOptions, prefetchAuthedData, sessionQueryOptions } from "@/lib/queries";
 import { Toaster } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import appCss from "../styles.css?url";
 import { queryClient } from "@/lib/query-client";
-import { clearToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
 import { KachKivunLogo } from "@/components/KachKivunLogo";
 import { SITE_DESCRIPTION, SITE_NAME_HE } from "@/lib/brand";
 import { MATCH_TOOL_SHORT } from "@/lib/voice";
@@ -214,8 +213,12 @@ function SiteHeader({
   tokenPresent: boolean;
   onLogout: () => void;
 }) {
-  const queryClient = useQueryClient();
   const { data: session } = useQuery(sessionQueryOptions(tokenPresent));
+  const token = tokenPresent ? getToken() : null;
+  const { data: dash } = useQuery({
+    ...dashboardQueryOptions(token),
+    enabled: authed && !!token,
+  });
 
   useEffect(() => {
     if (session?.role) setStoredRole(session.role);
@@ -276,7 +279,12 @@ function SiteHeader({
           ) : null}
 
           {authed ? (
-            <ProfileMenu displayName={profileName} isAdmin={isAdmin} onLogout={onLogout} />
+            <ProfileMenu
+              displayName={profileName}
+              isAdmin={isAdmin}
+              onLogout={onLogout}
+              aiCalls={dash?.aiCalls}
+            />
           ) : (
             <Link
               to="/post-signup"
@@ -349,6 +357,7 @@ function SiteHeader({
                   isAdmin={isAdmin}
                   onLogout={onLogout}
                   onNavigate={() => setMobileOpen(false)}
+                  aiCalls={dash?.aiCalls}
                 />
               ) : (
                 <Link to="/post-signup" className="px-2 py-2.5 text-sm font-semibold text-primary">

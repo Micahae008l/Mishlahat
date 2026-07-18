@@ -110,8 +110,7 @@ export async function generateReport(req, res) {
 - אם ציין העדפת חמ"ש — כבד את זה ובחר תפקידים שמתאימים לטווח הזה.
 - אם ציין קרבה לבית — בחר בסיסים/תפקידים שמתאימים גיאוגרפית.
 - שים דגש על "למה זה מתאים לך ספציפית" ולא הסברים גנריים.
-- ציין חמ"ש (אורך שירות) לכל תפקיד.
-- ציין בסיס/מיקום לכל תפקיד.
+- חמ"ש (אורך שירות) ומיקום: ציין רק אם ידוע לך בוודאות מהתפקיד. אם אינך בטוח — כתוב "משתנה לפי מסלול — יש לוודא במיטב". אל תמציא מספרים או שמות בסיסים.
 
 ## מבנה JSON
 
@@ -132,8 +131,8 @@ export async function generateReport(req, res) {
       "tags": ["string — עד 5 תגיות"],
       "fitReason": "string — משפט אחד מנוסח אישית: 'אתה מתאים כי...'",
       "riskNote": "string — סיכון/חסם אם קיים, ריק אם אין",
-      "serviceLength": "string — חמ\"ש משוער (12/16/21/32 חודשים)",
-      "location": "string — בסיס/אזור גיאוגרפי"
+      "serviceLength": "string — חמ\"ש אם ידוע בוודאות, אחרת 'משתנה לפי מסלול — יש לוודא במיטב'",
+      "location": "string — בסיס/אזור אם ידוע בוודאות, אחרת 'משתנה לפי מסלול'"
     }
   ],
   "rolesTheyAskedAbout": "string — אם המועמד ציין תפקידים שמעניינים: תגובה ישירה אליהם — האם מתאימים? למה כן/לא? חלופות?",
@@ -185,10 +184,10 @@ ${JSON.stringify(
     roleTitle: r.roleTitle,
     category: r.category,
     combat: r.combat,
-    minDapar: r.minDapar,
-    minMedical: r.minMedical,
-    tags: r.tags?.slice(0, 4),
-    aiRecommendationHint: r.aiRecommendationHint,
+    selective: r.selective,
+    preferenceTags: r.preferenceTags,
+    signals: r.signals,
+    bestFor: r.bestFor,
   })),
   null,
   0

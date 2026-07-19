@@ -271,8 +271,8 @@ function DashboardPage() {
 
           {/* Hub: התאמת תפקידים */}
           <motion.section variants={fadeUp} className="space-y-4" aria-labelledby="dashboard-tools-heading">
-            <div className="flex flex-col gap-3 text-right sm:flex-row-reverse sm:items-end sm:justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" dir="rtl">
+              <div className="min-w-0 text-right">
                 <p className="font-mono text-[10px] tracking-widest text-dust uppercase">כלי AI</p>
                 <h2 id="dashboard-tools-heading" className="text-lg font-bold text-foreground sm:text-xl">
                   התאמת תפקידים
@@ -281,7 +281,8 @@ function DashboardPage() {
               </div>
               {data.aiCalls && !data.aiCalls.unlimited ? (
                 <div
-                  className={`inline-flex shrink-0 items-center gap-2 self-start border px-3.5 py-2 sm:self-auto ${
+                  dir="rtl"
+                  className={`inline-flex shrink-0 items-center gap-3 self-start border px-3.5 py-2 sm:self-auto ${
                     (data.aiCalls.remaining ?? 0) === 0
                       ? "border-destructive/50 bg-destructive/10 text-destructive"
                       : "border-primary/45 bg-primary/10 text-foreground"
@@ -289,17 +290,18 @@ function DashboardPage() {
                   title="מספר ההפעלות החינמיות של יוצר ההתאמה"
                   aria-live="polite"
                 >
+                  <span className="text-xs leading-tight text-dust">
+                    שימושים
+                    <br />
+                    חינמיים נותרו
+                  </span>
                   <span
+                    dir="ltr"
                     className={`font-mono text-xl font-bold tabular-nums leading-none ${
                       (data.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-primary"
                     }`}
                   >
                     {data.aiCalls.remaining}/{data.aiCalls.cap}
-                  </span>
-                  <span className="text-xs leading-tight text-dust">
-                    שימושים
-                    <br />
-                    חינמיים נותרו
                   </span>
                 </div>
               ) : null}
@@ -317,8 +319,8 @@ function DashboardPage() {
             ) : (
               <div className="border border-iron/30 bg-card p-5 text-right sm:p-8" dir="rtl">
                 <p className="font-mono text-[10px] tracking-widest text-dust uppercase mb-2">התאמת תפקידים</p>
-                <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
-                  <Target className="h-5 w-5 shrink-0 text-dust" />
+                <h3 className="flex flex-row items-center justify-start gap-2 text-base font-bold text-foreground sm:text-lg">
+                  <Target className="h-5 w-5 shrink-0 text-dust" aria-hidden />
                   <span>השלימו פרטים כדי להפעיל את היוצר</span>
                 </h3>
                 {missingLabels.length > 0 ? (

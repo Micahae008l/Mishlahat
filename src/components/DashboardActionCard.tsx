@@ -11,7 +11,7 @@ type Props = {
   variant?: "primary" | "default";
 };
 
-/** RTL action row: text on the right, arrow on the left */
+/** RTL action row: Hebrew title on the right, chevron toward the left */
 export function DashboardActionCard({
   to,
   badge,
@@ -34,8 +34,8 @@ export function DashboardActionCard({
     >
       <div className="min-w-0 flex-1 text-right">
         <p className={`eyebrow mb-1.5 ${primary ? "eyebrow-accent" : ""}`}>{badge}</p>
-        <h3 className="flex flex-row items-center justify-end gap-2 text-base font-bold text-foreground sm:text-lg">
-          <Icon className={`h-5 w-5 shrink-0 ${primary ? "text-primary" : "text-primary"}`} />
+        <h3 className="flex flex-row items-center justify-start gap-2 text-base font-bold text-foreground sm:text-lg">
+          <Icon className={`h-5 w-5 shrink-0 ${primary ? "text-primary" : "text-primary"}`} aria-hidden />
           <span>{title}</span>
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-dust">{description}</p>

@@ -252,16 +252,8 @@ function RoleInsightsPage() {
               dir="rtl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={closeRole}
-                  className="rounded-md border border-iron/30 p-2 text-dust transition hover:text-foreground"
-                  aria-label="סגירה"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <div className="min-w-0 flex-1">
+              <div className="mb-4 flex items-start justify-between gap-3" dir="ltr">
+                <div className="min-w-0 flex-1 text-right" dir="rtl">
                   <p className="font-mono text-[10px] tracking-widest text-primary uppercase">
                     {detail?.category || "תפקיד"}
                   </p>
@@ -269,6 +261,14 @@ function RoleInsightsPage() {
                     {detail?.roleTitle || "טוען…"}
                   </h2>
                 </div>
+                <button
+                  type="button"
+                  onClick={closeRole}
+                  className="shrink-0 rounded-md border border-iron/30 p-2 text-dust transition hover:text-foreground"
+                  aria-label="סגירה"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
               {detailQuery.isLoading ? (
@@ -347,7 +347,7 @@ function RoleInsightsPage() {
                     <IntensityBar label="עבודה עם אנשים" value={detail.peopleIntensity} />
                   </div>
 
-                  <div className="flex flex-col gap-2 border-t border-iron/20 pt-4 sm:flex-row sm:justify-end">
+                  <div className="flex flex-col gap-2 border-t border-iron/20 pt-4 sm:flex-row sm:justify-start" dir="ltr">
                     <a
                       href={detail.officialSearchUrl}
                       target="_blank"
@@ -364,7 +364,7 @@ function RoleInsightsPage() {
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-iron/40 px-4 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
                     >
                       קטלוג תפקידים רשמי
-                      <ChevronLeft className="h-4 w-4" aria-hidden />
+                      <ChevronLeft className="h-4 w-4 rotate-180" aria-hidden />
                     </a>
                   </div>
 

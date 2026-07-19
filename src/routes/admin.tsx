@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  MessageSquare,
   Users,
   Shield,
   ShieldAlert,
@@ -18,6 +19,8 @@ import { AdminSkeleton, AdminUsersTableSkeleton } from "@/components/skeletons/P
 import {
   ApiError,
   deleteAdminUser,
+  listAdminRoleReviews,
+  moderateRoleReview,
   updateAdminUserRole,
   updateAdminUserTokenCap,
   type AdminUserRow,
@@ -76,6 +79,7 @@ function AdminPage() {
   const [search, setSearch] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null);
+  const [reviewStatus, setReviewStatus] = useState<"pending" | "approved" | "rejected" | "all">("pending");
 
   useEffect(() => {
     setMounted(true);
@@ -160,6 +164,23 @@ function AdminPage() {
       setDeleteTarget(null);
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const reviewsQuery = useQuery({
+    queryKey: ["admin-role-reviews", reviewStatus],
+    queryFn: () => listAdminRoleReviews(reviewStatus),
+    enabled: mounted && !!token && adminMe.isSuccess,
+  });
+
+  const moderateMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "approve" | "reject" }) =>
+      moderateRoleReview(id, action),
+    onSuccess: (res) => {
+      toast.success(res.message);
+      void queryClient.invalidateQueries({ queryKey: ["admin-role-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["role-reviews"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -360,6 +381,93 @@ function AdminPage() {
                   </table>
                 </div>
               </>
+            )}
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="border border-iron/30 bg-card p-5 sm:p-6" dir="rtl">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-xs tracking-widest text-dust uppercase">
+                  ביקורות תפקידים
+                </p>
+                <h2 className="mt-1 flex items-center gap-2 text-base font-bold text-foreground">
+                  <MessageSquare className="h-4 w-4 text-primary" aria-hidden />
+                  תור לאישור
+                  {reviewsQuery.data?.pendingCount ? (
+                    <span className="rounded-sm bg-primary/15 px-2 py-0.5 font-mono text-xs text-primary">
+                      {reviewsQuery.data.pendingCount} ממתינות
+                    </span>
+                  ) : null}
+                </h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(["pending", "approved", "rejected", "all"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setReviewStatus(s)}
+                    className={`rounded-sm border px-2.5 py-1 text-[11px] transition ${
+                      reviewStatus === s
+                        ? "border-primary/50 bg-primary/15 text-foreground"
+                        : "border-iron/30 text-dust hover:border-primary/30"
+                    }`}
+                  >
+                    {s === "pending"
+                      ? "ממתינות"
+                      : s === "approved"
+                        ? "מאושרות"
+                        : s === "rejected"
+                          ? "נדחו"
+                          : "הכל"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {reviewsQuery.isLoading ? (
+              <p className="text-sm text-dust">טוען ביקורות…</p>
+            ) : (reviewsQuery.data?.reviews.length ?? 0) === 0 ? (
+              <p className="text-sm text-dust">אין ביקורות במסנן הזה.</p>
+            ) : (
+              <ul className="space-y-3">
+                {reviewsQuery.data?.reviews.map((r) => (
+                  <li key={r.id} className="border border-iron/20 bg-background/40 p-4 text-right">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground">{r.roleTitle}</p>
+                        <p className="mt-0.5 text-[11px] text-dust">
+                          {r.displayName}
+                          {r.userEmail ? ` · ${r.userEmail}` : ""}
+                          {r.rating ? ` · ${r.rating}/5` : ""}
+                          {r.servedInRole ? " · שירת בתפקיד" : ""}
+                        </p>
+                      </div>
+                      <span className="font-mono text-[10px] text-dust">{r.status}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-dust">{r.body}</p>
+                    {r.status === "pending" ? (
+                      <div className="mt-3 flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={moderateMutation.isPending}
+                          onClick={() => moderateMutation.mutate({ id: r.id, action: "reject" })}
+                          className="rounded-md border border-iron/40 px-3 py-1.5 text-xs text-dust transition hover:border-destructive/40 hover:text-destructive"
+                        >
+                          דחו
+                        </button>
+                        <button
+                          type="button"
+                          disabled={moderateMutation.isPending}
+                          onClick={() => moderateMutation.mutate({ id: r.id, action: "approve" })}
+                          className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:brightness-110"
+                        >
+                          אשרו ופרסמו
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             )}
           </motion.div>
         </motion.div>

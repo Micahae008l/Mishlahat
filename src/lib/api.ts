@@ -414,6 +414,56 @@ export function getRoleInsight(slugOrTitle: string) {
   });
 }
 
+export type RoleReview = {
+  id: string;
+  roleTitle: string;
+  roleSlug: string;
+  displayName: string;
+  body: string;
+  rating: number | null;
+  servedInRole: boolean;
+  createdAt: string;
+};
+
+export type AdminRoleReview = RoleReview & {
+  status: "pending" | "approved" | "rejected";
+  userEmail: string;
+  userId: string | null;
+  rejectReason: string;
+  moderatedAt: string | null;
+  updatedAt: string;
+};
+
+export function listRoleReviews(slugOrTitle: string) {
+  return apiFetch<{ roleSlug: string; roleTitle: string; reviews: RoleReview[] }>(
+    `/api/roles/${encodeURIComponent(slugOrTitle)}/reviews`,
+    { skipAuth: true }
+  );
+}
+
+export function submitRoleReview(
+  slugOrTitle: string,
+  body: { displayName: string; body: string; rating?: number | null; servedInRole?: boolean }
+) {
+  return apiFetch<{ message: string; review: { id: string; status: string } }>(
+    `/api/roles/${encodeURIComponent(slugOrTitle)}/reviews`,
+    { method: "POST", body: JSON.stringify(body) }
+  );
+}
+
+export function listAdminRoleReviews(status: "pending" | "approved" | "rejected" | "all" = "pending") {
+  return apiFetch<{ pendingCount: number; reviews: AdminRoleReview[] }>(
+    `/api/admin/role-reviews?status=${encodeURIComponent(status)}`
+  );
+}
+
+export function moderateRoleReview(id: string, action: "approve" | "reject", reason?: string) {
+  return apiFetch<{ message: string; review: AdminRoleReview }>(`/api/admin/role-reviews/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action, reason }),
+  });
+}
+
 /** Stable client-side slug (mirrors server). */
 export function roleInsightSlug(title: string) {
   return String(title || "")

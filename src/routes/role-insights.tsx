@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { getRoleInsight, listRoles, roleInsightSlug } from "@/lib/api";
+import { RoleReviewsPanel } from "@/components/RoleReviewsPanel";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
 
@@ -371,6 +372,8 @@ function RoleInsightsPage() {
                     קישור החיפוש מוביל לתוצאות מאתר מתגייסים (mitgaisim.idf.il). השמות והדרישות משתנים,
                     ואנחנו לא מחליפים ייעוץ רשמי של צה״ל.
                   </p>
+
+                  <RoleReviewsPanel roleSlug={detail.slug} roleTitle={detail.roleTitle} />
                 </div>
               ) : null}
             </motion.div>

@@ -19,6 +19,10 @@ import {
   deleteUser,
 } from "../controllers/adminController.js";
 import {
+  adminListReviews,
+  adminModerateReview,
+} from "../controllers/roleReviewsController.js";
+import {
   getSecurityOverview,
   listSecurityEvents,
   listBlockedIps,
@@ -40,6 +44,13 @@ router.patch(
   updateUserTokenCap
 );
 router.delete("/users/:id", validateRequest(validateObjectIdParam("id")), deleteUser);
+
+router.get("/role-reviews", adminListReviews);
+router.patch(
+  "/role-reviews/:id",
+  validateRequest(validateObjectIdParam("id")),
+  adminModerateReview
+);
 
 router.get("/security/overview", getSecurityOverview);
 router.get("/security/events", validateRequest(validateSecurityEventsQuery), listSecurityEvents);

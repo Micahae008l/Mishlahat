@@ -1,0 +1,70 @@
+{
+  "_note": "Web-validated v3 enrichment overrides, keyed by exact roleTitle. Layered onto the base catalog by getIdfRoleCatalogV3(). Each entry was confirmed against official mitgaisim.idf.il pages. Grows incrementally as roles are validated. Floors gate hard only at enrichment.status reviewed/verified.",
+  "schemaVersion": "idf-role-preference-recommender-v3",
+  "overrides": {
+    "מדריך/ת חי״ר": {
+      "daparFloor": 40,
+      "medicalFloor": 72,
+      "serviceLengthMonths": 24,
+      "serviceLengthLabel": "שירות חובה מלא; קורס מדריכות כחודשיים",
+      "locations": ["בסיסי אימון חטיבתיים ופיקודיים", "מרכז לאומי לאימונים ביבשה — צאלים"],
+      "dayToDay": "מעבירות הכשרות מקצועיות ללוחמי חי\"ר: אמצעי לחימה ותצפית, קליעה וצליפה, ותפעול רכב קרבי משוריין. עבודה בשטח בבסיסי אימון.",
+      "requirements": ["פרופיל 72 ומעלה", "דפ\"ר 40 ומעלה", "הדרכה 4+ במא\"ה"],
+      "physicalDemand": 4,
+      "techIntensity": 2,
+      "peopleIntensity": 5,
+      "competitiveness": "medium",
+      "keyDimensions": ["instruction", "command", "teamwork"],
+      "popularity": "known",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/תפקידים/מדריכת-חיר" }
+    },
+    "מדריך/ת הנדסה קרבית": {
+      "daparFloor": 40,
+      "medicalFloor": 72,
+      "serviceLengthMonths": 24,
+      "serviceLengthLabel": "שירות חובה מלא; טירונות 02 (3 שבועות) + קורס קמ\"ד (4 חודשים)",
+      "locations": ["הל\"ץ — בית הספר למקצועות ההנדסה"],
+      "dayToDay": "מכשירות לוחמי הנדסה קרבית באחד מארבעה תחומים: רק\"ם, מיקוש וחבלה, תפעול צמ\"ה, או סיירת יהל\"ם. עבודה מעשית בשטח.",
+      "requirements": ["פרופיל 72 ומעלה", "דפ\"ר 40 ומעלה", "הדרכה 4+ במא\"ה"],
+      "physicalDemand": 4,
+      "techIntensity": 3,
+      "peopleIntensity": 5,
+      "competitiveness": "medium",
+      "keyDimensions": ["instruction", "command", "interpersonalCare"],
+      "popularity": "known",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/תפקידים/מדריכת-הנדסה-קרבית" }
+    },
+    "מדריך/ת ERP": {
+      "daparFloor": 50,
+      "medicalFloor": 45,
+      "serviceLengthMonths": 24,
+      "serviceLengthLabel": "שירות חובה מלא; הכשרה כ-8 שבועות",
+      "locations": ["מפקדת קצין משאבי האנוש הראשית — רמת גן", "הדרכות ביחידות ברחבי הארץ"],
+      "dayToDay": "מכשירות קצינים וחיילים על מערכות המידע והדיגיטל של חיל משאבי האנוש, מלווים כניסת קצינים חדשים לתפקיד ויוצאים להדרכות בבסיסים.",
+      "requirements": ["פרופיל 45 ומעלה", "קב\"א 52 ומעלה", "הדרכה 3+, הפעלה טכנית 2+ במא\"ה"],
+      "physicalDemand": 1,
+      "techIntensity": 3,
+      "peopleIntensity": 4,
+      "competitiveness": "medium",
+      "keyDimensions": ["instruction", "technicalActivation", "dataProcessing"],
+      "popularity": "niche",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/תפקידים/מדריכת-erp-ודיגיטל" }
+    },
+    "מאבחן/ת צוות אוויר": {
+      "daparFloor": null,
+      "medicalFloor": null,
+      "serviceLengthMonths": 24,
+      "serviceLengthLabel": "שירות חובה מלא",
+      "locations": ["מערך ההדרכה של חיל האוויר"],
+      "dayToDay": "מעבירות מבחני מיון ומודיעות תוצאות למועמדי צוות אוויר לאורך שלבי המיון, תוך שמירה על אתיקה ותשומת לב אישית.",
+      "requirements": ["מיועד לתפקידי אבחון וניהול משאבי אנוש", "דפ\"ר גבוה", "יכולת בין-אישית"],
+      "physicalDemand": 1,
+      "techIntensity": 2,
+      "peopleIntensity": 5,
+      "competitiveness": "high",
+      "keyDimensions": ["interpersonalCare", "dataProcessing", "disciplineMaturity"],
+      "popularity": "niche",
+      "enrichment": { "status": "reviewed", "confidence": "medium", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/תפקידים/מאבחנת-צוות-אוויר" }
+    }
+  }
+}

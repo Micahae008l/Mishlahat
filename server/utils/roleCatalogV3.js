@@ -1,5 +1,23 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { getIdfRoleCatalogParsed } from "./idfRoleCatalog.js";
 import { YOM_HAMEAH_12_KEYS } from "./yomHameah12Keys.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+let cachedOverrides;
+/** Web-validated per-role enrichment, keyed by exact roleTitle. Grows over time. */
+function loadEnrichmentOverrides() {
+  if (cachedOverrides !== undefined) return cachedOverrides;
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, "../data/role-enrichment-v3.json"), "utf8");
+    cachedOverrides = JSON.parse(raw)?.overrides || {};
+  } catch {
+    cachedOverrides = {};
+  }
+  return cachedOverrides;
+}
 
 /**
  * Schema-v3 loader shim. v3 adds structured per-role fields (floors, day-to-day,
@@ -145,10 +163,19 @@ export function getIdfRoleCatalogV3() {
     cachedV3 = parsed ? { ...parsed, roles: [] } : null;
     return cachedV3;
   }
+  const overrides = loadEnrichmentOverrides();
+  let enrichedCount = 0;
+  const roles = parsed.roles.map((r) => {
+    const ov = overrides[r.roleTitle];
+    if (ov) enrichedCount++;
+    return normalizeRoleV3(ov ? { ...r, ...ov } : r);
+  });
   cachedV3 = {
     ...parsed,
-    schemaVersion: parsed.schemaVersion || "idf-role-preference-recommender-v2",
-    roles: parsed.roles.map(normalizeRoleV3),
+    // Reflects that output is v3 (also namespaces the match cache via profileHash).
+    schemaVersion: "idf-role-preference-recommender-v3",
+    enrichedCount,
+    roles,
   };
   return cachedV3;
 }

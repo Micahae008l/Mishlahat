@@ -17,6 +17,7 @@ import { getIdfRoleCatalogParsed } from "../utils/idfRoleCatalog.js";
 import { preFilterRoles } from "../utils/rolePreFilter.js";
 import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
 import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash } from "../utils/roleScoring.js";
+import AiMatchResult from "../models/AiMatchResult.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -226,6 +227,34 @@ export async function matchRoles(req, res) {
       physicalActivityLevel: preferences?.physicalActivityLevel,
       yom,
     };
+
+    // Cache: identical profile + catalog + prompt + engine → return the saved
+    // result instantly. Logged as cache_hit (not success) so it costs nothing
+    // and does not consume one of the free uses.
+    const profileHash = computeProfileHash(
+      profileForMatch,
+      getIdfRoleCatalogV3()?.schemaVersion,
+      MATCH_PROMPT_VERSION
+    );
+    const cachedMatch = await AiMatchResult.findOne({ userId, profileHash, endpoint: "match-roles" }).lean();
+    if (cachedMatch?.roles?.length) {
+      await recordAiUsage({
+        userId,
+        userEmail,
+        endpoint: "match-roles",
+        model: "cache",
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        durationMs: Date.now() - startedAt,
+        status: "cache_hit",
+        filteredRoleCount: 0,
+      });
+      const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);
+      console.log(`[ai/match-roles] cache hit for user ${userId}`);
+      return res.json({ roles: cachedMatch.roles, aiCalls, cached: true });
+    }
+
     let filteredRoles;
     let candidatePool = null;
     if (MATCH_ENGINE === "v2") {
@@ -439,6 +468,13 @@ ${yomLines}${legacyQ}
         };
       });
     }
+
+    // Persist to cache so an identical re-run is free and byte-identical.
+    await AiMatchResult.findOneAndUpdate(
+      { userId, profileHash },
+      { $set: { engineVersion: MATCH_ENGINE, endpoint: "match-roles", roles: normalized } },
+      { upsert: true }
+    ).catch((e) => console.error("[ai/match-roles] cache write failed:", e?.message));
 
     // Recompute after logging so the client shows the up-to-date remaining count.
     const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);

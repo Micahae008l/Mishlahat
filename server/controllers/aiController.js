@@ -15,6 +15,8 @@ import {
 } from "../utils/yomHameah12Keys.js";
 import { getIdfRoleCatalogParsed } from "../utils/idfRoleCatalog.js";
 import { preFilterRoles } from "../utils/rolePreFilter.js";
+import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
+import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash } from "../utils/roleScoring.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +29,45 @@ function loadSystemPrompt() {
 }
 
 const BASE_SYSTEM_PROMPT = loadSystemPrompt();
+
+function loadSystemPromptV2() {
+  try {
+    return fs.readFileSync(path.join(__dirname, "../prompts/match-roles-system-v2.txt"), "utf8");
+  } catch {
+    return BASE_SYSTEM_PROMPT;
+  }
+}
+const BASE_SYSTEM_PROMPT_V2 = loadSystemPromptV2();
+
+/** v2 system prompt: pre-scored pool with rich v3 fields; model returns adjustment, not matchPercentage. */
+function buildSystemPromptV2(pool) {
+  const catalogSection = pool?.length
+    ? `
+
+---
+
+## מאגר תפקידים מדורג מראש (JSON — בחרו מתוכו בלבד)
+
+להלן ${pool.length} תפקידים שדורגו מראש ע"י מנוע הניקוד עבור המועמד. בחרו את 5 הטובים ביותר, החזירו adjustment (מ-8- עד 8+) לכל אחד, ואל תמציאו תפקידים שאינם ברשימה.
+
+${JSON.stringify(
+  pool.map((r) => ({
+    roleTitle: r.roleTitle,
+    category: r.category,
+    combat: r.combat,
+    basePercent: r.basePercent,
+    breakdownHe: r.breakdownHe,
+    dayToDay: r.dayToDay || undefined,
+    requirements: r.requirements?.length ? r.requirements : undefined,
+    keyDimensions: r.keyDimensions,
+    popularity: r.popularity,
+  })),
+  null,
+  0
+)}`
+    : "";
+  return BASE_SYSTEM_PROMPT_V2 + catalogSection;
+}
 
 /**
  * Build the system prompt with an inline filtered catalog subset.
@@ -104,6 +145,52 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const AI_MODEL = process.env.AI_MATCH_MODEL || "gpt-4o";
 const AI_TEMPERATURE = parseFloat(process.env.AI_MATCH_TEMPERATURE) || 0.2;
 
+// Hybrid engine flag. Default "v1" = existing behavior (safe deploy); set AI_MATCH_ENGINE=v2 to activate.
+const MATCH_ENGINE = (process.env.AI_MATCH_ENGINE || "v1").toLowerCase();
+const MATCH_PROMPT_VERSION = "match-v2-2026-07";
+
+/**
+ * v2: convert the model's {roleTitle, adjustment, ...} into final RoleMatch objects.
+ * Percentage = deterministic basePercent (looked up from the pool) + clamped AI adjustment.
+ * Enforces strict descending order so the UI's ranked layout is always monotonic.
+ */
+function finalizeRolesV2(rawRoles, pool) {
+  const byTitle = new Map(pool.map((r) => [r.roleTitle, r]));
+  const titles = pool.map((r) => r.roleTitle);
+
+  const out = rawRoles.map((r) => {
+    const roleTitle = String(r.roleTitle || "").trim();
+    let poolRole = byTitle.get(roleTitle);
+    if (!poolRole) {
+      const hit = titles.find((t) => t.includes(roleTitle) || roleTitle.includes(t));
+      if (hit) poolRole = byTitle.get(hit);
+      if (!poolRole) console.warn(`[ai/match-roles v2] unknown roleTitle from model: "${roleTitle}"`);
+    }
+    const basePercent = poolRole?.basePercent ?? 60;
+    const description = String(r.description || "").trim();
+    let summary = String(r.summary || "").trim();
+    if (!summary && description) {
+      const first = description.split(/(?<=[.!?])\s+/)[0]?.trim();
+      summary = first && first.length <= 140 ? first : `${description.slice(0, 120).trim()}…`;
+    }
+    return {
+      roleTitle: poolRole?.roleTitle || roleTitle,
+      matchPercentage: blendPercent(basePercent, r.adjustment),
+      summary,
+      description,
+      tags: Array.isArray(r.tags) ? r.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 6) : [],
+    };
+  });
+
+  out.sort((a, b) => b.matchPercentage - a.matchPercentage);
+  for (let i = 1; i < out.length; i++) {
+    if (out[i].matchPercentage >= out[i - 1].matchPercentage) {
+      out[i].matchPercentage = Math.max(30, out[i - 1].matchPercentage - 1);
+    }
+  }
+  return out;
+}
+
 export async function matchRoles(req, res) {
   const userId = req.userId;
   let userEmail = "";
@@ -129,13 +216,31 @@ export async function matchRoles(req, res) {
     // Migrate yom hameah to 12-key format
     const yom = migrateLegacyYomHameahTo12(stats.yomHameah);
 
-    // Pre-filter the catalog from 302 → ~40 best candidates
-    const catalog = getIdfRoleCatalogParsed();
-    const allRoles = catalog?.roles || [];
-    const filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
-    filteredRoleCount = filteredRoles.length;
-
-    console.log(`[ai/match-roles] Pre-filtered ${allRoles.length} → ${filteredRoles.length} roles for user ${userId}`);
+    // Build the candidate pool. v2 = deterministic hybrid scoring (pool of 15);
+    // v1 = legacy pre-filter (top 40). Kept behind AI_MATCH_ENGINE for instant rollback.
+    const profileForMatch = {
+      daparScore: stats.daparScore,
+      medicalProfile: stats.medicalProfile,
+      combatPreference: preferences?.combatPreference,
+      focus: preferences?.focus,
+      physicalActivityLevel: preferences?.physicalActivityLevel,
+      yom,
+    };
+    let filteredRoles;
+    let candidatePool = null;
+    if (MATCH_ENGINE === "v2") {
+      const catV3 = getIdfRoleCatalogV3();
+      candidatePool = buildCandidatePool(catV3?.roles || [], profileForMatch, { poolSize: 15 });
+      filteredRoles = candidatePool;
+      filteredRoleCount = candidatePool.length;
+      console.log(`[ai/match-roles] engine=v2 pool=${candidatePool.length} for user ${userId}`);
+    } else {
+      const catalog = getIdfRoleCatalogParsed();
+      const allRoles = catalog?.roles || [];
+      filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
+      filteredRoleCount = filteredRoles.length;
+      console.log(`[ai/match-roles] engine=v1 pre-filtered ${allRoles.length} → ${filteredRoles.length} for user ${userId}`);
+    }
 
     const legacyQ =
       stats.yomQuestionnaire?.length > 0
@@ -172,7 +277,26 @@ export async function matchRoles(req, res) {
       ? `ממדים נמוכים: ${lowDims.map(d => `${d.label} (${d.score})`).join(", ")}`
       : "אין ציונים בולטים נמוכים";
 
-    const userPrompt = `ענה לפי כללי המערכת (JSON בלבד, טקסטים בעברית).
+    const userPrompt = MATCH_ENGINE === "v2" ? `ענה לפי כללי המערכת (JSON בלבד, טקסטים בעברית).
+
+מהמאגר המדורג מראש שבהוראות המערכת, בחר את 5 התפקידים הטובים ביותר עבור המועמד, דרג מ-#1 (החזק ביותר) ל-#5, והחזר adjustment (מ-8- עד 8+) לכל תפקיד. אל תחזיר matchPercentage — המערכת מחשבת אותו מ-basePercent ומה-adjustment שלך.
+
+חוזה ההסבר (חובה בכל description): צטט את דפ"ר ${stats.daparScore}, את הפרופיל הרפואי ${stats.medicalProfile}, ממד מא"ה אחד עם הציון שלו, ולפחות עובדה אחת מתוך שדה dayToDay של התפקיד.
+
+## פרופיל מועמד
+
+- דפ"ר: ${stats.daparScore}
+- פרופיל רפואי: ${stats.medicalProfile}
+- מקור ציוני מאה: ${yomSrc}
+- ציוני מאה (כל 12 ממדים):
+${yomLines}${legacyQ}
+- ${strengthsLine}
+- ${weaknessLine}
+- העדפת קרביות: ${preferences?.combatPreference || "לא הוגדר"}
+- מיקוד: ${preferences?.focus || "כללי"}
+- פעילות גופנית: ${preferences?.physicalActivityLevel || "לא צוין"}
+
+בחר 5 תפקידים מהמאגר בלבד. שמות מדויקים כפי שמופיעים במאגר, תיאורים בעברית בלבד.` : `ענה לפי כללי המערכת (JSON בלבד, טקסטים בעברית).
 
 החזר אובייקט JSON עם מפתח יחיד "roles" (מערך של 5 תפקידים), בדיוק כפי שמוגדר בהוראות המערכת.
 
@@ -219,16 +343,24 @@ ${yomLines}${legacyQ}
 
 המלץ על 5 תפקידי צה"ל. שמות ותיאורים — בעברית בלבד.`;
 
-    const completion = await openai.chat.completions.create({
+    const isV2 = MATCH_ENGINE === "v2";
+    const openaiParams = {
       model: AI_MODEL,
       messages: [
-        { role: "system", content: buildSystemPrompt(filteredRoles) },
+        { role: "system", content: isV2 ? buildSystemPromptV2(candidatePool) : buildSystemPrompt(filteredRoles) },
         { role: "user", content: userPrompt },
       ],
-      temperature: AI_TEMPERATURE,
       max_tokens: 8000,
       response_format: { type: "json_object" },
-    });
+      temperature: isV2 ? 0.1 : AI_TEMPERATURE,
+    };
+    if (isV2) {
+      // Deterministic seed from the profile hash → best-effort identical reruns (caching is the hard guarantee).
+      openaiParams.seed = seedFromString(
+        computeProfileHash(profileForMatch, getIdfRoleCatalogV3()?.schemaVersion, MATCH_PROMPT_VERSION)
+      );
+    }
+    const completion = await openai.chat.completions.create(openaiParams);
 
     const durationMs = Date.now() - startedAt;
     const usage = completion.usage ?? {};
@@ -284,24 +416,29 @@ ${yomLines}${legacyQ}
       filteredRoleCount,
     });
 
-    // Ensure roles are sorted by matchPercentage descending
-    roles.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
-
-    const normalized = roles.map((r) => {
-      const description = String(r.description || "").trim();
-      let summary = String(r.summary || "").trim();
-      if (!summary && description) {
-        const first = description.split(/(?<=[.!?])\s+/)[0]?.trim();
-        summary = first && first.length <= 140 ? first : `${description.slice(0, 120).trim()}…`;
-      }
-      return {
-        roleTitle: String(r.roleTitle || "").trim(),
-        matchPercentage: Math.round(Number(r.matchPercentage) || 0),
-        summary,
-        description,
-        tags: Array.isArray(r.tags) ? r.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 6) : [],
-      };
-    });
+    let normalized;
+    if (MATCH_ENGINE === "v2") {
+      // Percentage = deterministic basePercent + clamped AI adjustment; strict descending.
+      normalized = finalizeRolesV2(roles, candidatePool || []);
+    } else {
+      // Ensure roles are sorted by matchPercentage descending
+      roles.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+      normalized = roles.map((r) => {
+        const description = String(r.description || "").trim();
+        let summary = String(r.summary || "").trim();
+        if (!summary && description) {
+          const first = description.split(/(?<=[.!?])\s+/)[0]?.trim();
+          summary = first && first.length <= 140 ? first : `${description.slice(0, 120).trim()}…`;
+        }
+        return {
+          roleTitle: String(r.roleTitle || "").trim(),
+          matchPercentage: Math.round(Number(r.matchPercentage) || 0),
+          summary,
+          description,
+          tags: Array.isArray(r.tags) ? r.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 6) : [],
+        };
+      });
+    }
 
     // Recompute after logging so the client shows the up-to-date remaining count.
     const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);

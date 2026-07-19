@@ -8,6 +8,7 @@ import { updateProfile, type YomHameah } from "@/lib/api";
 import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
+import { DraftDateField } from "@/components/DraftDateField";
 import {
   COMBAT_PREFERENCE_OPTIONS,
   FOCUS_PREFERENCE_OPTIONS,
@@ -335,17 +336,13 @@ function OnboardingPage() {
             {step === STEP_DRAFT && (
               <div className="space-y-3 text-right">
                 <label className="block text-sm font-medium text-foreground">תאריך גיוס משוער</label>
-                <input
-                  type="date"
+                <DraftDateField
                   value={draftDate}
-                  onChange={(e) => {
-                    setDraftDate(e.target.value);
+                  onChange={(v) => {
+                    setDraftDate(v);
                     setStepError(null);
                   }}
-                  className={`input-field w-full max-w-xs text-left${stepError ? " input-field--invalid" : ""}`}
-                  min="2000-01-01"
-                  max="2038-12-31"
-                  aria-invalid={stepError ? true : undefined}
+                  invalid={Boolean(stepError)}
                 />
               </div>
             )}

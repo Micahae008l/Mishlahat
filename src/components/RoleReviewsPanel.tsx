@@ -52,29 +52,29 @@ export function RoleReviewsPanel({ roleSlug, roleTitle }: Props) {
   const reviewCount = reviews.length;
 
   return (
-    <section className="border-t border-iron/20 pt-4" aria-labelledby="role-reviews-heading">
+    <section className="border-t border-iron/20 pt-4 text-right" dir="rtl" aria-labelledby="role-reviews-heading">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 text-right transition hover:opacity-90"
+        className="flex w-full items-center justify-start gap-3 text-right transition hover:opacity-90"
         aria-expanded={open}
         aria-controls="role-reviews-panel"
         id="role-reviews-heading"
       >
-        <ChevronDown
-          className={`h-5 w-5 shrink-0 text-primary transition ${open ? "rotate-180" : ""}`}
-          aria-hidden
-        />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center justify-end gap-2 text-sm font-bold text-foreground">
+          <p className="flex items-center justify-start gap-2 text-sm font-bold text-foreground">
+            <MessageSquare className="h-4 w-4 shrink-0 text-primary" aria-hidden />
             ביקורות משרתים
-            <MessageSquare className="h-4 w-4 text-primary" aria-hidden />
           </p>
           <p className="mt-0.5 text-xs text-dust">
             שירתם ב«{roleTitle}»? לחצו לפתיחה
             {open && reviewCount > 0 ? ` · ${reviewCount} מאושרות` : ""}
           </p>
         </div>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-primary transition ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
       </button>
 
       {open ? (
@@ -90,20 +90,20 @@ export function RoleReviewsPanel({ roleSlug, roleTitle }: Props) {
           ) : (
             <ul className="space-y-3">
               {reviews.map((r) => (
-                <li key={r.id} className="border border-iron/25 bg-background/40 p-3 text-right">
+                <li key={r.id} className="border border-iron/25 bg-background/40 p-3 text-right" dir="rtl">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-dust">
-                      {new Date(r.createdAt).toLocaleDateString("he-IL")}
-                    </span>
                     <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-foreground">{r.displayName}</span>
                       {r.rating ? (
-                        <span className="inline-flex items-center gap-0.5 font-mono text-[11px] text-primary">
+                        <span className="inline-flex items-center gap-0.5 font-mono text-[11px] text-primary" dir="ltr">
                           <Star className="h-3 w-3 fill-current" aria-hidden />
                           {r.rating}/5
                         </span>
                       ) : null}
-                      <span className="text-xs font-semibold text-foreground">{r.displayName}</span>
                     </div>
+                    <span className="font-mono text-[11px] tabular-nums text-dust" dir="ltr">
+                      {new Date(r.createdAt).toLocaleDateString("he-IL")}
+                    </span>
                   </div>
                   {r.servedInRole ? (
                     <p className="mt-1 text-[10px] text-primary/90">שירת/ה בתפקיד</p>
@@ -146,7 +146,16 @@ export function RoleReviewsPanel({ roleSlug, roleTitle }: Props) {
                   required
                 />
               </label>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3" dir="rtl">
+                <label className="inline-flex items-center gap-2 text-xs text-dust">
+                  <input
+                    type="checkbox"
+                    checked={servedInRole}
+                    onChange={(e) => setServedInRole(e.target.checked)}
+                    className="accent-primary"
+                  />
+                  שירתתי בתפקיד הזה
+                </label>
                 <div className="flex items-center gap-1" dir="ltr">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
@@ -162,15 +171,6 @@ export function RoleReviewsPanel({ roleSlug, roleTitle }: Props) {
                     </button>
                   ))}
                 </div>
-                <label className="inline-flex items-center gap-2 text-xs text-dust">
-                  <input
-                    type="checkbox"
-                    checked={servedInRole}
-                    onChange={(e) => setServedInRole(e.target.checked)}
-                    className="accent-primary"
-                  />
-                  שירתתי בתפקיד הזה
-                </label>
               </div>
               <button
                 type="submit"

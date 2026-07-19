@@ -125,6 +125,27 @@
     color: var(--color-foreground);
   }
 
+  /* Native date picker — readable on dark UI */
+  .input-field--date {
+    color-scheme: dark;
+    min-height: 3rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .input-field--date::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.85;
+    filter: invert(72%) sepia(64%) saturate(480%) hue-rotate(52deg) brightness(104%);
+    padding: 0.15rem;
+    margin-inline-end: 0.15rem;
+  }
+  .input-field--date::-webkit-datetime-edit {
+    padding: 0;
+  }
+  .input-field--date::-webkit-datetime-edit-fields-wrapper {
+    padding-inline-start: 0.15rem;
+  }
+
   /* OTP cells — never use width:100% from .input-field */
   .input-field--otp {
     width: 2.75rem;

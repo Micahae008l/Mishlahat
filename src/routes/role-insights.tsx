@@ -293,7 +293,7 @@ function RoleInsightsPage() {
                 <p className="text-sm text-destructive">לא הצלחנו לטעון את התפקיד. נסו שוב.</p>
               ) : detail ? (
                 <div className="space-y-5">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" dir="rtl">
                     {detail.combat ? (
                       <span className="rounded-sm border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] text-primary">
                         כיוון קרבי / שדה
@@ -363,7 +363,7 @@ function RoleInsightsPage() {
                     <IntensityBar label="עבודה עם אנשים" value={detail.peopleIntensity} />
                   </div>
 
-                  <div className="flex flex-col gap-2 border-t border-iron/20 pt-4 sm:flex-row sm:justify-start" dir="ltr">
+                  <div className="flex flex-col gap-2 border-t border-iron/20 pt-4 sm:flex-row sm:justify-start" dir="rtl">
                     <a
                       href={detail.officialSearchUrl}
                       target="_blank"
@@ -380,7 +380,7 @@ function RoleInsightsPage() {
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-iron/40 px-4 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
                     >
                       קטלוג תפקידים רשמי
-                      <ChevronLeft className="h-4 w-4 rotate-180" aria-hidden />
+                      <ChevronLeft className="h-4 w-4" aria-hidden />
                     </a>
                   </div>
 

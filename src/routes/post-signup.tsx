@@ -14,6 +14,7 @@ import {
 import { getToken, setAuthSession } from "@/lib/auth";
 import { dashboardQueryOptions, prefetchAuthedData } from "@/lib/queries";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
+import { DraftDateField } from "@/components/DraftDateField";
 import {
   COMBAT_PREFERENCE_OPTIONS,
   FOCUS_PREFERENCE_OPTIONS,
@@ -626,23 +627,14 @@ function PostSignupPage() {
               {step === 9 && (
                 <div className="space-y-3 text-right">
                   <FormField label="תאריך גיוס משוער" error={fieldErrors.draftDate}>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        value={draftDate}
-                        onChange={(e) => {
-                          setDraftDate(e.target.value);
-                          clearFieldErrors("draftDate");
-                        }}
-                        className={`input-field w-full max-w-xs pl-10 text-left${fieldErrors.draftDate ? " input-field--invalid" : ""}`}
-                        min="2000-01-01"
-                        max="2038-12-31"
-                        aria-invalid={fieldErrors.draftDate ? true : undefined}
-                      />
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dust/40">
-                        <Calendar className="h-4 w-4" />
-                      </span>
-                    </div>
+                    <DraftDateField
+                      value={draftDate}
+                      onChange={(v) => {
+                        setDraftDate(v);
+                        clearFieldErrors("draftDate");
+                      }}
+                      invalid={Boolean(fieldErrors.draftDate)}
+                    />
                   </FormField>
                   <p className="text-xs text-dust">אפשר לעדכן מאוחר יותר בפרופיל.</p>
                 </div>

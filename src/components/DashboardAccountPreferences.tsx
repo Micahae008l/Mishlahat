@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";
+import { DraftDateField } from "@/components/DraftDateField";
 import { getDashboardStats, updateProfile, type DashboardResponse } from "@/lib/api";
 import {
   COMBAT_PREFERENCE_OPTIONS,
@@ -203,14 +204,7 @@ export function DashboardAccountPreferences({ data }: Props) {
               {data.user.status === "Pre-Draft" && (
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-foreground">תאריך גיוס משוער</label>
-                  <input
-                    type="date"
-                    value={draftDate}
-                    onChange={(e) => setDraftDate(e.target.value)}
-                    className="input-field max-w-xs"
-                    min="2000-01-01"
-                    max="2038-12-31"
-                  />
+                  <DraftDateField value={draftDate} onChange={setDraftDate} />
                 </div>
               )}
 

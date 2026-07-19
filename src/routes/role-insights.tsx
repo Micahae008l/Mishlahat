@@ -196,8 +196,24 @@ function RoleInsightsPage() {
       <p className="text-right text-xs text-dust" dir="rtl">
         {listQuery.isLoading
           ? "טוען…"
-          : `מציגים ${listQuery.data?.count ?? 0} מתוך ${listQuery.data?.total ?? 0} תפקידים`}
+          : listQuery.isError
+            ? "לא הצלחנו לטעון את הקטלוג"
+            : `מציגים ${listQuery.data?.count ?? 0} מתוך ${listQuery.data?.total ?? 0} תפקידים`}
       </p>
+
+      {listQuery.isError ? (
+        <div className="border border-destructive/30 bg-destructive/5 p-5 text-right" dir="rtl">
+          <p className="text-sm font-semibold text-foreground">שגיאה בטעינת התפקידים</p>
+          <p className="mt-1 text-sm text-dust">רעננו את העמוד או נסו שוב בעוד רגע.</p>
+          <button
+            type="button"
+            onClick={() => void listQuery.refetch()}
+            className="mt-3 text-sm font-semibold text-primary hover:underline"
+          >
+            נסו שוב
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2" dir="rtl">
         {roles.map((r) => (
@@ -227,7 +243,7 @@ function RoleInsightsPage() {
         ))}
       </div>
 
-      {!listQuery.isLoading && roles.length === 0 ? (
+      {!listQuery.isLoading && !listQuery.isError && roles.length === 0 ? (
         <p className="py-10 text-center text-sm text-dust">לא נמצאו תפקידים לחיפוש הזה.</p>
       ) : null}
 

@@ -9,6 +9,7 @@ import {
   getSecurityEvents,
   getSecurityOverview,
   getSession,
+  listMatchHistory,
   listReportHistory,
   type SecurityEventsFilters,
 } from "@/lib/api";
@@ -20,6 +21,7 @@ export const STALE = {
   session: 10 * MIN,
   dashboard: 5 * MIN,
   reportHistory: 3 * MIN,
+  matchHistory: 2 * MIN,
   reportDetail: 10 * MIN,
   admin: 2 * MIN,
   security: 30_000,
@@ -47,6 +49,14 @@ export const reportHistoryQueryOptions = (token: string | null) =>
     queryFn: listReportHistory,
     enabled: !!token,
     staleTime: STALE.reportHistory,
+  });
+
+export const matchHistoryQueryOptions = (token: string | null) =>
+  queryOptions({
+    queryKey: queryKeys.matchHistory(token),
+    queryFn: listMatchHistory,
+    enabled: !!token,
+    staleTime: STALE.matchHistory,
   });
 
 export const reportHistoryDetailQueryOptions = (reportId: string, token: string | null) =>

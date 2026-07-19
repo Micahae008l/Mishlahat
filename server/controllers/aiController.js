@@ -18,6 +18,7 @@ import { preFilterRoles } from "../utils/rolePreFilter.js";
 import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
 import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash } from "../utils/roleScoring.js";
 import AiMatchResult from "../models/AiMatchResult.js";
+import MatchGeneration from "../models/MatchGeneration.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -475,6 +476,17 @@ ${yomLines}${legacyQ}
       { $set: { engineVersion: MATCH_ENGINE, endpoint: "match-roles", roles: normalized } },
       { upsert: true }
     ).catch((e) => console.error("[ai/match-roles] cache write failed:", e?.message));
+
+    // Append-only history so users can reopen past generations.
+    const top = normalized[0];
+    await MatchGeneration.create({
+      userId,
+      profileHash,
+      engineVersion: MATCH_ENGINE,
+      roles: normalized,
+      topRole: top?.roleTitle || "",
+      topMatch: top?.matchPercentage ?? null,
+    }).catch((e) => console.error("[ai/match-roles] history write failed:", e?.message));
 
     // Recompute after logging so the client shows the up-to-date remaining count.
     const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);

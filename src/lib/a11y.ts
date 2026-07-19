@@ -37,6 +37,8 @@ export const ARIA = {
   rangeValue: (title: string, value: number, max: number) => `${title}: ${value} מתוך ${max}`,
   accountPreferences: "העדפות חשבון",
   reportHistory: "היסטוריית דוחות",
+  matchHistory: "היסטוריית התאמות",
+  deleteMatch: (title: string) => `מחק התאמה: ${title}`,
 } as const;
 
 export function progressBarProps(pct: number, label: string) {

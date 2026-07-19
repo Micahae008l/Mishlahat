@@ -105,35 +105,38 @@ function RoleCard({
         featured ? "border-primary/45 bg-card" : "border-iron/30 bg-card"
       }`}
     >
-      <div className={`grid ${featured ? "md:grid-cols-[1fr_220px]" : "grid-cols-1"}`}>
-        <div className={`relative min-h-[140px] overflow-hidden ${featured ? "md:order-2" : ""}`}>
+      <div
+        dir="rtl"
+        className={`grid ${featured ? "md:grid-cols-[220px_1fr]" : "grid-cols-1"}`}
+      >
+        <div className="relative min-h-[140px] overflow-hidden">
           <img
             src={photo.src}
             alt={photo.alt}
             className="h-full w-full object-cover opacity-75"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-l from-card via-card/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-card via-card/75 to-transparent" />
           <span
-            className="absolute top-3 left-3 rounded-sm border border-primary/30 bg-background/80 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-primary"
+            className="absolute top-3 right-3 rounded-sm border border-primary/30 bg-background/80 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-primary"
             aria-hidden
           >
             #{rank}
           </span>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent px-3 pb-2 pt-8 text-left">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent px-3 pb-2 pt-8 text-right">
             <IdfPhotoCredit photo={photo} />
           </div>
         </div>
 
-        <div className={`flex flex-col gap-4 p-6 ${featured ? "md:p-8" : ""}`}>
-          <div className="flex items-start justify-between gap-4">
-            <MatchRing pct={role.matchPercentage} size={featured ? "lg" : "md"} />
+        <div className={`flex flex-col gap-4 p-6 ${featured ? "md:p-8" : ""}`} dir="rtl">
+          <div className="flex items-start justify-between gap-4" dir="rtl">
             <div className="min-w-0 flex-1">
               <h3 className={`font-bold text-foreground ${featured ? "text-xl" : "text-base"}`}>
                 {role.roleTitle}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-foreground/90">{headline}</p>
             </div>
+            <MatchRing pct={role.matchPercentage} size={featured ? "lg" : "md"} />
           </div>
 
           <div className="flex flex-wrap justify-end gap-2">
@@ -206,16 +209,16 @@ export function RoleMatchCards({ roles }: { roles: RoleMatch[] }) {
 
   return (
     <section className="space-y-5" aria-labelledby="role-match-results-heading">
-      <div className="flex items-center justify-end gap-2 text-right">
-        <div>
+      <div dir="rtl" className="flex items-center justify-start gap-2 text-right">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-primary/10 text-primary" aria-hidden>
+          <Bot className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
           <p className="font-mono text-[10px] tracking-widest text-primary uppercase">תוצאות</p>
           <h2 id="role-match-results-heading" className="text-xl font-bold text-foreground">
             5 תפקידים מותאמים לפרופיל שלכם
           </h2>
           <p className="mt-1 text-[11px] text-dust/70">לכל תפקיד תמונה שונה · קרדיט לצלם/מקור בתחתית התמונה</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10 text-primary" aria-hidden>
-          <Bot className="h-5 w-5" />
         </div>
       </div>
 

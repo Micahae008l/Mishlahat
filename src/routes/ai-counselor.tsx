@@ -9,6 +9,7 @@ import {
 } from "@/components/skeletons/PageSkeletons";
 import { toast } from "sonner";
 import { RoleMatchCards } from "@/components/RoleMatchCards";
+import { MatchHistoryPanel } from "@/components/MatchHistoryPanel";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
 import { getIdfPhoto } from "@/lib/idf-images";
 import { matchRolesRequest, type RoleMatch } from "@/lib/api";
@@ -48,6 +49,7 @@ function AiCounselorPage() {
   ]);
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<RoleMatch[] | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,11 +100,15 @@ function AiCounselorPage() {
     }
     setLoading(true);
     setRoles(null);
+    setHistoryId(null);
     setMessages((prev) => [...prev, { role: "user", text: "בקשת התאמת תפקידים" }]);
     try {
       const { roles: list } = await matchRolesRequest();
       setRoles(list);
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["match-history"] }),
+      ]);
       setMessages((prev) => [
         ...prev,
         {
@@ -144,21 +150,23 @@ function AiCounselorPage() {
           </p>
           {dash?.aiCalls && !dash.aiCalls.unlimited ? (
             <div
-              className={`mt-4 inline-flex items-center gap-2 border px-3.5 py-2 ${
+              dir="rtl"
+              className={`mt-4 inline-flex items-center gap-3 border px-3.5 py-2 ${
                 (dash.aiCalls.remaining ?? 0) === 0
                   ? "border-destructive/50 bg-destructive/10"
                   : "border-primary/45 bg-primary/10"
               }`}
               aria-live="polite"
             >
+              <span className="text-xs text-dust">שימושים חינמיים נותרו</span>
               <span
+                dir="ltr"
                 className={`font-mono text-xl font-bold tabular-nums ${
                   (dash.aiCalls.remaining ?? 0) === 0 ? "text-destructive" : "text-primary"
                 }`}
               >
                 {dash.aiCalls.remaining}/{dash.aiCalls.cap}
               </span>
-              <span className="text-xs text-dust">שימושים חינמיים נותרו</span>
             </div>
           ) : null}
         </div>
@@ -192,30 +200,36 @@ function AiCounselorPage() {
         {dash && aiReady && (
           <div
             dir="rtl"
-            className="flex flex-wrap justify-start gap-3 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:px-4"
+            className="flex flex-wrap justify-start gap-4 rounded-sm border border-iron/25 bg-card/50 px-3 py-3 font-mono text-xs text-dust sm:px-4"
           >
-            <span>
-              דפ״ר: <strong className="text-foreground">{dash.stats?.daparScore ?? "-"}</strong>
+            <span className="inline-flex items-center gap-2" dir="rtl">
+              <span>דפ״ר</span>
+              <strong dir="ltr" className="tabular-nums text-foreground">
+                {dash.stats?.daparScore ?? "-"}
+              </strong>
             </span>
-            <span className="text-iron/40">|</span>
-            <span>
-              רפואי: <strong className="text-foreground">{dash.stats?.medicalProfile ?? "-"}</strong>
+            <span className="text-iron/40" aria-hidden>
+              |
             </span>
-            <span className="text-iron/40">|</span>
-            <span>
-              מא״ה: <strong className="text-foreground">{yomAvgLabel}</strong>
+            <span className="inline-flex items-center gap-2" dir="rtl">
+              <span>רפואי</span>
+              <strong dir="ltr" className="tabular-nums text-foreground">
+                {dash.stats?.medicalProfile ?? "-"}
+              </strong>
+            </span>
+            <span className="text-iron/40" aria-hidden>
+              |
+            </span>
+            <span className="inline-flex items-center gap-2" dir="rtl">
+              <span>מא״ה</span>
+              <strong dir="ltr" className="tabular-nums text-foreground">
+                {yomAvgLabel}
+              </strong>
             </span>
           </div>
         )}
 
         <div dir="rtl" className="flex flex-wrap items-center justify-start gap-3">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 rounded-md border border-iron/40 px-5 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
-          >
-            דשבורד
-            <ArrowLeft className="h-3.5 w-3.5 rotate-180" aria-hidden />
-          </Link>
           <button
             type="button"
             disabled={loading || !aiReady || !token || tokenCapped || callCapped}
@@ -225,9 +239,33 @@ function AiCounselorPage() {
             <Award className="h-4 w-4" aria-hidden />
             התאמת תפקידים
           </button>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 rounded-md border border-iron/40 px-5 py-2.5 text-sm text-dust transition hover:border-primary/40 hover:text-foreground"
+          >
+            דשבורד
+            <ArrowLeft className="h-3.5 w-3.5 rotate-180" aria-hidden />
+          </Link>
         </div>
 
-        <section className="border border-iron/30 bg-card overflow-hidden" aria-labelledby="ai-chat-heading">
+        {token ? (
+          <MatchHistoryPanel
+            activeId={historyId}
+            onSelect={(list, meta) => {
+              setRoles(list);
+              setHistoryId(meta.id);
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: "ai",
+                  text: `נטענה התאמה מההיסטוריה${meta.topRole ? ` · ${meta.topRole}` : ""} (${list.length} תפקידים).`,
+                },
+              ]);
+            }}
+          />
+        ) : null}
+
+        <section className="border border-iron/30 bg-card overflow-hidden" aria-labelledby="ai-chat-heading" dir="rtl">
           <div className="border-b border-iron/20 px-5 py-2.5 text-right">
             <h2 id="ai-chat-heading" className="font-mono text-[10px] tracking-widest text-dust uppercase">
               שיחה

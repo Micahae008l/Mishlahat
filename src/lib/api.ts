@@ -359,10 +359,37 @@ export type RoleMatch = {
 };
 
 export function matchRolesRequest() {
-  return apiFetch<{ roles: RoleMatch[]; aiCalls?: AiCallCapStatus }>("/api/ai/match-roles", {
+  return apiFetch<{ roles: RoleMatch[]; aiCalls?: AiCallCapStatus; cached?: boolean }>("/api/ai/match-roles", {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+export type MatchHistoryItem = {
+  id: string;
+  createdAt: string;
+  updatedAt?: string;
+  engineVersion: string;
+  topRole: string;
+  topMatch: number | null;
+  roleCount: number;
+  roleTitles: string[];
+};
+
+export type MatchHistoryDetail = MatchHistoryItem & {
+  roles: RoleMatch[];
+};
+
+export function listMatchHistory() {
+  return apiFetch<{ generations: MatchHistoryItem[] }>("/api/ai/match-history");
+}
+
+export function getMatchHistory(id: string) {
+  return apiFetch<{ generation: MatchHistoryDetail }>(`/api/ai/match-history/${id}`);
+}
+
+export function deleteMatchHistory(id: string) {
+  return apiFetch<{ message: string; id: string }>(`/api/ai/match-history/${id}`, { method: "DELETE" });
 }
 
 // ── Role insights catalog (public) ──────────────────────────────────────────

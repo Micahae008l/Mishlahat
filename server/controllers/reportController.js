@@ -11,6 +11,8 @@ import {
 } from "../utils/yomHameah12Keys.js";
 import { getIdfRoleCatalogParsed } from "../utils/idfRoleCatalog.js";
 import { preFilterRoles } from "../utils/rolePreFilter.js";
+import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
+import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash } from "../utils/roleScoring.js";
 import ReportHistory from "../models/ReportHistory.js";
 import { trimUserReportHistory } from "./reportHistoryController.js";
 import { generateReportPdf } from "../utils/reportPdf.js";
@@ -21,6 +23,19 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const REPORT_MODEL = process.env.AI_REPORT_MODEL || "gpt-4o";
 const REPORT_TEMPERATURE = parseFloat(process.env.AI_REPORT_TEMPERATURE) || 0.25;
+
+// Shares the one match-engine flag: default v1 (safe), AI_MATCH_ENGINE=v2 activates hybrid.
+const REPORT_ENGINE = (process.env.AI_MATCH_ENGINE || "v1").toLowerCase();
+const REPORT_PROMPT_VERSION = "report-v2-2026-07";
+
+// v2-only override appended to the report system prompt.
+const REPORT_V2_OVERRIDE = `
+
+## מנוע דירוג v2 — עדיפות עליונה על ההוראות שלמעלה
+- קיבלת מאגר תפקידים שדורג מראש, עם basePercent לכל תפקיד. בחר 10 תפקידים מהמאגר בלבד.
+- לכל תפקיד החזר "adjustment" (מספר שלם בין 8- ל-8+) במקום matchPercentage. אל תחזיר matchPercentage כלל.
+- אל תמלא serviceLength ו-location — המערכת ממלאת אותם מהקטלוג. השאר מחרוזת ריקה.
+- כל description ו-fitReason חייבים לצטט: דפ"ר, פרופיל רפואי, ממד מא"ה אחד עם הציון שלו, ולפחות עובדה אחת מתוך dayToDay של התפקיד. אסור מילוי גנרי.`;
 
 export async function generateReport(req, res) {
   const userId = req.userId;
@@ -56,9 +71,25 @@ export async function generateReport(req, res) {
 
     const yom = migrateLegacyYomHameahTo12(stats.yomHameah);
 
-    const catalog = getIdfRoleCatalogParsed();
-    const allRoles = catalog?.roles || [];
-    const filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
+    const profileForMatch = {
+      daparScore: stats.daparScore,
+      medicalProfile: stats.medicalProfile,
+      combatPreference: preferences?.combatPreference,
+      focus: preferences?.focus,
+      physicalActivityLevel: preferences?.physicalActivityLevel,
+      yom,
+    };
+    let filteredRoles;
+    let candidatePool = null;
+    if (REPORT_ENGINE === "v2") {
+      const catV3 = getIdfRoleCatalogV3();
+      candidatePool = buildCandidatePool(catV3?.roles || [], profileForMatch, { poolSize: 25, maxPerCategory: 3 });
+      filteredRoles = candidatePool;
+    } else {
+      const catalog = getIdfRoleCatalogParsed();
+      const allRoles = catalog?.roles || [];
+      filteredRoles = preFilterRoles(allRoles, stats, preferences, yom);
+    }
     filteredRoleCount = filteredRoles.length;
 
     const yomSrc =
@@ -180,15 +211,29 @@ ${personalInfoLines.length ? personalInfoLines.join("\n") : "(לא סופק מי
 ## קטלוג תפקידים מסונן (${filteredRoles.length} תפקידים)
 
 ${JSON.stringify(
-  filteredRoles.map((r) => ({
-    roleTitle: r.roleTitle,
-    category: r.category,
-    combat: r.combat,
-    selective: r.selective,
-    preferenceTags: r.preferenceTags,
-    signals: r.signals,
-    bestFor: r.bestFor,
-  })),
+  filteredRoles.map((r) =>
+    REPORT_ENGINE === "v2"
+      ? {
+          roleTitle: r.roleTitle,
+          category: r.category,
+          combat: r.combat,
+          basePercent: r.basePercent,
+          breakdownHe: r.breakdownHe,
+          dayToDay: r.dayToDay || undefined,
+          requirements: r.requirements?.length ? r.requirements : undefined,
+          keyDimensions: r.keyDimensions,
+          popularity: r.popularity,
+        }
+      : {
+          roleTitle: r.roleTitle,
+          category: r.category,
+          combat: r.combat,
+          selective: r.selective,
+          preferenceTags: r.preferenceTags,
+          signals: r.signals,
+          bestFor: r.bestFor,
+        }
+  ),
   null,
   0
 )}
@@ -203,16 +248,23 @@ ${JSON.stringify(
 - תגובה לתפקידים שציין ולפחדים שציין
 - סיכום להורים`;
 
-    const completion = await openai.chat.completions.create({
+    const isV2 = REPORT_ENGINE === "v2";
+    const reportParams = {
       model: REPORT_MODEL,
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: isV2 ? systemPrompt + REPORT_V2_OVERRIDE : systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      temperature: REPORT_TEMPERATURE,
       max_tokens: 12000,
       response_format: { type: "json_object" },
-    });
+      temperature: isV2 ? 0.15 : REPORT_TEMPERATURE,
+    };
+    if (isV2) {
+      reportParams.seed = seedFromString(
+        computeProfileHash(profileForMatch, getIdfRoleCatalogV3()?.schemaVersion, REPORT_PROMPT_VERSION)
+      );
+    }
+    const completion = await openai.chat.completions.create(reportParams);
 
     const durationMs = Date.now() - startedAt;
     const usage = completion.usage ?? {};
@@ -261,6 +313,29 @@ ${JSON.stringify(
       openaiRequestId: completion.id ?? null,
       filteredRoleCount,
     });
+
+    if (isV2 && Array.isArray(report.roles) && candidatePool) {
+      // Blend deterministic basePercent with the model's adjustment, and take
+      // serviceLength/location from the catalog (kill-switch: model can't invent them).
+      const byTitle = new Map(candidatePool.map((r) => [r.roleTitle, r]));
+      const titles = candidatePool.map((r) => r.roleTitle);
+      report.roles = report.roles.map((r) => {
+        const roleTitle = String(r.roleTitle || "").trim();
+        let pr = byTitle.get(roleTitle);
+        if (!pr) {
+          const hit = titles.find((t) => t.includes(roleTitle) || roleTitle.includes(t));
+          if (hit) pr = byTitle.get(hit);
+        }
+        const basePercent = pr?.basePercent ?? 60;
+        return {
+          ...r,
+          roleTitle: pr?.roleTitle || roleTitle,
+          matchPercentage: blendPercent(basePercent, r.adjustment),
+          serviceLength: pr?.serviceLengthLabel || "משתנה לפי מסלול — יש לוודא במיטב",
+          location: pr?.locations?.length ? pr.locations.join(", ") : "משתנה לפי מסלול",
+        };
+      });
+    }
 
     if (Array.isArray(report.roles)) {
       report.roles.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));

@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Bot,
@@ -11,9 +12,11 @@ import {
   Sparkles,
   Users,
   Waves,
+  BookOpen,
 } from "lucide-react";
 import { IdfPhotoCredit } from "@/components/IdfPhotoCredit";
 import type { RoleMatch } from "@/lib/api";
+import { roleInsightSlug } from "@/lib/api";
 import { pickRolePhoto, type IdfPhoto } from "@/lib/idf-photo-catalog";
 import { ARIA } from "@/lib/a11y";
 
@@ -175,6 +178,15 @@ function RoleCard({
               ) : null}
             </div>
           ) : null}
+
+          <Link
+            to="/role-insights"
+            search={{ role: roleInsightSlug(role.roleTitle) }}
+            className="inline-flex items-center gap-1.5 self-start text-xs font-semibold text-primary transition hover:underline"
+          >
+            <BookOpen className="h-3.5 w-3.5" aria-hidden />
+            מידע נוסף על התפקיד
+          </Link>
         </div>
       </div>
     </motion.article>

@@ -200,7 +200,6 @@ type NavItem = { to: string; label: string; exact?: boolean };
 
 const NAV_AUTHED: readonly NavItem[] = [
   { to: "/ai-counselor", label: MATCH_TOOL_SHORT },
-  { to: "/report", label: "דוח מוכנות" },
   { to: "/role-insights", label: "תובנות תפקידים" },
 ];
 

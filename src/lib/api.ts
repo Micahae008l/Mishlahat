@@ -365,6 +365,67 @@ export function matchRolesRequest() {
   });
 }
 
+// ── Role insights catalog (public) ──────────────────────────────────────────
+
+export type RoleInsightListItem = {
+  slug: string;
+  roleTitle: string;
+  category: string;
+  combat: boolean;
+  selective: boolean;
+  signals: string[];
+  tagsHe: string[];
+  summary: string;
+};
+
+export type RoleInsightDetail = RoleInsightListItem & {
+  tags: string[];
+  about: string;
+  dayToDay: string;
+  requirements: string[];
+  locations: string[];
+  serviceLengthLabel: string;
+  daparFloor: number | null;
+  medicalFloor: number | null;
+  physicalDemand: number | null;
+  techIntensity: number | null;
+  peopleIntensity: number | null;
+  officialDirectoryUrl: string;
+  officialSearchUrl: string;
+};
+
+export function listRoles(params?: { q?: string; category?: string; combat?: string }) {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.category) sp.set("category", params.category);
+  if (params?.combat) sp.set("combat", params.combat);
+  const qs = sp.toString();
+  return apiFetch<{
+    count: number;
+    total: number;
+    categories: string[];
+    roles: RoleInsightListItem[];
+  }>(`/api/roles${qs ? `?${qs}` : ""}`, { skipAuth: true });
+}
+
+export function getRoleInsight(slugOrTitle: string) {
+  return apiFetch<{ role: RoleInsightDetail }>(`/api/roles/${encodeURIComponent(slugOrTitle)}`, {
+    skipAuth: true,
+  });
+}
+
+/** Stable client-side slug (mirrors server). */
+export function roleInsightSlug(title: string) {
+  return String(title || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[/\\]+/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/[^\u0590-\u05FFa-z0-9-]+/gi, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "role";
+}
+
 // ── Full Report ─────────────────────────────────────────────────────────────
 
 export type FitnessData = {

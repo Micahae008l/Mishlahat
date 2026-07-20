@@ -153,13 +153,13 @@ export function scoreRole(role, profile) {
   // Always-on hard gate (unchanged from v1): no combat below profile 64.
   if (role.combat && medical < 64) hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
 
-  // Gender gates (skipped when gender unknown, to not break existing profiles).
+  // Gender gate (skipped when gender unknown, to not break existing profiles).
+  // Line-infantry combat is male_only, so females are gated there; the 82-profile
+  // requirement for female-open (mixed) combat is carried by each role's medicalFloor,
+  // not a blanket rule that would wrongly block combat medics/drivers at profile 64.
   if (profile.gender && role.genderEligibility && role.genderEligibility !== "all") {
     const wanted = profile.gender === "female" ? "female_only" : "male_only";
     if (role.genderEligibility !== wanted) hardFailReasons.push("התפקיד אינו פתוח למגדר הנבחר");
-  }
-  if (profile.gender === "female" && role.combat && medical < 82) {
-    hardFailReasons.push('שירות קרבי לנשים דורש פרופיל 82 ומעלה');
   }
 
   // Floors gate hard only when the data was human-reviewed; otherwise soft penalty.

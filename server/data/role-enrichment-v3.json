@@ -99,6 +99,40 @@
       "popularity": "famous",
       "genderEligibility": "male_only",
       "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/לוחם-בחטיבת-גולני" }
+    },
+    "לוחם בגבעתי": {
+      "daparFloor": 40,
+      "medicalFloor": 82,
+      "serviceLengthMonths": 32,
+      "serviceLengthLabel": "שירות חובה מלא; מסלול הכשרה כ-10 חודשים (טירונות 4 + מתקדם 3 + מסלול 3)",
+      "locations": ["גדודי חטיבת גבעתי"],
+      "dayToDay": "פעילות מבצעית בכל גזרות הלחימה — מארבים, סיורים ומשימות. במהלך המסלול אפשריות הכשרות: חובשים, צלפים, נשק כבד וקשר.",
+      "requirements": ["פרופיל 82 ומעלה", "BMI 17-32", "מיון גיבוש"],
+      "physicalDemand": 5,
+      "techIntensity": 1,
+      "peopleIntensity": 2,
+      "competitiveness": "high",
+      "keyDimensions": ["spatialPerception", "disciplineMaturity", "teamwork"],
+      "popularity": "famous",
+      "genderEligibility": "male_only",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/לוחם-בחטיבת-גבעתי" }
+    },
+    "חובש/ת קרבי/ת": {
+      "daparFloor": 50,
+      "medicalFloor": 64,
+      "serviceLengthMonths": 32,
+      "serviceLengthLabel": "שירות חובה מלא; קורס חובשים קרביים כ-3 חודשים",
+      "locations": ["יחידות שדה ומרפאות יחידתיות"],
+      "dayToDay": "מטפלים בפצועים בשטח באימונים, בפעילות מבצעית ובחירום, ובשגרה מטפלים במרפאת היחידה כמו חובש כללי.",
+      "requirements": ["פרופיל 64 ומעלה", "דפ\"ר 50 ומעלה", "עבודת צוות 3+, יחסי אנוש 3+ במא\"ה"],
+      "physicalDemand": 4,
+      "techIntensity": 1,
+      "peopleIntensity": 5,
+      "competitiveness": "medium",
+      "keyDimensions": ["interpersonalCare", "teamwork", "disciplineMaturity"],
+      "popularity": "known",
+      "genderEligibility": "all",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/חובשת-קדמית" }
     }
   }
 }

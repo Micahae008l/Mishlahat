@@ -65,6 +65,40 @@
       "keyDimensions": ["interpersonalCare", "dataProcessing", "disciplineMaturity"],
       "popularity": "niche",
       "enrichment": { "status": "reviewed", "confidence": "medium", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/תפקידים/מאבחנת-צוות-אוויר" }
+    },
+    "מגן/ת סייבר": {
+      "daparFloor": 70,
+      "medicalFloor": null,
+      "serviceLengthMonths": 24,
+      "serviceLengthLabel": "שירות חובה מלא; קורס כ-19 שבועות בבסמ\"ח",
+      "locations": ["בסמ\"ח (הכשרה)", "יחידות הגנת הסייבר"],
+      "dayToDay": "מאתרים, מנתחים ומטפלים באיומי סייבר בזמן אמת, ומבצעים חקירת עומק ופורנזיקה דיגיטלית לזיהוי מקור התקיפה והיקפה.",
+      "requirements": ["דפ\"ר 70 ומעלה", "סיווג ביטחוני", "לא נדרש ידע מוקדם — חשיבה לוגית"],
+      "physicalDemand": 1,
+      "techIntensity": 5,
+      "peopleIntensity": 2,
+      "competitiveness": "very_high",
+      "keyDimensions": ["technicalActivation", "dataProcessing", "disciplineMaturity"],
+      "popularity": "famous",
+      "genderEligibility": "all",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/מגן-סייבר" }
+    },
+    "לוחם בגולני": {
+      "daparFloor": 40,
+      "medicalFloor": 82,
+      "serviceLengthMonths": 32,
+      "serviceLengthLabel": "שירות חובה מלא; טירונות כ-4 חודשים + אימון מתקדם כ-3 חודשים",
+      "locations": ["גדודי חטיבת גולני"],
+      "dayToDay": "פעילות מבצעית בכל גזרות הלחימה — מארבים, סיורים ומשימות מיוחדות, לחימה רגלית ובאמצעות נגמ\"שים.",
+      "requirements": ["פרופיל 82 ומעלה", "BMI 17-32", "מיון גיבוש"],
+      "physicalDemand": 5,
+      "techIntensity": 1,
+      "peopleIntensity": 2,
+      "competitiveness": "high",
+      "keyDimensions": ["spatialPerception", "disciplineMaturity", "teamwork"],
+      "popularity": "famous",
+      "genderEligibility": "male_only",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/לוחם-בחטיבת-גולני" }
     }
   }
 }

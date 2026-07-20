@@ -16,7 +16,7 @@ import {
 import { getIdfRoleCatalogParsed } from "../utils/idfRoleCatalog.js";
 import { preFilterRoles } from "../utils/rolePreFilter.js";
 import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
-import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash } from "../utils/roleScoring.js";
+import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash, buildProfileNotice } from "../utils/roleScoring.js";
 import AiMatchResult from "../models/AiMatchResult.js";
 import MatchGeneration from "../models/MatchGeneration.js";
 
@@ -223,11 +223,13 @@ export async function matchRoles(req, res) {
     const profileForMatch = {
       daparScore: stats.daparScore,
       medicalProfile: stats.medicalProfile,
+      gender: stats.gender,
       combatPreference: preferences?.combatPreference,
       focus: preferences?.focus,
       physicalActivityLevel: preferences?.physicalActivityLevel,
       yom,
     };
+    const profileNotice = buildProfileNotice(profileForMatch);
 
     // Cache: identical profile + catalog + prompt + engine → return the saved
     // result instantly. Logged as cache_hit (not success) so it costs nothing
@@ -253,7 +255,7 @@ export async function matchRoles(req, res) {
       });
       const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);
       console.log(`[ai/match-roles] cache hit for user ${userId}`);
-      return res.json({ roles: cachedMatch.roles, aiCalls, cached: true });
+      return res.json({ roles: cachedMatch.roles, aiCalls, notice: profileNotice, cached: true });
     }
 
     let filteredRoles;
@@ -491,7 +493,7 @@ ${yomLines}${legacyQ}
     // Recompute after logging so the client shows the up-to-date remaining count.
     const aiCalls = await getCallCapStatusForUserId(userId).catch(() => null);
 
-    res.json({ roles: normalized, aiCalls });
+    res.json({ roles: normalized, aiCalls, notice: profileNotice });
   } catch (err) {
     await recordAiUsage({
       userId,

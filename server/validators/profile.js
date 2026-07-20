@@ -116,6 +116,7 @@ function parseStatsPatch(value) {
     "serviceEndDate",
     "daparScore",
     "medicalProfile",
+    "gender",
     "yomHameah",
     "yomQuestionnaire",
   ];
@@ -140,6 +141,12 @@ function parseStatsPatch(value) {
     if (!m.ok) return m;
     if (m.value != null && !MEDICAL_PROFILES.includes(m.value)) return fail("medicalProfile is invalid");
     patch.medicalProfile = m.value;
+  }
+  if (obj.value.gender !== undefined) {
+    if (obj.value.gender !== null && obj.value.gender !== "male" && obj.value.gender !== "female") {
+      return fail("gender is invalid");
+    }
+    patch.gender = obj.value.gender;
   }
   if (obj.value.yomQuestionnaire !== undefined) {
     const q = parseYomQuestionnaire(obj.value.yomQuestionnaire);

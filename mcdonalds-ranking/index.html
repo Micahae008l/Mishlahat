@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Golden Index — A Worldwide Ranking of McDonald's</title>
+<meta name="description" content="Sixty countries, appraised on taste and price. The definitive guide to McDonald's, worldwide." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#14110d;
+    --bg2:#1b1712;
+    --panel:#1f1a14;
+    --ivory:#ece4d6;
+    --muted:#9d9384;
+    --faint:#6f665a;
+    --gold:#c9a24b;
+    --gold-soft:#d9b86a;
+    --line:rgba(236,228,214,.10);
+    --line-2:rgba(236,228,214,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);color:var(--ivory);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+    line-height:1.5;
+  }
+  .serif{font-family:'Fraunces',Georgia,serif}
+  ::selection{background:var(--gold);color:#14110d}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 32px}
+  a{color:inherit}
+  .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600}
+
+  /* arches mark — slim monochrome */
+  .mark path{fill:currentColor}
+
+  /* ---- top bar ---- */
+  header.bar{border-bottom:1px solid var(--line-2)}
+  .bar-in{max-width:1040px;margin:0 auto;padding:20px 32px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--gold)}
+  .brand .nm{color:var(--ivory);font-family:'Fraunces';font-weight:500;font-size:18px;letter-spacing:.2px}
+  .bar nav{margin-left:auto;display:flex;gap:28px}
+  .bar nav a{text-decoration:none;color:var(--muted);font-size:13px;letter-spacing:.04em;transition:.2s}
+  .bar nav a:hover{color:var(--ivory)}
+
+  /* ---- hero ---- */
+  .hero{position:relative;padding:84px 32px 80px;overflow:hidden}
+  .hero .watermark{position:absolute;left:8%;top:50%;transform:translate(-50%,-50%);width:680px;max-width:120%;color:rgba(201,162,75,.05);pointer-events:none}
+  .hero-in{position:relative;z-index:1;max-width:1040px;margin:0 auto;display:grid;grid-template-columns:1.04fr .96fr;gap:40px;align-items:center}
+  .hero-copy{max-width:520px}
+  .hero h1{font-family:'Fraunces';font-weight:400;font-size:clamp(38px,5vw,62px);line-height:1.05;letter-spacing:-.01em;margin:20px 0 0}
+  .hero h1 em{font-style:italic;color:var(--gold-soft)}
+  .hero p{margin:22px 0 0;max-width:460px;color:var(--muted);font-size:16px;line-height:1.6}
+  .rule{display:flex;align-items:center;gap:16px;margin:36px 0 0;color:var(--faint)}
+  .rule::after{content:"";height:1px;width:80px;background:var(--line)}
+  .rule span{font-size:11px;letter-spacing:.3em;text-transform:uppercase}
+
+  /* ---- hero burger ---- */
+  .hero-burger{position:relative;display:flex;justify-content:center;align-items:center;min-height:340px}
+  .hero-burger .glow{position:absolute;width:80%;height:80%;left:50%;top:46%;transform:translate(-50%,-50%);border-radius:50%;
+    background:radial-gradient(closest-side,rgba(201,162,75,.28),rgba(201,162,75,.04) 62%,transparent 76%)}
+  .hero-burger .ring{position:absolute;left:50%;top:80%;transform:translate(-50%,-50%);width:74%;height:46px;
+    border:1px solid rgba(201,162,75,.35);border-radius:50%}
+  .hero-burger svg{position:relative;width:min(360px,92%);height:auto;
+    filter:drop-shadow(0 18px 22px rgba(0,0,0,.45))}
+
+  /* ---- top three feature ---- */
+  .feature{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .feat{padding:40px 28px;text-align:center;border-right:1px solid var(--line-2);position:relative}
+  .feat:last-child{border-right:none}
+  .feat .ord{font-family:'Fraunces';font-weight:400;font-size:54px;line-height:1;color:var(--gold);opacity:.92}
+  .feat .ord.silver{color:#c8c2b4}.feat .ord.bronze{color:#bd8a5c}
+  .feat .fl{font-size:30px;margin:14px 0 8px;display:block}
+  .feat h3{font-family:'Fraunces';font-weight:500;font-size:22px}
+  .feat .sc{margin-top:10px;font-size:13px;color:var(--muted);letter-spacing:.02em}
+  .feat .sc b{color:var(--ivory);font-weight:600}
+
+  /* ---- ranking ---- */
+  .listhead{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:18px;margin:64px 0 26px}
+  .listhead h2{font-family:'Fraunces';font-weight:500;font-size:30px}
+  .listhead .sub{color:var(--faint);font-size:13px;margin-top:6px}
+  .tools{display:flex;align-items:center;gap:26px}
+  .sortset{display:flex;gap:22px}
+  .sortset button{background:none;border:none;font:inherit;font-size:13px;letter-spacing:.04em;color:var(--muted);cursor:pointer;padding:4px 0;position:relative;transition:.2s}
+  .sortset button:hover{color:var(--ivory)}
+  .sortset button.active{color:var(--gold)}
+  .sortset button.active::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:1px;background:var(--gold)}
+  .search{position:relative}
+  .search input{background:none;border:none;border-bottom:1px solid var(--line);color:var(--ivory);font:inherit;font-size:13px;padding:5px 4px 5px 22px;width:130px;outline:none;transition:.25s}
+  .search input::placeholder{color:var(--faint)}
+  .search input:focus{border-color:var(--gold);width:170px}
+  .search svg{position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--faint)}
+
+  .list{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:46px 1fr 96px 88px 128px;align-items:center;gap:16px;padding:16px 8px;border-bottom:1px solid var(--line-2);transition:background .18s}
+  .row:hover{background:var(--bg2)}
+  .row .ord{font-family:'Fraunces';font-weight:400;font-size:20px;color:var(--faint);text-align:center;font-variant-numeric:tabular-nums}
+  .row.top .ord{color:var(--gold)}
+  .row .name{display:flex;align-items:center;gap:13px;min-width:0}
+  .row .name .fl{font-size:18px;width:26px;text-align:center;color:var(--muted);font-size:13px;letter-spacing:.04em}
+  .row .name .cn{font-family:'Fraunces';font-weight:500;font-size:18px;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell-label{display:none}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .price{font-size:15px;font-weight:500}
+  .cheap{color:#9bc49a}.midp{color:var(--gold-soft)}.dear{color:#cf9c8e}
+  .taste{font-size:15px;color:var(--ivory);font-weight:500}
+  .taste s{color:var(--faint);font-size:12px;text-decoration:none;margin-left:1px}
+  .scorewrap{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+  .track{width:64px;height:2px;background:var(--line);position:relative;overflow:hidden}
+  .track i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft))}
+  .scoreval{font-family:'Fraunces';font-weight:500;font-size:17px;color:var(--ivory);width:28px;text-align:right}
+  .empty{padding:50px;text-align:center;color:var(--faint)}
+
+  footer{border-top:1px solid var(--line-2);margin-top:72px;padding:46px 32px 64px;text-align:center}
+  footer .mark{color:var(--gold);opacity:.8}
+  footer p{color:var(--muted);font-size:13px;max-width:540px;margin:16px auto 0;line-height:1.7}
+  footer .disc{color:var(--faint);font-size:11.5px;margin-top:12px}
+
+  @media(max-width:760px){
+    .wrap,.bar-in,.hero{padding-left:22px;padding-right:22px}
+    .bar nav{gap:18px}
+    .hero-in{grid-template-columns:1fr;text-align:center;gap:12px}
+    .hero-copy{margin:0 auto}
+    .hero p{margin-left:auto;margin-right:auto}
+    .rule{justify-content:center}.rule::before{content:"";height:1px;width:80px;background:var(--line)}
+    .hero-burger{order:-1;min-height:230px}
+    .hero-burger svg{width:240px}
+    .hero .watermark{left:50%;top:30%}
+    .feature{grid-template-columns:1fr}
+    .feat{border-right:none;border-bottom:1px solid var(--line-2)}
+    .feat:last-child{border-bottom:none}
+    .listhead{align-items:flex-start;flex-direction:column}
+    .row{grid-template-columns:34px 1fr auto;gap:10px 14px;padding:16px 4px;row-gap:6px}
+    .row .price{grid-column:2;text-align:left}
+    .row .taste{display:none}
+    .row .scorewrap{grid-column:3;grid-row:1}
+    .track{display:none}
+  }
+</style>
+</head>
+<body id="top">
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top">
+      <svg class="mark" width="26" height="22" viewBox="0 0 120 100"><path d="M8,100 L8,30 C8,2 50,2 50,30 Q60,52 70,30 C70,2 112,2 112,30 L112,100 L92,100 L92,55 C92,22 70,22 70,55 L70,100 L50,100 L50,55 C50,22 28,22 28,55 L28,100 Z"/></svg>
+      <span class="nm">The Golden Index</span>
+    </a>
+    <nav>
+      <a href="#feature">The Podium</a>
+      <a href="#ranking">Full Ranking</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <svg class="watermark mark" viewBox="0 0 120 100"><path d="M8,100 L8,30 C8,2 50,2 50,30 Q60,52 70,30 C70,2 112,2 112,30 L112,100 L92,100 L92,55 C92,22 70,22 70,55 L70,100 L50,100 L50,55 C50,22 28,22 28,55 L28,100 Z"/></svg>
+  <div class="hero-in">
+    <div class="hero-copy">
+      <span class="kicker">Worldwide Appraisal · MMXXVI</span>
+      <h1>The definitive ranking of <em>McDonald's</em>, country by country.</h1>
+      <p>Sixty nations, each appraised on the only two things that matter — how good the food is, and what it costs you.</p>
+      <div class="rule"><span>Sixty Countries</span></div>
+    </div>
+    <div class="hero-burger">
+      <span class="glow"></span>
+      <span class="ring"></span>
+      <svg viewBox="0 0 300 250" role="img" aria-label="A Big Mac">
+        <defs>
+          <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f0c982"/><stop offset=".5" stop-color="#dca85d"/><stop offset="1" stop-color="#bd8341"/>
+          </linearGradient>
+          <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#e6b269"/><stop offset="1" stop-color="#c1853e"/>
+          </linearGradient>
+          <linearGradient id="bot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d49f54"/><stop offset="1" stop-color="#a86d31"/>
+          </linearGradient>
+          <linearGradient id="patty" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#6b4026"/><stop offset="1" stop-color="#4a2916"/>
+          </linearGradient>
+          <radialGradient id="sheen" cx="38%" cy="26%" r="60%">
+            <stop offset="0" stop-color="#fbe6bd" stop-opacity=".9"/><stop offset="1" stop-color="#fbe6bd" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- top bun -->
+        <path d="M36 92 C36 24 264 24 264 92 Z" fill="url(#top)"/>
+        <path d="M36 92 C36 24 264 24 264 92" fill="url(#sheen)"/>
+        <path d="M36 92 C36 26 264 26 264 92" fill="none" stroke="#a36f37" stroke-width="1.5" opacity=".5"/>
+        <!-- sesame seeds -->
+        <g fill="#fff2d4" stroke="#d9b277" stroke-width=".6">
+          <ellipse cx="96" cy="66" rx="6.4" ry="3.4" transform="rotate(-24 96 66)"/>
+          <ellipse cx="138" cy="52" rx="6.4" ry="3.4" transform="rotate(6 138 52)"/>
+          <ellipse cx="180" cy="56" rx="6.4" ry="3.4" transform="rotate(20 180 56)"/>
+          <ellipse cx="216" cy="70" rx="6" ry="3.2" transform="rotate(34 216 70)"/>
+          <ellipse cx="118" cy="78" rx="5.8" ry="3.1" transform="rotate(-12 118 78)"/>
+          <ellipse cx="162" cy="78" rx="5.8" ry="3.1" transform="rotate(16 162 78)"/>
+          <ellipse cx="74" cy="82" rx="5.4" ry="2.9" transform="rotate(-34 74 82)"/>
+          <ellipse cx="204" cy="84" rx="5.2" ry="2.8" transform="rotate(40 204 84)"/>
+        </g>
+        <!-- lettuce -->
+        <path d="M26 96 q16 -14 30 -2 q16 -16 32 -2 q16 -16 32 -2 q16 -16 32 -2 q16 -16 32 -2 q15 -14 28 -2 l0 12 q-124 12 -218 0 Z" fill="#86a356"/>
+        <path d="M26 96 q16 -14 30 -2 q16 -16 32 -2 q16 -16 32 -2 q16 -16 32 -2 q16 -16 32 -2 q15 -14 28 -2" fill="none" stroke="#6f8c45" stroke-width="1" opacity=".6"/>
+        <!-- cheese -->
+        <path d="M34 104 l232 0 l-16 20 l-13 -12 l-22 14 l-15 -12 l-20 14 l-17 -13 l-20 14 l-16 -13 l-22 14 l-15 -14 l-19 13 Z" fill="#eaa93a"/>
+        <!-- patty -->
+        <rect x="34" y="112" width="232" height="24" rx="11" fill="url(#patty)"/>
+        <g fill="#3c2113" opacity=".5"><circle cx="70" cy="124" r="1.6"/><circle cx="110" cy="120" r="1.6"/><circle cx="150" cy="126" r="1.6"/><circle cx="190" cy="121" r="1.6"/><circle cx="230" cy="125" r="1.6"/></g>
+        <!-- club bun -->
+        <rect x="40" y="136" width="220" height="18" rx="9" fill="url(#mid)"/>
+        <!-- second patty -->
+        <rect x="34" y="154" width="232" height="24" rx="11" fill="url(#patty)"/>
+        <g fill="#3c2113" opacity=".5"><circle cx="80" cy="166" r="1.6"/><circle cx="124" cy="163" r="1.6"/><circle cx="168" cy="167" r="1.6"/><circle cx="212" cy="164" r="1.6"/></g>
+        <!-- bottom bun -->
+        <path d="M40 178 q110 30 220 0 l0 14 q-110 34 -220 0 Z" fill="url(#bot)"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="feature" id="feature"></section>
+
+<main class="wrap">
+  <section id="ranking">
+    <div class="listhead">
+      <div>
+        <h2>The Full Ranking</h2>
+        <div class="sub" id="subline">Ordered by overall standing</div>
+      </div>
+      <div class="tools">
+        <div class="sortset" id="sort">
+          <button data-sort="composite" class="active">Overall</button>
+          <button data-sort="taste">Taste</button>
+          <button data-sort="price">Value</button>
+        </div>
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Search" />
+        </div>
+      </div>
+    </div>
+    <div class="list" id="rows"></div>
+    <div class="empty" id="empty" style="display:none">No country matches that search.</div>
+  </section>
+</main>
+
+<footer>
+  <svg class="mark" width="34" height="28" viewBox="0 0 120 100"><path d="M8,100 L8,30 C8,2 50,2 50,30 Q60,52 70,30 C70,2 112,2 112,30 L112,100 L92,100 L92,55 C92,22 70,22 70,55 L70,100 L50,100 L50,55 C50,22 28,22 28,55 L28,100 Z"/></svg>
+  <p class="serif" style="font-size:16px;color:var(--ivory)">The Golden Index</p>
+  <p>An independent, fan-made appraisal of McDonald's restaurants around the world, scored on taste and price.</p>
+  <p class="disc">Not affiliated with or endorsed by McDonald's Corporation. All trademarks belong to their respective owner and appear here for editorial purposes only. Figures are illustrative.</p>
+</footer>
+
+<script>
+const DATA=[
+{country:"Japan",price:3.02,taste:9.8,composite:96},{country:"Taiwan",price:2.47,taste:8.5,composite:93},
+{country:"Hong Kong",price:3.20,taste:9.0,composite:92},{country:"Vietnam",price:2.89,taste:8.2,composite:89},
+{country:"Indonesia",price:2.51,taste:8.0,composite:88},{country:"Malaysia",price:3.39,taste:8.4,composite:87},
+{country:"Philippines",price:2.84,taste:8.1,composite:86},{country:"South Korea",price:3.74,taste:8.3,composite:85},
+{country:"Thailand",price:4.30,taste:8.8,composite:84},{country:"China",price:3.66,taste:7.8,composite:82},
+{country:"India",price:2.51,taste:7.5,composite:81},{country:"Italy",price:7.00,taste:9.5,composite:80},
+{country:"France",price:7.00,taste:9.2,composite:79},{country:"Austria",price:7.00,taste:8.8,composite:78},
+{country:"Singapore",price:5.77,taste:8.9,composite:77},{country:"Switzerland",price:9.12,taste:9.0,composite:76},
+{country:"Australia",price:5.70,taste:8.5,composite:75},{country:"Spain",price:7.00,taste:8.5,composite:74},
+{country:"Germany",price:7.00,taste:8.2,composite:73},{country:"New Zealand",price:4.94,taste:8.3,composite:72},
+{country:"Czech Republic",price:5.49,taste:7.2,composite:71},{country:"Poland",price:6.25,taste:7.5,composite:70},
+{country:"Hungary",price:4.99,taste:7.1,composite:69},{country:"UAE",price:5.17,taste:7.5,composite:68},
+{country:"Argentina",price:5.53,taste:7.5,composite:67},{country:"Turkey",price:5.90,taste:7.5,composite:66},
+{country:"Croatia",price:3.52,taste:7.0,composite:65},{country:"Romania",price:3.97,taste:6.8,composite:64},
+{country:"Ukraine",price:3.19,taste:6.8,composite:63},{country:"South Africa",price:3.35,taste:7.0,composite:62},
+{country:"Brazil",price:4.45,taste:6.8,composite:61},{country:"Mexico",price:6.16,taste:6.5,composite:60},
+{country:"Peru",price:5.02,taste:7.0,composite:59},{country:"Qatar",price:4.67,taste:6.9,composite:58},
+{country:"Kuwait",price:4.51,taste:6.8,composite:57},{country:"Saudi Arabia",price:5.06,taste:7.0,composite:56},
+{country:"Jordan",price:3.52,taste:6.8,composite:55},{country:"Oman",price:3.92,taste:6.5,composite:54},
+{country:"Azerbaijan",price:3.91,taste:6.2,composite:53},{country:"Egypt",price:2.64,taste:6.5,composite:52},
+{country:"Pakistan",price:3.85,taste:7.2,composite:51},{country:"Moldova",price:4.09,taste:6.0,composite:50},
+{country:"Canada",price:5.53,taste:7.1,composite:49},{country:"United Kingdom",price:7.05,taste:7.0,composite:48},
+{country:"Chile",price:5.41,taste:7.0,composite:47},{country:"Colombia",price:6.21,taste:6.8,composite:46},
+{country:"Costa Rica",price:6.04,taste:6.5,composite:45},{country:"Israel",price:6.36,taste:6.5,composite:44},
+{country:"Lebanon",price:5.36,taste:6.5,composite:43},{country:"Bahrain",price:4.73,taste:6.5,composite:42},
+{country:"Denmark",price:7.14,taste:6.8,composite:41},{country:"Sweden",price:7.25,taste:6.5,composite:40},
+{country:"Norway",price:7.51,taste:6.0,composite:39},{country:"United States",price:6.12,taste:5.0,composite:38},
+{country:"Sri Lanka",price:5.69,taste:6.0,composite:37},{country:"Guatemala",price:4.30,taste:5.8,composite:36},
+{country:"Honduras",price:5.06,taste:5.5,composite:35},{country:"Nicaragua",price:4.75,taste:5.5,composite:34},
+{country:"Uruguay",price:8.75,taste:7.0,composite:33},{country:"Venezuela",price:4.04,taste:5.0,composite:32}
+];
+const CODES={"Japan":"JP","Taiwan":"TW","Hong Kong":"HK","Vietnam":"VN","Indonesia":"ID","Malaysia":"MY","Philippines":"PH","South Korea":"KR","Thailand":"TH","China":"CN","India":"IN","Italy":"IT","France":"FR","Austria":"AT","Singapore":"SG","Switzerland":"CH","Australia":"AU","Spain":"ES","Germany":"DE","New Zealand":"NZ","Czech Republic":"CZ","Poland":"PL","Hungary":"HU","UAE":"AE","Argentina":"AR","Turkey":"TR","Croatia":"HR","Romania":"RO","Ukraine":"UA","South Africa":"ZA","Brazil":"BR","Mexico":"MX","Peru":"PE","Qatar":"QA","Kuwait":"KW","Saudi Arabia":"SA","Jordan":"JO","Oman":"OM","Azerbaijan":"AZ","Egypt":"EG","Pakistan":"PK","Moldova":"MD","Canada":"CA","United Kingdom":"GB","Chile":"CL","Colombia":"CO","Costa Rica":"CR","Israel":"IL","Lebanon":"LB","Bahrain":"BH","Denmark":"DK","Sweden":"SE","Norway":"NO","United States":"US","Sri Lanka":"LK","Guatemala":"GT","Honduras":"HN","Nicaragua":"NI","Uruguay":"UY","Venezuela":"VE"};
+const code=c=>CODES[c]||"—";
+const priceClass=p=>p<=3.6?"cheap":p<=5.6?"midp":"dear";
+const $=id=>document.getElementById(id);
+const rowsEl=$("rows"),emptyEl=$("empty"),sortEl=$("sort"),searchEl=$("search"),subEl=$("subline");
+let sortKey="composite",query="";
+const SUBS={composite:"Ordered by overall standing",taste:"Ordered by taste alone",price:"Ordered by value — cheapest first"};
+const ordinal=["I","II","III"];
+
+function sortData(){
+  let a=DATA.filter(d=>d.country.toLowerCase().includes(query.toLowerCase()));
+  if(sortKey==="composite")a.sort((x,y)=>y.composite-x.composite);
+  if(sortKey==="taste")a.sort((x,y)=>y.taste-x.taste||y.composite-x.composite);
+  if(sortKey==="price")a.sort((x,y)=>x.price-y.price||y.composite-x.composite);
+  return a;
+}
+function renderFeature(){
+  const t=[...DATA].sort((a,b)=>b.composite-a.composite).slice(0,3);
+  const tone=["","silver","bronze"];
+  $("feature").innerHTML=t.map((d,i)=>`<div class="feat">
+    <div class="ord serif ${tone[i]}">${ordinal[i]}</div>
+    <span class="fl">${code(d.country)}</span>
+    <h3>${d.country}</h3>
+    <div class="sc"><b>${d.composite}</b>/100 · ${d.taste.toFixed(1)} taste · $${d.price.toFixed(2)}</div>
+  </div>`).join("");
+}
+function renderRows(){
+  const a=sortData();
+  emptyEl.style.display=a.length?"none":"block";
+  subEl.textContent=SUBS[sortKey];
+  rowsEl.innerHTML=a.map((d,i)=>{const p=i+1;return `<div class="row ${p<=3?'top':''}">
+    <div class="ord serif">${p}</div>
+    <div class="name"><span class="fl">${code(d.country)}</span><span class="cn">${d.country}</span></div>
+    <div class="num price ${priceClass(d.price)}">$${d.price.toFixed(2)}</div>
+    <div class="num taste">${d.taste.toFixed(1)}<s>/10</s></div>
+    <div class="scorewrap"><span class="track"><i style="width:${d.composite}%"></i></span><span class="scoreval serif">${d.composite}</span></div>
+  </div>`;}).join("");
+}
+sortEl.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [...sortEl.children].forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");sortKey=b.dataset.sort;renderRows();});
+searchEl.addEventListener("input",e=>{query=e.target.value;renderRows();});
+renderFeature();renderRows();
+</script>
+</body>
+</html>

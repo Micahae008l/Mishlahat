@@ -231,6 +231,7 @@ export type ScoreOnboardingPayload = {
   serviceLifeCycle?: ServiceLifeCycle;
   daparScore: number;
   medicalProfile: number;
+  gender?: "male" | "female" | null;
   yomHameah: YomHameah;
   yomHameahSource: "official" | "self";
   /** yyyy-mm-dd — required for AI */
@@ -253,6 +254,7 @@ export function completeScoreOnboarding(payload: ScoreOnboardingPayload) {
     stats: {
       daparScore: payload.daparScore,
       medicalProfile: payload.medicalProfile,
+      gender: payload.gender ?? null,
       yomHameah: payload.yomHameah,
       draftDate: payload.draftDate,
     },
@@ -270,6 +272,7 @@ export type MilitaryStatsDto = {
   serviceEndDate?: string | null;
   daparScore?: number | null;
   medicalProfile?: number | null;
+  gender?: "male" | "female" | null;
   yomHameah?: YomHameah | null;
   yomQuestionnaire?: YomQuestionnaireEntry[];
 };
@@ -329,6 +332,7 @@ export type ProfileUpdateBody = {
     serviceEndDate: string | null;
     daparScore: number | null;
     medicalProfile: number | null;
+    gender: "male" | "female" | null;
     yomHameah: YomHameah | null;
     yomQuestionnaire: YomQuestionnaireEntry[];
   }>;
@@ -359,7 +363,7 @@ export type RoleMatch = {
 };
 
 export function matchRolesRequest() {
-  return apiFetch<{ roles: RoleMatch[]; aiCalls?: AiCallCapStatus; cached?: boolean }>("/api/ai/match-roles", {
+  return apiFetch<{ roles: RoleMatch[]; aiCalls?: AiCallCapStatus; cached?: boolean; notice?: string }>("/api/ai/match-roles", {
     method: "POST",
     body: JSON.stringify({}),
   });

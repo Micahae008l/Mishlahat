@@ -153,6 +153,15 @@ export function scoreRole(role, profile) {
   // Always-on hard gate (unchanged from v1): no combat below profile 64.
   if (role.combat && medical < 64) hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
 
+  // Gender gates (skipped when gender unknown, to not break existing profiles).
+  if (profile.gender && role.genderEligibility && role.genderEligibility !== "all") {
+    const wanted = profile.gender === "female" ? "female_only" : "male_only";
+    if (role.genderEligibility !== wanted) hardFailReasons.push("התפקיד אינו פתוח למגדר הנבחר");
+  }
+  if (profile.gender === "female" && role.combat && medical < 82) {
+    hardFailReasons.push('שירות קרבי לנשים דורש פרופיל 82 ומעלה');
+  }
+
   // Floors gate hard only when the data was human-reviewed; otherwise soft penalty.
   const floorsTrusted = role.enrichment?.status === "reviewed" || role.enrichment?.status === "verified";
   let softMult = 1;
@@ -190,6 +199,21 @@ export function scoreRole(role, profile) {
     subscores: { prefFit, focusFit: ff, yomFit: yf, eligibilityMargin: em, qualityPrior: qp },
     breakdownHe,
   };
+}
+
+/** Honest Hebrew heads-up about what the profile does/doesn't open. "" if nothing notable. */
+export function buildProfileNotice(profile) {
+  const medical = Number(profile.medicalProfile) || 0;
+  const notes = [];
+  if (medical && medical < 64) {
+    notes.push(`עם פרופיל רפואי ${medical}, רוב תפקידי הלחימה סגורים בפניכם — ההמלצות מתמקדות בתפקידים עורפיים ותומכי-לחימה.`);
+  } else if (medical && medical < 82) {
+    notes.push(`עם פרופיל רפואי ${medical}, חלק מתפקידי הלחימה המובחרים אינם זמינים.`);
+  }
+  if (profile.gender === "female") {
+    notes.push("שירות קרבי לנשים הוא התנדבותי ומוגבל בעיקר ליחידות מעורבות (דורש פרופיל 82 ומעלה).");
+  }
+  return notes.join(" ");
 }
 
 export function toDisplayPercent(base01) {
@@ -259,6 +283,7 @@ export function computeProfileHash(profile, catalogVersion, promptVersion) {
   const canonical = {
     dapar: Number(profile.daparScore) || 0,
     medical: Number(profile.medicalProfile) || 0,
+    gender: profile.gender || "",
     combat: profile.combatPreference || "",
     focus: profile.focus || "",
     physical: profile.physicalActivityLevel || "",

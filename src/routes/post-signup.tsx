@@ -52,7 +52,7 @@ const DAPAR_SCORES = [10, 20, 30, 40, 50, 60, 70, 80, 90] as const;
 const MEDICAL_SCORES = [21, 45, 64, 72, 82, 97] as const;
 const TOTAL_STEPS = 9;
 
-type FieldKey = "email" | "code" | "username" | "dapar" | "medical" | "combat" | "focus" | "fitness" | "draftDate";
+type FieldKey = "email" | "code" | "username" | "dapar" | "medical" | "gender" | "combat" | "focus" | "fitness" | "draftDate";
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -77,6 +77,7 @@ function PostSignupPage() {
   const [username, setUsername] = useState("");
   const [dapar, setDapar] = useState<number | "">("");
   const [medical, setMedical] = useState<number | "">("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
   const [yomScores, setYomScores] = useState(() => defaultYomHameah12Scores());
   const [combatPreference, setCombatPreference] = useState<CombatPreferenceValue | "">("");
   const [focusPref, setFocusPref] = useState<FocusPreferenceValue | "">("");
@@ -110,6 +111,7 @@ function PostSignupPage() {
     setUsername(d.user.preferredName?.trim() ?? "");
     if (d.stats?.daparScore != null) setDapar(d.stats.daparScore);
     if (d.stats?.medicalProfile != null) setMedical(d.stats.medicalProfile);
+    if (d.stats?.gender) setGender(d.stats.gender);
     setYomScores(yomFromDashboard(d.stats));
     const p = d.preferences;
     setCombatPreference(coerceCombat(p?.combatPreference));
@@ -224,8 +226,12 @@ function PostSignupPage() {
   }
 
   function nextFromCoreScores() {
-    clearFieldErrors("dapar", "medical");
+    clearFieldErrors("dapar", "medical", "gender");
     let hasError = false;
+    if (gender === "") {
+      setFieldError("gender", "נא לבחור");
+      hasError = true;
+    }
     if (dapar === "") {
       setFieldError("dapar", 'נא לבחור ציון דפ"ר');
       hasError = true;
@@ -308,6 +314,7 @@ function PostSignupPage() {
         serviceLifeCycle: "pre",
         daparScore: dapar,
         medicalProfile: medical,
+        gender: gender || null,
         yomHameah,
         yomHameahSource: "self",
         draftDate,
@@ -529,6 +536,20 @@ function PostSignupPage() {
 
               {step === 4 && (
                 <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField label="מין" error={fieldErrors.gender}>
+                    <select
+                      value={gender}
+                      onChange={(e) => {
+                        setGender(e.target.value as "male" | "female" | "");
+                        clearFieldErrors("gender");
+                      }}
+                      className="input-field"
+                    >
+                      <option value="">בחרו</option>
+                      <option value="male">זכר</option>
+                      <option value="female">נקבה</option>
+                    </select>
+                  </FormField>
                   <FormField label='דפ"ר' error={fieldErrors.dapar}>
                     <select
                       value={dapar}

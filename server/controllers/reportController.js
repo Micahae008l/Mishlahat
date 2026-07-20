@@ -74,6 +74,7 @@ export async function generateReport(req, res) {
     const profileForMatch = {
       daparScore: stats.daparScore,
       medicalProfile: stats.medicalProfile,
+      gender: stats.gender,
       combatPreference: preferences?.combatPreference,
       focus: preferences?.focus,
       physicalActivityLevel: preferences?.physicalActivityLevel,

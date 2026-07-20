@@ -108,6 +108,17 @@ function derivePeopleIntensity(tags = []) {
   return clampInt(1 + hits * 1.5, 1, 5, 2);
 }
 
+// ponytail: naive gender heuristic — combat is male-only unless it's a known
+// mixed/female-open unit. Explicit genderEligibility in the enrichment overrides
+// (from the web-validation pass) is the upgrade path for per-role accuracy.
+const MIXED_OR_FEMALE_COMBAT_RE =
+  /קרקל|ברדלס|לביאי|אריות הירדן|פנתר|מעורב|הגנת הגבולות|הגנ"ם|תותחן|חובש/;
+function deriveGenderEligibility(role) {
+  if (role.combat && !MIXED_OR_FEMALE_COMBAT_RE.test(role.roleTitle || "")) return "male_only";
+  return "all";
+}
+
+const VALID_GENDER_ELIG = new Set(["all", "male_only", "female_only"]);
 const VALID_COMPETITIVENESS = new Set(["low", "medium", "high", "very_high"]);
 const VALID_POPULARITY = new Set(["famous", "known", "niche"]);
 const VALID_ENRICH_STATUS = new Set(["none", "ai_draft", "reviewed", "verified"]);
@@ -143,6 +154,7 @@ export function normalizeRoleV3(role) {
     techIntensity: clampInt(role.techIntensity, 1, 5, deriveTechIntensity(tags)),
     peopleIntensity: clampInt(role.peopleIntensity, 1, 5, derivePeopleIntensity(tags)),
     competitiveness: pickEnum(role.competitiveness, VALID_COMPETITIVENESS, role.selective ? "high" : "medium"),
+    genderEligibility: pickEnum(role.genderEligibility, VALID_GENDER_ELIG, deriveGenderEligibility(role)),
     keyDimensions: keyDimensions.length ? keyDimensions : deriveKeyDimensions(tags),
     popularity: pickEnum(role.popularity, VALID_POPULARITY, "known"),
     enrichment: {

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1" />
+  <title>קח כיוון — המלצות</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #14161c;
+      --card: #1c1f28;
+      --fg: #e8e9ed;
+      --dust: #9a9eab;
+      --iron: #4a4e5a;
+      --primary: #9bb86a;
+      --primary-dim: rgba(155, 184, 106, 0.18);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0b0e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: Heebo, system-ui, sans-serif;
+      color: var(--fg);
+    }
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: var(--bg);
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 0 10px #1a1c22, 0 0 0 12px #2a2d36, 0 40px 80px rgba(0,0,0,.55);
+    }
+    .notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #0a0b0e;
+      border-radius: 20px;
+      z-index: 5;
+    }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      padding: 18px 28px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .status-icons { display: flex; gap: 6px; opacity: .85; font-size: 11px; letter-spacing: .5px; }
+    .header {
+      padding: 8px 20px 16px;
+      text-align: right;
+      border-bottom: 1px solid rgba(74,78,90,.35);
+    }
+    .eyebrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+    .header p {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--dust);
+    }
+    .list {
+      padding: 14px 16px 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(74,78,90,.4);
+      border-radius: 10px;
+      padding: 14px 14px 14px 12px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .card.featured {
+      border-color: rgba(155, 184, 106, .45);
+      background: linear-gradient(135deg, #22262f 0%, #1c1f28 100%);
+      box-shadow: 0 0 0 1px rgba(155,184,106,.08), 0 8px 24px rgba(0,0,0,.25);
+    }
+    .ring {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .ring .pct {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      line-height: 1;
+    }
+    .ring .pct strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .ring .pct span {
+      font-size: 9px;
+      color: var(--dust);
+    }
+    .card.featured .ring { width: 76px; height: 76px; }
+    .card.featured .ring .pct strong { font-size: 24px; }
+    .meta { min-width: 0; text-align: right; }
+    .rank {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      color: var(--primary);
+      background: var(--primary-dim);
+      border: 1px solid rgba(155,184,106,.3);
+      padding: 2px 7px;
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+    .meta h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .card.featured .meta h2 { font-size: 17px; }
+    .meta .blurb {
+      font-size: 12px;
+      color: var(--dust);
+      line-height: 1.45;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    .tag {
+      font-size: 10px;
+      color: var(--dust);
+      border: 1px solid rgba(74,78,90,.45);
+      background: rgba(28,31,40,.8);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+    .nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: rgba(20,22,28,.96);
+      border-top: 1px solid rgba(74,78,90,.35);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 14px;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--dust);
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1.5px solid currentColor;
+      opacity: .9;
+    }
+    .nav-item.active .nav-icon {
+      background: var(--primary-dim);
+    }
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 20px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .brand-bar span { font-size: 11px; color: var(--dust); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="phone" id="phone">
+    <div class="notch"></div>
+    <div class="status">
+      <span>9:41</span>
+      <div class="status-icons">LTE · 100%</div>
+    </div>
+    <div class="brand-bar">
+      <div>קח כיוון</div>
+      <span>התאמת תפקידים</span>
+    </div>
+    <div class="header">
+      <div class="eyebrow">תוצאות</div>
+      <h1>5 תפקידים מותאמים<br />לפרופיל שלכם</h1>
+      <p>מבוסס על דפ״ר, פרופיל רפואי והעדפות</p>
+    </div>
+    <div class="list">
+      <article class="card featured">
+        <div class="ring" aria-hidden="true">
+          <svg width="76" height="76" viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r="32" fill="none" stroke="#4a4e5a" stroke-width="5" opacity=".35"/>
+            <circle cx="38" cy="38" r="32" fill="none" stroke="#9bb86a" stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="201" stroke-dashoffset="16"/>
+          </svg>
+          <div class="pct"><strong>92</strong><span>%</span></div>
+        </div>
+        <div class="meta">
+          <span class="rank">#1</span>
+          <h2>מודיעין שדה</h2>
+          <p class="blurb">התאמה גבוהה לחשיבה אנליטית ולעבודה תחת לחץ.</p>
+          <div class="tags">
+            <span class="tag">מודיעין</span>
+            <span class="tag">ניתוח</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ring">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#4a4e5a" stroke-width="4.5" opacity=".35"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#9bb86a" stroke-width="4.5" stroke-linecap="round"
+              stroke-dasharray="163" stroke-dashoffset="24"/>
+          </svg>
+          <div class="pct"><strong>85</strong><span>%</span></div>
+        </div>
+        <div class="meta">
+          <span class="rank">#2</span>
+          <h2>סייבר הגנתי</h2>
+          <p class="blurb">חיבור חזק לטכנולוגיה ופתרון בעיות.</p>
+          <div class="tags">
+            <span class="tag">טכנולוגיה</span>
+            <span class="tag">סייבר</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ring">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#4a4e5a" stroke-width="4.5" opacity=".35"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#9bb86a" stroke-width="4.5" stroke-linecap="round"
+              stroke-dasharray="163" stroke-dashoffset="41"/>
+          </svg>
+          <div class="pct"><strong>78</strong><span>%</span></div>
+        </div>
+        <div class="meta">
+          <span class="rank">#3</span>
+          <h2>תותחנים</h2>
+          <p class="blurb">התאמה לצוותיות ולעבודה בשטח.</p>
+          <div class="tags">
+            <span class="tag">קרבי</span>
+            <span class="tag">שטח</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ring">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#4a4e5a" stroke-width="4.5" opacity=".35"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#9bb86a" stroke-width="4.5" stroke-linecap="round"
+              stroke-dasharray="163" stroke-dashoffset="52"/>
+          </svg>
+          <div class="pct"><strong>71</strong><span>%</span></div>
+        </div>
+        <div class="meta">
+          <span class="rank">#4</span>
+          <h2>חיל הרפואה</h2>
+          <p class="blurb">נטייה לעזרה לאחרים ולעבודה מסודרת.</p>
+          <div class="tags">
+            <span class="tag">רפואה</span>
+            <span class="tag">שירות</span>
+          </div>
+        </div>
+      </article>
+    </div>
+    <nav class="nav">
+      <div class="nav-item"><div class="nav-icon"></div>בית</div>
+      <div class="nav-item active"><div class="nav-icon"></div>התאמה</div>
+      <div class="nav-item"><div class="nav-icon"></div>פרופיל</div>
+    </nav>
+  </div>
+</body>
+</html>

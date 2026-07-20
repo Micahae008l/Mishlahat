@@ -61,6 +61,9 @@ export async function applyStatsPatch(userId, stats) {
   ) {
     update.medicalProfile = stats.medicalProfile;
   }
+  if (stats.gender === "male" || stats.gender === "female" || stats.gender === null) {
+    update.gender = stats.gender;
+  }
 
   if (Array.isArray(stats.yomQuestionnaire) && stats.yomQuestionnaire.length > 0) {
     update.yomQuestionnaire = stats.yomQuestionnaire.map((x) => ({

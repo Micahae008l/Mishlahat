@@ -49,6 +49,7 @@ function AiCounselorPage() {
   ]);
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<RoleMatch[] | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -103,8 +104,9 @@ function AiCounselorPage() {
     setHistoryId(null);
     setMessages((prev) => [...prev, { role: "user", text: "בקשת התאמת תפקידים" }]);
     try {
-      const { roles: list } = await matchRolesRequest();
+      const { roles: list, notice: n } = await matchRolesRequest();
       setRoles(list);
+      setNotice(n || null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["match-history"] }),
@@ -341,7 +343,14 @@ function AiCounselorPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, ease }}
             >
-              <RoleMatchCards roles={roles} />
+              <>
+                {notice ? (
+                  <p className="mb-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                    {notice}
+                  </p>
+                ) : null}
+                <RoleMatchCards roles={roles} />
+              </>
             </motion.div>
           ) : null}
         </AnimatePresence>

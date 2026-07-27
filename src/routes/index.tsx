@@ -12,6 +12,7 @@ import {
   ArrowUpLeft,
   Users,
   Star,
+  Heart,
 } from "lucide-react";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { IdfPhotoPanel } from "@/components/IdfPhotoPanel";
@@ -19,7 +20,7 @@ import { getIdfPhoto, idfPhotoAt, type IdfPhoto } from "@/lib/idf-images";
 import { getDashboardStats } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { authedEntryHref } from "@/lib/profile-resume";
-import { SITE_NAME_HE } from "@/lib/brand";
+import { BIT_QR_SRC, SITE_NAME_HE } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -144,12 +145,9 @@ function HomePage() {
               <span className="text-primary">בתכנון.</span>
             </motion.h1>
 
-            <motion.p
-              variants={fadeUp}
-              className="mt-6 max-w-md text-base leading-[1.7] text-dust"
-            >
-              {SITE_NAME_HE} מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל.
-              נתונים אישיים, ציונים, מסלול תפקיד, ויועץ AI. במקום אחד, בעברית, בחינם.
+            <motion.p variants={fadeUp} className="mt-6 max-w-md text-base leading-[1.7] text-dust">
+              {SITE_NAME_HE} מרכזת את כל מה שצריך לדעת לפני ובמהלך השירות בצה&quot;ל. נתונים אישיים,
+              ציונים, מסלול תפקיד, ויועץ AI. במקום אחד, בעברית, בחינם.
             </motion.p>
 
             <motion.div variants={fadeUp} className="mt-10 flex flex-col gap-3">
@@ -188,7 +186,6 @@ function HomePage() {
             </div>
           </motion.div>
         </div>
-
       </section>
 
       <div className="section-divider" />
@@ -204,9 +201,7 @@ function HomePage() {
             className="mb-14 max-w-xl text-right"
           >
             <p className="font-mono text-xs tracking-widest text-primary uppercase mb-3">כלים</p>
-            <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
-              שלושה כלים, מסך אחד
-            </h2>
+            <h2 className="text-3xl font-bold leading-tight sm:text-4xl">שלושה כלים, מסך אחד</h2>
             <p className="mt-3 text-base text-dust leading-relaxed">
               כל מה שצריך כדי להתכונן לשירות, מרוכז ונגיש.
             </p>
@@ -216,7 +211,7 @@ function HomePage() {
             <CapabilityCard
               icon={<BarChart3 className="h-5 w-5" />}
               title="מעקב נתונים"
-              description='דפ״ר, פרופיל רפואי, ויום המאה. הכל במסך אחד עם ספירה לאחור חיה.'
+              description="דפ״ר, פרופיל רפואי, ויום המאה. הכל במסך אחד עם ספירה לאחור חיה."
               photo={idfPhotoAt(0)}
               idx={0}
             />
@@ -252,8 +247,7 @@ function HomePage() {
           >
             <Users className="h-4 w-4 text-primary" />
             <p className="text-sm">
-              <span className="font-bold text-foreground">500+</span> מתגייסים
-              כבר משתמשים בפלטפורמה
+              <span className="font-bold text-foreground">500+</span> מתגייסים כבר משתמשים בפלטפורמה
             </p>
           </motion.div>
 
@@ -310,19 +304,20 @@ function HomePage() {
               transition={{ duration: 0.4, delay: 0.1, ease }}
               className="text-right"
             >
-              <p className="font-mono text-xs tracking-widest text-olive uppercase mb-3">איך זה עובד</p>
+              <p className="font-mono text-xs tracking-widest text-olive uppercase mb-3">
+                איך זה עובד
+              </p>
               <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
                 מהנתונים שלכם לתפקיד שמתאים
               </h2>
               <p className="mt-4 max-w-lg text-base leading-[1.7] text-dust">
-                מילאתם דפ״ר, פרופיל רפואי, וציוני מא״ה. המערכת מצליבה את הנתונים
-                מול מאגר של מאות תפקידים בצה״ל ומחזירה חמש המלצות מפורטות, מנומקות,
-                עם אחוזי התאמה.
+                מילאתם דפ״ר, פרופיל רפואי, וציוני מא״ה. המערכת מצליבה את הנתונים מול מאגר של מאות
+                תפקידים בצה״ל ומחזירה חמש המלצות מפורטות, מנומקות, עם אחוזי התאמה.
               </p>
 
               <div className="mt-10 grid grid-cols-1 gap-4 border-t border-iron/30 pt-8 sm:grid-cols-3 sm:gap-6">
                 <StepBlock num="01" title="הרשמה" desc="חשבון חינמי תוך 3 דקות" idx={0} />
-                <StepBlock num="02" title="נתונים" desc='דפ״ר, רפואי, מא״ה והעדפות' idx={1} />
+                <StepBlock num="02" title="נתונים" desc="דפ״ר, רפואי, מא״ה והעדפות" idx={1} />
                 <StepBlock num="03" title="תובנות" desc="התאמה + המלצות AI" idx={2} />
               </div>
             </motion.div>
@@ -345,10 +340,58 @@ function HomePage() {
             למה לסמוך עלינו
           </motion.p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-            <TrustBlock icon={<Lock className="h-5 w-5" />} title="הצפנה מקצה לקצה" desc="כל הנתונים מוצפנים ומאובטחים. אף אחד מלבדכם לא יכול לגשת למידע." idx={0} />
-            <TrustBlock icon={<Shield className="h-5 w-5" />} title="פרטיות מלאה" desc="לא משתפים, לא מוכרים, לא מעבירים מידע לצד שלישי. אף פעם." idx={1} />
-            <TrustBlock icon={<Target className="h-5 w-5" />} title="חינם לשימוש" desc="ללא תשלום, ללא מנוי, ללא פרסומות. כלי הכנה לשירות שפתוח לכולם." idx={2} />
+            <TrustBlock
+              icon={<Lock className="h-5 w-5" />}
+              title="הצפנה מקצה לקצה"
+              desc="כל הנתונים מוצפנים ומאובטחים. אף אחד מלבדכם לא יכול לגשת למידע."
+              idx={0}
+            />
+            <TrustBlock
+              icon={<Shield className="h-5 w-5" />}
+              title="פרטיות מלאה"
+              desc="לא משתפים, לא מוכרים, לא מעבירים מידע לצד שלישי. אף פעם."
+              idx={1}
+            />
+            <TrustBlock
+              icon={<Target className="h-5 w-5" />}
+              title="חינם לשימוש"
+              desc="ללא תשלום, ללא מנוי, ללא פרסומות. כלי הכנה לשירות שפתוח לכולם."
+              idx={2}
+            />
           </div>
+
+          {BIT_QR_SRC && (
+            <motion.div
+              id="donate"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease }}
+              className="mt-6 flex scroll-mt-20 flex-col items-center gap-6 border border-iron/20 bg-card p-8 text-center sm:flex-row sm:justify-between sm:text-right"
+            >
+              <div>
+                <h3 className="flex items-center justify-center gap-2 text-base font-bold text-foreground sm:justify-start">
+                  <Heart className="h-4 w-4 text-primary" aria-hidden />
+                  האתר חינמי, ונשאר חינמי
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-dust">
+                  אנחנו צוות קטן שמפתח את {SITE_NAME_HE} בזמן הפנוי. אין מנוי ואין פרסומות. אם זה
+                  עזר לכם, תרומה קטנה בביט מכסה לנו את עלויות השרתים וה־AI.
+                </p>
+                <p className="mt-3 text-xs text-dust/70">
+                  סרקו את הקוד באפליקציית ביט. מתחת לגיל 18? רק באישור הורה.
+                </p>
+              </div>
+              <img
+                src={BIT_QR_SRC}
+                alt="קוד QR לתרומה בביט"
+                width={160}
+                height={160}
+                loading="lazy"
+                className="h-40 w-40 shrink-0 rounded-md bg-white p-2"
+              />
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -374,12 +417,9 @@ function HomePage() {
           </div>
           <div className="order-1 lg:order-2 max-w-xl text-right">
             <h2 className="text-3xl font-bold sm:text-4xl">
-              השירות שלכם,{" "}
-              <span className="text-primary">בראש שקט.</span>
+              השירות שלכם, <span className="text-primary">בראש שקט.</span>
             </h2>
-            <p className="mt-4 text-base text-dust">
-              בחינם, בעברית, ועם פרטיות מלאה.
-            </p>
+            <p className="mt-4 text-base text-dust">בחינם, בעברית, ועם פרטיות מלאה.</p>
             <HomePrimaryCta className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-7 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]" />
             <p className="mt-3 flex items-center gap-1.5 text-xs text-dust/70">
               <Lock className="h-3 w-3" />
@@ -428,7 +468,9 @@ function DataPoint({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-right" ref={ref}>
       <p className="font-mono text-2xl font-bold tabular-nums text-foreground">
-        {prefix}{display}{suffix}
+        {prefix}
+        {display}
+        {suffix}
       </p>
       <p className="mt-0.5 text-xs text-dust">{label}</p>
     </div>
@@ -473,7 +515,17 @@ function CapabilityCard({
   );
 }
 
-function StepBlock({ num, title, desc, idx }: { num: string; title: string; desc: string; idx: number }) {
+function StepBlock({
+  num,
+  title,
+  desc,
+  idx,
+}: {
+  num: string;
+  title: string;
+  desc: string;
+  idx: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -489,7 +541,17 @@ function StepBlock({ num, title, desc, idx }: { num: string; title: string; desc
   );
 }
 
-function TrustBlock({ icon, title, desc, idx = 0 }: { icon: React.ReactNode; title: string; desc: string; idx?: number }) {
+function TrustBlock({
+  icon,
+  title,
+  desc,
+  idx = 0,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  idx?: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}

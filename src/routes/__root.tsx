@@ -19,7 +19,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import appCss from "../styles.css?url";
 import { queryClient } from "@/lib/query-client";
 import { KachKivunLogo } from "@/components/KachKivunLogo";
-import { SITE_DESCRIPTION, SITE_NAME_HE } from "@/lib/brand";
+import { BIT_DONATE_URL, BIT_QR_SRC, SITE_DESCRIPTION, SITE_NAME_HE } from "@/lib/brand";
 import { MATCH_TOOL_SHORT } from "@/lib/voice";
 import { ARIA, MAIN_CONTENT_ID, MOBILE_NAV_ID } from "@/lib/a11y";
 import { IDF_BACKDROP_IMAGE_URLS, preloadIdfBackdropImages } from "@/lib/idf-images";
@@ -184,6 +184,15 @@ function RootLayoutInner() {
               <Link to="/terms" className="transition hover:text-foreground">
                 תנאי שימוש
               </Link>
+              {(BIT_QR_SRC || BIT_DONATE_URL) && (
+                <a
+                  href={BIT_DONATE_URL || "/#donate"}
+                  {...(BIT_DONATE_URL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className="font-semibold text-primary transition hover:brightness-125"
+                >
+                  תרמו לנו בביט
+                </a>
+              )}
             </div>
             <span className="text-dust/50">
               &copy; {new Date().getFullYear()} {SITE_NAME_HE}
@@ -228,8 +237,7 @@ function SiteHeader({
   const NAV_ITEMS = useMemo(() => (authed ? [...NAV_AUTHED] : []), [authed]);
 
   const profileName =
-    session?.preferredName?.trim() ||
-    (session?.email ? session.email.split("@")[0] : undefined);
+    session?.preferredName?.trim() || (session?.email ? session.email.split("@")[0] : undefined);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -285,10 +293,7 @@ function SiteHeader({
               aiCalls={dash?.aiCalls}
             />
           ) : (
-            <Link
-              to="/post-signup"
-              className="btn-primary shrink-0 px-4 py-1.5 text-sm"
-            >
+            <Link to="/post-signup" className="btn-primary shrink-0 px-4 py-1.5 text-sm">
               התחברו
             </Link>
           )}
@@ -312,10 +317,7 @@ function SiteHeader({
               )}
             </button>
           ) : (
-            <Link
-              to="/post-signup"
-              className="btn-primary px-3 py-1.5 text-xs"
-            >
+            <Link to="/post-signup" className="btn-primary px-3 py-1.5 text-xs">
               התחברו
             </Link>
           )}
@@ -376,9 +378,7 @@ function NotFoundPage() {
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
       <p className="font-mono text-6xl font-black tabular-nums text-primary">404</p>
       <h1 className="mt-4 text-xl font-bold text-foreground">העמוד לא נמצא</h1>
-      <p className="mt-2 text-sm text-dust">
-        הכתובת לא קיימת או שהעמוד הוסר.
-      </p>
+      <p className="mt-2 text-sm text-dust">הכתובת לא קיימת או שהעמוד הוסר.</p>
       <Link to="/" className="btn-primary mt-8 px-6 py-2.5">
         חזרה לדף הראשי
       </Link>

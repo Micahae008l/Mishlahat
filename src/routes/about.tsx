@@ -94,7 +94,6 @@ function AboutPage() {
           >
             <Stat value="+120" label="תפקידים במאגר" />
             <Stat value="12" label="ממדי מא״ה" />
-            <Stat value="+500" label="מתגייסים" />
             <Stat value="3 דק׳" label="זמן הרשמה" />
           </motion.div>
         </div>

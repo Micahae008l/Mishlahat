@@ -10,8 +10,6 @@ import {
   Lock,
   Shield,
   ArrowUpLeft,
-  Users,
-  Star,
   Heart,
 } from "lucide-react";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
@@ -74,39 +72,6 @@ function HomePrimaryCta({ className }: { className: string }) {
       <ChevronLeft className="h-4 w-4" />
       {label}
     </Link>
-  );
-}
-
-function Testimonial({
-  quote,
-  name,
-  detail,
-  idx,
-}: {
-  quote: string;
-  name: string;
-  detail: string;
-  idx: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-card p-6 sm:p-8 text-right"
-    >
-      <div className="mb-4 flex gap-0.5 text-primary">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Star key={i} className="h-3 w-3 fill-current" />
-        ))}
-      </div>
-      <p className="text-sm leading-relaxed text-dust">&ldquo;{quote}&rdquo;</p>
-      <div className="mt-4 border-t border-iron/20 pt-4">
-        <p className="text-sm font-bold text-foreground">{name}</p>
-        <p className="text-xs text-dust">{detail}</p>
-      </div>
-    </motion.div>
   );
 }
 
@@ -227,47 +192,6 @@ function HomePage() {
               title="יועץ AI אישי"
               description="יועץ מבוסס AI שמנתח את הפרופיל שלכם ונותן המלצות מותאמות אישית."
               photo={idfPhotoAt(2)}
-              idx={2}
-            />
-          </div>
-        </div>
-      </section>
-
-      <div className="section-divider" />
-
-      {/* ── Social proof ── */}
-      <section className="py-16 sm:py-20">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.4, ease }}
-            className="mb-12 flex items-center justify-center gap-3 text-dust"
-          >
-            <Users className="h-4 w-4 text-primary" />
-            <p className="text-sm">
-              <span className="font-bold text-foreground">500+</span> מתגייסים כבר משתמשים בפלטפורמה
-            </p>
-          </motion.div>
-
-          <div className="grid gap-px bg-iron/20 grid-cols-1 sm:grid-cols-3">
-            <Testimonial
-              quote="קיבלתי המלצת תפקיד שלא הכרתי, ועכשיו זה בדיוק מה שאני עושה בצה״ל."
-              name="נועם כ׳"
-              detail="לוחם, נח״ל"
-              idx={0}
-            />
-            <Testimonial
-              quote="תוך 3 דקות הבנתי מה הפרופיל שלי אומר ואיפה אני יכולה להתאים."
-              name="שירה ד׳"
-              detail="קצינה, חיל האוויר"
-              idx={1}
-            />
-            <Testimonial
-              quote="היועץ AI הציע לי מסלולים שלא חשבתי עליהם. שווה כל שנייה."
-              name="איתי מ׳"
-              detail="תותחן, חיל התותחנים"
               idx={2}
             />
           </div>

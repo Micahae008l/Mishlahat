@@ -1,14 +1,14 @@
-# Deploy קח כיוון (Kach Kivun) — subdomain setup
+# Deploy קח כיוון (Kach Kivun)
 
-Keep the WordPress shop at **https://mike.haddad.co.il/** and run קח כיוון at:
+Live today:
 
-| Service          | URL                              |
-| ---------------- | -------------------------------- |
-| Shop (unchanged) | `https://mike.haddad.co.il/`     |
-| קח כיוון app     | `https://app.mike.haddad.co.il/` |
-| קח כיוון API     | `https://api.mike.haddad.co.il/` |
+| Service      | URL                          | Host               |
+| ------------ | ---------------------------- | ------------------ |
+| קח כיוון app | `https://kachkivun.com/`     | Cloudflare Workers |
+| קח כיוון API | `https://api.kachkivun.com/` | Render             |
 
-You can use a dedicated subdomain (e.g. `app.mike.haddad.co.il`) — use the same hostname everywhere below.
+The WordPress shop at `mike.haddad.co.il` is a separate site and is not affected by
+anything in this document.
 
 ---
 
@@ -25,7 +25,7 @@ You can use a dedicated subdomain (e.g. `app.mike.haddad.co.il`) — use the sam
 ### Repo / agent (already done in code)
 
 - `render.yaml` — one-click API deploy on Render
-- CORS for `https://app.mike.haddad.co.il` via `FRONTEND_URL` / `ALLOWED_ORIGINS`
+- CORS for `https://kachkivun.com` via `FRONTEND_URL` / `ALLOWED_ORIGINS`
 - `npm run deploy:web` — build + Cloudflare deploy
 - `.env.production.example` — production `VITE_API_URL`
 
@@ -57,13 +57,13 @@ Save this as `MONGODB_URI` — you will paste it into Render in step 2.
    | `ACCESS_TOKEN_TTL`   | `15m`                                                                       |
    | `REFRESH_TOKEN_DAYS` | `30`                                                                        |
    | `OPENAI_API_KEY`     | your OpenAI key                                                             |
-   | `FRONTEND_URL`       | `https://app.mike.haddad.co.il`                                             |
-   | `ALLOWED_ORIGINS`    | `https://app.mike.haddad.co.il`                                             |
+   | `FRONTEND_URL`       | `https://kachkivun.com`                                             |
+   | `ALLOWED_ORIGINS`    | `https://kachkivun.com`                                             |
    | `SMTP_*`             | optional — for real OTP emails (see `server/.env.example`)                  |
 
 5. Wait until deploy is **Live**. Open the Render URL (e.g. `https://kachkivun-api.onrender.com/api/health`) — you should see `{"status":"ok",...}`.
 
-6. **Custom domain on Render:** Service → **Settings** → **Custom Domains** → add `api.mike.haddad.co.il`. Render shows a **CNAME** target (e.g. `kachkivun-api.onrender.com`).
+6. **Custom domain on Render:** Service → **Settings** → **Custom Domains** → add `api.kachkivun.com`. Render shows a **CNAME** target (e.g. `kachkivun-api.onrender.com`).
 
 ---
 
@@ -75,7 +75,7 @@ Where you manage `haddad.co.il` (WordPress host, registrar, or Cloudflare):
 | ----- | ----- | ---------------------------- |
 | CNAME | `api` | the hostname Render gave you |
 
-Wait a few minutes, then check: **https://api.mike.haddad.co.il/api/health**
+Wait a few minutes, then check: **https://api.kachkivun.com/api/health**
 
 ---
 
@@ -98,30 +98,33 @@ PowerShell:
 
 ```powershell
 cd C:\Users\Michael\Mishlahat
-$env:VITE_API_URL="https://api.mike.haddad.co.il"
 npm run deploy:web
 ```
+
+`.env.production` already pins `VITE_API_URL=https://api.kachkivun.com`, so the build
+picks it up on its own. Only set the variable by hand if you are deploying against a
+different API.
 
 First deploy creates a `*.workers.dev` URL. Test it in the browser (login may hit your real API).
 
 ### 4c. Custom domain for the app
 
 1. Cloudflare dashboard → **Workers & Pages** → your worker **tanstack-start-app**.
-2. **Settings** → **Domains & Routes** → **Add** → `app.mike.haddad.co.il`.
+2. **Settings** → **Domains & Routes** → **Add** → `kachkivun.com`.
 3. If DNS is on Cloudflare, it often adds the record automatically. Otherwise add:
 
    | Type  | Name  | Value                             |
    | ----- | ----- | --------------------------------- |
    | CNAME | `app` | the worker route Cloudflare shows |
 
-Open **https://app.mike.haddad.co.il** — the shop at the root domain is untouched.
+Open **https://kachkivun.com** — the shop at the root domain is untouched.
 
 ---
 
 ## Step 5 — Smoke test (you)
 
-1. `https://api.mike.haddad.co.il/api/health` → OK JSON
-2. `https://app.mike.haddad.co.il` → landing page loads
+1. `https://api.kachkivun.com/api/health` → OK JSON
+2. `https://kachkivun.com` → landing page loads
 3. Login with email → OTP (check Render logs if SMTP not set yet)
 4. Complete onboarding → dashboard loads
 
@@ -134,7 +137,6 @@ Open **https://app.mike.haddad.co.il** — the shop at the root domain is untouc
 **Frontend:**
 
 ```powershell
-$env:VITE_API_URL="https://api.mike.haddad.co.il"
 npm run deploy:web
 ```
 
@@ -144,14 +146,9 @@ npm run deploy:web
 
 | Problem                      | Fix                                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| CORS error in browser        | On Render, set `ALLOWED_ORIGINS` exactly to `https://app.mike.haddad.co.il` (no trailing slash). |
+| CORS error in browser        | On Render, set `ALLOWED_ORIGINS` exactly to `https://kachkivun.com` (no trailing slash). |
 | API 503 / connection refused | Render service sleeping (free tier) — wait ~30s on first request; or upgrade plan.               |
 | OTP never arrives            | Set `SMTP_*` on Render; until then, see OTP in **Render → Logs**.                                |
-| App calls wrong API          | Rebuild with `VITE_API_URL=https://api.mike.haddad.co.il` before `deploy:web`.                   |
+| App calls wrong API          | Rebuild with `VITE_API_URL=https://api.kachkivun.com` before `deploy:web`.                   |
 | MongoDB connection failed    | Atlas IP allowlist includes `0.0.0.0/0`; password in URI is URL-encoded.                         |
 
----
-
-## Optional: use `kachkivun` instead of `app`
-
-Use `kachkivun.mike.haddad.co.il` everywhere this doc says `app.mike.haddad.co.il`, and set the same URL in Render `FRONTEND_URL` and `ALLOWED_ORIGINS`.

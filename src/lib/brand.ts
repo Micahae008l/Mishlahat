@@ -24,4 +24,5 @@ export const LEGAL_UPDATED = "27 ביולי 2026";
 export const BIT_QR_SRC = "";
 
 /** Optional Bit payment-request link (app → בקשת תשלום → שיתוף → העתקת קישור). */
-export const BIT_DONATE_URL = "";
+export const BIT_DONATE_URL =
+  "https://www.bitpay.co.il/app/me/599F0FEF-6F14-DC48-7E1C-37B1849772F95F55";

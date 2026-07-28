@@ -20,7 +20,7 @@ import { getIdfPhoto, idfPhotoAt, type IdfPhoto } from "@/lib/idf-images";
 import { getDashboardStats } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { authedEntryHref } from "@/lib/profile-resume";
-import { BIT_QR_SRC, SITE_NAME_HE } from "@/lib/brand";
+import { BIT_DONATE_URL, BIT_QR_SRC, SITE_NAME_HE } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -360,7 +360,7 @@ function HomePage() {
             />
           </div>
 
-          {BIT_QR_SRC && (
+          {(BIT_DONATE_URL || BIT_QR_SRC) && (
             <motion.div
               id="donate"
               initial={{ opacity: 0, y: 12 }}
@@ -378,18 +378,31 @@ function HomePage() {
                   אנחנו צוות קטן שמפתח את {SITE_NAME_HE} בזמן הפנוי. אין מנוי ואין פרסומות. אם זה
                   עזר לכם, תרומה קטנה בביט מכסה לנו את עלויות השרתים וה־AI.
                 </p>
-                <p className="mt-3 text-xs text-dust/70">
-                  סרקו את הקוד באפליקציית ביט. מתחת לגיל 18? רק באישור הורה.
-                </p>
+                <p className="mt-3 text-xs text-dust/70">מתחת לגיל 18? רק באישור הורה.</p>
               </div>
-              <img
-                src={BIT_QR_SRC}
-                alt="קוד QR לתרומה בביט"
-                width={160}
-                height={160}
-                loading="lazy"
-                className="h-40 w-40 shrink-0 rounded-md bg-white p-2"
-              />
+              <div className="flex shrink-0 flex-col items-center gap-3">
+                {BIT_QR_SRC && (
+                  <img
+                    src={BIT_QR_SRC}
+                    alt="קוד QR לתרומה בביט"
+                    width={160}
+                    height={160}
+                    loading="lazy"
+                    className="h-40 w-40 rounded-md bg-white p-2"
+                  />
+                )}
+                {BIT_DONATE_URL && (
+                  <a
+                    href={BIT_DONATE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:brightness-110 active:scale-[0.97]"
+                  >
+                    <Heart className="h-4 w-4" aria-hidden />
+                    תרמו לנו בביט
+                  </a>
+                )}
+              </div>
             </motion.div>
           )}
         </div>

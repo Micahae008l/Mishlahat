@@ -92,7 +92,7 @@ function AboutPage() {
             animate="show"
             className="mt-12 flex flex-wrap gap-x-10 gap-y-6 border-t border-iron/25 pt-8 sm:mt-14"
           >
-            <Stat value="+120" label="תפקידים במאגר" />
+            <Stat value="+300" label="תפקידים במאגר" />
             <Stat value="12" label="ממדי מא״ה" />
             <Stat value="3 דק׳" label="זמן הרשמה" />
           </motion.div>

@@ -309,16 +309,33 @@ export async function matchRoles(req, res) {
       ? `ממדים נמוכים: ${lowDims.map(d => `${d.label} (${d.score})`).join(", ")}`
       : "אין ציונים בולטים נמוכים";
 
+    // A candidate who has not been tested yet has null here. Never interpolate
+    // that into the prompt: the model would cite "דפ״ר null" as fact.
+    const hasDapar = stats.daparScore != null;
+    const hasMedical = stats.medicalProfile != null;
+    const untested = !hasDapar || !hasMedical;
+
+    const citeContract = untested
+      ? `חוזה ההסבר (חובה בכל description): ${[
+          hasDapar ? `צטט את דפ"ר ${stats.daparScore}` : null,
+          hasMedical ? `צטט את הפרופיל הרפואי ${stats.medicalProfile}` : null,
+          `ממד מא"ה אחד עם הציון שלו`,
+          `לפחות עובדה אחת מתוך שדה dayToDay של התפקיד`,
+        ].filter(Boolean).join(", ")}.
+אסור לך להמציא ${!hasDapar ? 'ציון דפ"ר' : ""}${!hasDapar && !hasMedical ? " או " : ""}${!hasMedical ? "פרופיל רפואי" : ""} שלא נמסר לך, ואסור לנחש אותו.
+במקום זה, בכל description כתוב במפורש שההתאמה מבוססת על ההעדפות ועל מא"ה בלבד, ושהיא עשויה להשתנות אחרי המיונים.`
+      : `חוזה ההסבר (חובה בכל description): צטט את דפ"ר ${stats.daparScore}, את הפרופיל הרפואי ${stats.medicalProfile}, ממד מא"ה אחד עם הציון שלו, ולפחות עובדה אחת מתוך שדה dayToDay של התפקיד.`;
+
     const userPrompt = MATCH_ENGINE === "v2" ? `ענה לפי כללי המערכת (JSON בלבד, טקסטים בעברית).
 
 מהמאגר המדורג מראש שבהוראות המערכת, בחר את 5 התפקידים הטובים ביותר עבור המועמד, דרג מ-#1 (החזק ביותר) ל-#5, והחזר adjustment (מ-8- עד 8+) לכל תפקיד. אל תחזיר matchPercentage — המערכת מחשבת אותו מ-basePercent ומה-adjustment שלך.
 
-חוזה ההסבר (חובה בכל description): צטט את דפ"ר ${stats.daparScore}, את הפרופיל הרפואי ${stats.medicalProfile}, ממד מא"ה אחד עם הציון שלו, ולפחות עובדה אחת מתוך שדה dayToDay של התפקיד.
+${citeContract}
 
 ## פרופיל מועמד
 
-- דפ"ר: ${stats.daparScore}
-- פרופיל רפואי: ${stats.medicalProfile}
+- דפ"ר: ${hasDapar ? stats.daparScore : "טרם נמדד"}
+- פרופיל רפואי: ${hasMedical ? stats.medicalProfile : "טרם נקבע"}
 - מקור ציוני מאה: ${yomSrc}
 - ציוני מאה (כל 12 ממדים):
 ${yomLines}${legacyQ}

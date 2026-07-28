@@ -38,12 +38,14 @@ export function preFilterRoles(roles, stats, prefs, yom) {
     let score = 0;
     let eligible = true;
 
-    // Hard medical filter: profile < 64 can't do combat roles
-    if (role.combat && medicalProfile < 64) {
+    // Hard medical filter: profile < 64 can't do combat roles.
+    // `medicalProfile` is null when untested, and null < 64 is true in JS, so
+    // the null check is what keeps untested candidates from losing every combat role.
+    if (role.combat && medicalProfile != null && medicalProfile < 64) {
       eligible = false;
     }
     // Profile < 72 makes combat roles unlikely — heavy penalty
-    if (role.combat && medicalProfile < 72) {
+    if (role.combat && medicalProfile != null && medicalProfile < 72) {
       score -= 15;
     }
 
@@ -63,12 +65,15 @@ export function preFilterRoles(roles, stats, prefs, yom) {
     }
     score += tagHits * 6;
 
-    // DAPAR alignment
-    const highDapar = daparScore >= 65;
+    // DAPAR alignment. Unknown dapar stays neutral: no bonus, but also no
+    // penalty, since an untested candidate has not failed anything yet.
     const techTags = tags.some(t => ["coding", "software", "cyber", "ai", "data", "intelligence", "research"].includes(t));
-    if (highDapar && techTags) score += 8;
-    if (highDapar && role.selective) score += 4;
-    if (!highDapar && techTags && role.selective) score -= 8;
+    if (daparScore != null) {
+      const highDapar = daparScore >= 65;
+      if (highDapar && techTags) score += 8;
+      if (highDapar && role.selective) score += 4;
+      if (!highDapar && techTags && role.selective) score -= 8;
+    }
 
     // Physical activity alignment
     if (physical === "High" && role.combat) score += 5;

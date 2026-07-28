@@ -21,6 +21,11 @@ const militaryStatsSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    /** Candidate has not reached צו ראשון: no דפ"ר, profile or מא"ה exists yet. */
+    noScoresYet: {
+      type: Boolean,
+      default: false,
+    },
     daparScore: {
       type: Number,
       enum: [10, 20, 30, 40, 50, 60, 70, 80, 90],

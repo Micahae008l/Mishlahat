@@ -50,12 +50,28 @@ export async function applyStatsPatch(userId, stats) {
   setDateField(update, "serviceStartDate", stats.serviceStartDate);
   setDateField(update, "serviceEndDate", stats.serviceEndDate);
 
+  // Checking "I don't have these yet" clears any previously entered scores, so
+  // a stale דפ"ר can't keep driving the match after the user says it isn't real.
+  if (typeof stats.noScoresYet === "boolean") {
+    update.noScoresYet = stats.noScoresYet;
+    if (stats.noScoresYet) {
+      update.daparScore = null;
+      update.medicalProfile = null;
+    }
+  }
+
   const DAPAR = new Set([10, 20, 30, 40, 50, 60, 70, 80, 90]);
   const MEDICAL = new Set([21, 45, 64, 72, 82, 97]);
-  if (stats.daparScore !== undefined && (stats.daparScore === null || DAPAR.has(stats.daparScore))) {
+  const untested = update.noScoresYet === true;
+  if (
+    !untested &&
+    stats.daparScore !== undefined &&
+    (stats.daparScore === null || DAPAR.has(stats.daparScore))
+  ) {
     update.daparScore = stats.daparScore;
   }
   if (
+    !untested &&
     stats.medicalProfile !== undefined &&
     (stats.medicalProfile === null || MEDICAL.has(stats.medicalProfile))
   ) {

@@ -98,9 +98,15 @@ function medicalStepMargin(medical, floor) {
   return clamp01(0.5 + (medical - floor) / 60);
 }
 
+/**
+ * `dapar` / `medical` are null when the candidate has not been tested yet.
+ * An unknown score is neutral (0.6, same as "role has no floor"), never 0 —
+ * treating it as 0 would rank an untested 17-year-old as if they had failed.
+ */
 function eligibilityMargin(role, dapar, medical) {
-  const daparComp = role.daparFloor == null ? 0.6 : clamp01((dapar - role.daparFloor) / 30);
-  const medComp = medicalStepMargin(medical, role.medicalFloor);
+  const daparComp =
+    role.daparFloor == null || dapar == null ? 0.6 : clamp01((dapar - role.daparFloor) / 30);
+  const medComp = medical == null ? 0.6 : medicalStepMargin(medical, role.medicalFloor);
   let margin = 0.5 * daparComp + 0.5 * medComp;
   if (role.competitiveness === "very_high" && daparComp < 0.3) margin *= 0.85;
   return clamp01(margin);
@@ -144,14 +150,19 @@ const DIM_LABELS_SHORT = {
  * @returns {{ eligible, hardFailReasons, base01, basePercent, subscores, breakdownHe }}
  */
 export function scoreRole(role, profile) {
-  const dapar = Number(profile.daparScore) || 0;
-  const medical = Number(profile.medicalProfile) || 0;
+  // null means "not tested yet", which is different from a low score. Never
+  // coerce it to 0: that would hard-fail every combat role and every floor.
+  const dapar = toScore(profile.daparScore);
+  const medical = toScore(profile.medicalProfile);
   const flat = profile.yomFlat ?? isFlatYom(profile.yom);
   const W = flat ? W_FLAT_YOM : W_NORMAL;
 
   const hardFailReasons = [];
   // Always-on hard gate (unchanged from v1): no combat below profile 64.
-  if (role.combat && medical < 64) hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
+  // Skipped when the profile is unknown; the caller surfaces that caveat instead.
+  if (role.combat && medical != null && medical < 64) {
+    hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
+  }
 
   // Gender gate (skipped when gender unknown, to not break existing profiles).
   // Line-infantry combat is male_only, so females are gated there; the 82-profile
@@ -165,11 +176,11 @@ export function scoreRole(role, profile) {
   // Floors gate hard only when the data was human-reviewed; otherwise soft penalty.
   const floorsTrusted = role.enrichment?.status === "reviewed" || role.enrichment?.status === "verified";
   let softMult = 1;
-  if (role.daparFloor != null && dapar < role.daparFloor) {
+  if (role.daparFloor != null && dapar != null && dapar < role.daparFloor) {
     if (floorsTrusted) hardFailReasons.push(`דפ"ר מתחת לסף (${role.daparFloor})`);
     else softMult *= SOFT_FLOOR_MULT;
   }
-  if (role.medicalFloor != null && medical < role.medicalFloor) {
+  if (role.medicalFloor != null && medical != null && medical < role.medicalFloor) {
     if (floorsTrusted) hardFailReasons.push(`פרופיל רפואי מתחת לסף (${role.medicalFloor})`);
     else softMult *= SOFT_FLOOR_MULT;
   }
@@ -201,10 +212,24 @@ export function scoreRole(role, profile) {
   };
 }
 
+/** null for "not tested yet"; any non-numeric value is treated the same way. */
+function toScore(v) {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 /** Honest Hebrew heads-up about what the profile does/doesn't open. "" if nothing notable. */
 export function buildProfileNotice(profile) {
   const medical = Number(profile.medicalProfile) || 0;
   const notes = [];
+  if (toScore(profile.daparScore) == null || toScore(profile.medicalProfile) == null) {
+    notes.push(
+      "עדיין אין לכם דפ\"ר או פרופיל רפואי, אז ההתאמה כאן מבוססת על ההעדפות שלכם בלבד. " +
+        "היא נותנת כיוון, לא תשובה: תפקידים קרביים ותפקידים עם סף דפ\"ר מוצגים בלי שנוכל לדעת אם תעמדו בו. " +
+        "כשיהיו לכם הציונים, הריצו שוב וההמלצות ידויקו.",
+    );
+  }
   if (medical && medical < 64) {
     notes.push(`עם פרופיל רפואי ${medical}, רוב תפקידי הלחימה סגורים בפניכם — ההמלצות מתמקדות בתפקידים עורפיים ותומכי-לחימה.`);
   } else if (medical && medical < 82) {

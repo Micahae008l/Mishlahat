@@ -287,6 +287,7 @@ function SiteHeader({
           ) : (
             <Link
               to="/post-signup"
+              hash="login"
               className="btn-primary shrink-0 px-4 py-1.5 text-sm"
             >
               התחברו
@@ -314,6 +315,7 @@ function SiteHeader({
           ) : (
             <Link
               to="/post-signup"
+              hash="login"
               className="btn-primary px-3 py-1.5 text-xs"
             >
               התחברו
@@ -359,7 +361,7 @@ function SiteHeader({
                   aiCalls={dash?.aiCalls}
                 />
               ) : (
-                <Link to="/post-signup" className="px-2 py-2.5 text-sm font-semibold text-primary">
+                <Link to="/post-signup" hash="login" className="px-2 py-2.5 text-sm font-semibold text-primary">
                   התחברו
                 </Link>
               )}

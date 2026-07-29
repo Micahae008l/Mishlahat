@@ -38,7 +38,7 @@ const stagger = {
 function HomePrimaryCta({ className }: { className: string }) {
   const [mounted, setMounted] = useState(false);
   const [to, setTo] = useState("/post-signup");
-  const [label, setLabel] = useState("התחילו בחינם");
+  const [label, setLabel] = useState("בדקו התאמה בחינם");
 
   useEffect(() => {
     setMounted(true);
@@ -165,7 +165,7 @@ function HomePage() {
               </div>
               <p className="flex items-center gap-1.5 text-xs text-dust/70">
                 <Lock className="h-3 w-3" />
-                ללא סיסמה, רק אימייל וקוד חד-פעמי
+                מתחילים מיד, בלי הרשמה. חשבון נדרש רק כדי לשמור את התוצאות.
               </p>
             </motion.div>
 

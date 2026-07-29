@@ -39,18 +39,16 @@ export function coerceFitness(v: string | undefined): FitnessPreferenceValue | "
   return FITNESS_SET.has(v as FitnessPreferenceValue) ? (v as FitnessPreferenceValue) : "";
 }
 
-/** First wizard step that still needs input (3–9). Assumes `!d.aiReady`. */
+/** First wizard step that still needs input (1–7). Assumes `!d.aiReady`. */
 export function computePostSignupResumeStep(d: DashboardResponse): number {
-  const name = d.user?.preferredName?.trim() ?? "";
-  if (!name) return 3;
+  const p = d.preferences;
+  if (!p?.combatPreference || p.combatPreference === "Undecided") return 1;
+  if (!p?.focus || p.focus === "Any") return 2;
+  if (!p?.physicalActivityLevel || p.physicalActivityLevel === "Unspecified") return 3;
   if (d.stats?.daparScore == null || d.stats?.medicalProfile == null) return 4;
   if (!migrateLegacyYomHameahTo12(d.stats?.yomHameah)) return 5;
-  const p = d.preferences;
-  if (!p?.combatPreference || p.combatPreference === "Undecided") return 6;
-  if (!p?.focus || p.focus === "Any") return 7;
-  if (!p?.physicalActivityLevel || p.physicalActivityLevel === "Unspecified") return 8;
-  if (!d.stats?.draftDate || Number.isNaN(Date.parse(String(d.stats.draftDate)))) return 9;
-  return 9;
+  if (!d.stats?.draftDate || Number.isNaN(Date.parse(String(d.stats.draftDate)))) return 6;
+  return 7;
 }
 
 /** Primary entry target after the user taps “connect” on marketing pages. */

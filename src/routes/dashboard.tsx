@@ -149,7 +149,7 @@ function DashboardPage() {
           >
             נסו שוב
           </button>
-          <Link to="/post-signup" className="mt-3 block text-sm text-primary hover:underline">
+          <Link to="/post-signup" hash="login" className="mt-3 block text-sm text-primary hover:underline">
             התחברות מחדש
           </Link>
         </div>

@@ -21,6 +21,11 @@ const CODE_MESSAGES: Record<string, string> = {
 /** User-facing message from API or network errors. */
 export function getErrorMessage(err: unknown, fallback = "שגיאה"): string {
   if (err instanceof ApiError) {
+    // status 0 = the request never reached the server. The browser's own text is
+    // untranslated English ("Load failed" on Safari, "Failed to fetch" on Chrome).
+    if (err.status === 0) {
+      return "לא הצלחנו להגיע לשרת. בדקו את החיבור לאינטרנט ונסו שוב בעוד רגע.";
+    }
     const fromCode = err.code ? CODE_MESSAGES[err.code] : undefined;
     if (fromCode && (!err.message || err.message === "Too Many Requests")) return fromCode;
     if (err.message) return err.message;

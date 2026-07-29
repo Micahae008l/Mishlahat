@@ -21,10 +21,23 @@ export type ApiFetchOptions = RequestInit & { skipAuth?: boolean; retries?: numb
 let refreshPromise: Promise<string | null> | null = null;
 
 function retryDelayMs(attempt: number, status?: number): number {
+  // A sleeping free-tier Render instance takes ~50s to wake, so unreachable-host
+  // and 503 retries need a budget in that range rather than a couple of seconds.
   if (status === 503 || status === 0) {
-    return Math.min(4000, 800 * 2 ** attempt);
+    return Math.min(8000, 800 * 2 ** attempt);
   }
   return 600;
+}
+
+/**
+ * Fire-and-forget ping that starts the API waking up while the visitor reads or
+ * answers the wizard, so their first real call is not the one paying cold start.
+ */
+export function warmApi(): void {
+  if (typeof window === "undefined") return;
+  void fetch(`${apiBase()}/api/health`, { credentials: "omit" }).catch(() => {
+    /* warm-up only, failures are irrelevant */
+  });
 }
 
 export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise<T> {
@@ -185,6 +198,8 @@ export function requestOtp(email: string, options?: { intent?: AuthIntent }) {
     method: "POST",
     body: JSON.stringify({ email, intent: options?.intent ?? "login" }),
     skipAuth: true,
+    // First call most visitors make, so it is the one that hits a cold server.
+    retries: 5,
   });
 }
 

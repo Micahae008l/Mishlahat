@@ -10,6 +10,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { warmApi } from "@/lib/api";
 import { clearToken, getToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
 import { dashboardQueryOptions, prefetchAuthedData, sessionQueryOptions } from "@/lib/queries";
 import { Toaster } from "sonner";
@@ -95,6 +96,12 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
+  // Start waking the API immediately. On the free Render plan a sleeping instance
+  // takes ~50s, and without this the visitor's first call is the OTP request.
+  useEffect(() => {
+    warmApi();
+  }, []);
+
   useEffect(() => {
     function onError(event: ErrorEvent) {
       trackError(event.message, event.filename ?? "global");

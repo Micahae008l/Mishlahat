@@ -107,6 +107,8 @@ function PostSignupPage() {
   const [draftDate, setDraftDate] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+  /** True when the user chose sign-in (or landed on #login) instead of the signup quiz. */
+  const [loginIntent, setLoginIntent] = useState(false);
   const authed = useRef(false);
 
   function clearFieldErrors(...keys: FieldKey[]) {
@@ -162,14 +164,57 @@ function PostSignupPage() {
       if (d.yomScores && typeof d.yomScores === "object") {
         setYomScores({ ...defaultYomHameah12Scores(), ...(d.yomScores as YomHameah) });
       }
-      setCombatPreference(coerceCombat(d.combatPreference as string | undefined));
-      setFocusPref(coerceFocus(d.focusPref as string | undefined));
-      setFitnessPref(coerceFitness(d.fitnessPref as string | undefined));
-      if (typeof d.draftDate === "string") setDraftDate(d.draftDate);
-      if (typeof d.step === "number" && d.step >= STEP.combat && d.step <= TOTAL_STEPS) setStep(d.step);
+      const combat = coerceCombat(d.combatPreference as string | undefined);
+      const focus = coerceFocus(d.focusPref as string | undefined);
+      const fitness = coerceFitness(d.fitnessPref as string | undefined);
+      setCombatPreference(combat);
+      setFocusPref(focus);
+      setFitnessPref(fitness);
+      const draft = typeof d.draftDate === "string" ? d.draftDate : "";
+      if (draft) setDraftDate(draft);
+
+      // Never resume on the email/OTP screens from a draft unless the quiz is done.
+      // Accidental "כבר יש לי חשבון" used to stick people on the login screen forever.
+      const missing = missingProfileStep({
+        combatPreference: combat,
+        focusPref: focus,
+        fitnessPref: fitness,
+        gender: d.gender === "male" || d.gender === "female" ? d.gender : "",
+        dapar: typeof d.dapar === "number" ? d.dapar : "",
+        medical: typeof d.medical === "number" ? d.medical : "",
+        draftDate: draft,
+        username: typeof d.username === "string" ? d.username : "",
+      });
+      const savedStep = typeof d.step === "number" ? d.step : STEP.combat;
+      if (missing !== 0) {
+        setStep(missing);
+      } else if (savedStep >= STEP.combat && savedStep <= TOTAL_STEPS) {
+        setStep(savedStep);
+      }
     } catch {
       /* corrupt draft, start clean */
     }
+  }
+
+  function clearLoginHash() {
+    if (typeof window === "undefined") return;
+    if (window.location.hash === "#login") {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+  }
+
+  function enterLoginMode() {
+    clearFieldErrors();
+    setLoginIntent(true);
+    setStep(STEP.email);
+  }
+
+  function enterSignupMode() {
+    clearFieldErrors();
+    setLoginIntent(false);
+    clearLoginHash();
+    const missing = firstMissingStep();
+    setStep(missing === 0 ? STEP.combat : missing);
   }
 
   function clearDraft() {
@@ -186,9 +231,13 @@ function PostSignupPage() {
     (async () => {
       if (!getToken()) {
         if (!cancelled) {
+          const wantsLogin = window.location.hash === "#login";
           restoreDraft();
           // "/post-signup#login" — returning users skip the quiz and go straight to email.
-          if (window.location.hash === "#login") setStep(STEP.email);
+          if (wantsLogin) {
+            setLoginIntent(true);
+            setStep(STEP.email);
+          }
           setBootstrapped(true);
         }
         return;
@@ -217,10 +266,14 @@ function PostSignupPage() {
   useEffect(() => {
     if (!bootstrapped || authed.current) return;
     try {
+      // Don't persist the login shortcut as the resume step — that traps new signups on email.
+      const missing = firstMissingStep();
+      const draftStep =
+        loginIntent || (step >= STEP.email && missing !== 0) ? (missing === 0 ? STEP.name : missing) : step;
       localStorage.setItem(
         DRAFT_KEY,
         JSON.stringify({
-          step,
+          step: draftStep,
           email,
           username,
           dapar,
@@ -238,6 +291,7 @@ function PostSignupPage() {
     }
   }, [
     bootstrapped,
+    loginIntent,
     step,
     email,
     username,
@@ -253,13 +307,16 @@ function PostSignupPage() {
 
   /** First profile step still missing a required answer, or 0 when complete. */
   function firstMissingStep(): number {
-    if (!combatPreference) return STEP.combat;
-    if (!focusPref) return STEP.focus;
-    if (!fitnessPref) return STEP.fitness;
-    if (gender === "" || dapar === "" || medical === "") return STEP.scores;
-    if (!draftDate.trim() || Number.isNaN(Date.parse(draftDate))) return STEP.draft;
-    if (!username.trim()) return STEP.name;
-    return 0;
+    return missingProfileStep({
+      combatPreference,
+      focusPref,
+      fitnessPref,
+      gender,
+      dapar,
+      medical,
+      draftDate,
+      username,
+    });
   }
 
   async function sendCode() {
@@ -456,12 +513,16 @@ function PostSignupPage() {
   }
 
   function goBack() {
-    if (step <= STEP.combat) {
-      navigate({ to: "/" });
+    if (loginIntent) {
+      if (step === STEP.code) {
+        setStep(STEP.email);
+        return;
+      }
+      // Leave sign-in and return to the quiz (or home if they never started).
+      enterSignupMode();
       return;
     }
-    // Signing-in users jump straight to the email step; back should return to the site.
-    if (step === STEP.email && firstMissingStep() !== 0) {
+    if (step <= STEP.combat) {
       navigate({ to: "/" });
       return;
     }
@@ -481,14 +542,14 @@ function PostSignupPage() {
   }
 
   const isAuthStep = step >= STEP.email;
-  // Reached the email step with no quiz answers: this is a plain sign-in, not a signup.
-  const loginOnly = isAuthStep && firstMissingStep() !== 0;
+  // Sign-in shortcut or #login — not the end of the signup quiz.
+  const loginOnly = loginIntent;
   const stepCount = authed.current ? LAST_PROFILE_STEP : TOTAL_STEPS;
   const displayStep = loginOnly ? step - STEP.email + 1 : Math.min(step, stepCount);
   const displayTotal = loginOnly ? 2 : stepCount;
   const progress = Math.round((displayStep / displayTotal) * 100);
   const meta = getStepMeta(step, loginOnly);
-  const showSignInShortcut = !authed.current && step < STEP.email;
+  const showSignInShortcut = !authed.current && !loginIntent && step < STEP.email;
 
   return (
     <div dir="rtl" className="relative flex min-h-dvh">
@@ -801,13 +862,20 @@ function PostSignupPage() {
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={() => {
-                    clearFieldErrors();
-                    setStep(STEP.email);
-                  }}
+                  onClick={enterLoginMode}
                   className="text-sm text-dust underline-offset-4 transition hover:text-foreground hover:underline disabled:opacity-50"
                 >
                   כבר יש לי חשבון
+                </button>
+              ) : null}
+              {loginOnly && step === STEP.email ? (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={enterSignupMode}
+                  className="text-sm text-dust underline-offset-4 transition hover:text-foreground hover:underline disabled:opacity-50"
+                >
+                  הרשמה חדשה
                 </button>
               ) : null}
             </div>
@@ -820,6 +888,25 @@ function PostSignupPage() {
       </div>
     </div>
   );
+}
+
+function missingProfileStep(p: {
+  combatPreference: CombatPreferenceValue | "";
+  focusPref: FocusPreferenceValue | "";
+  fitnessPref: FitnessPreferenceValue | "";
+  gender: "male" | "female" | "";
+  dapar: number | "";
+  medical: number | "";
+  draftDate: string;
+  username: string;
+}): number {
+  if (!p.combatPreference) return STEP.combat;
+  if (!p.focusPref) return STEP.focus;
+  if (!p.fitnessPref) return STEP.fitness;
+  if (p.gender === "" || p.dapar === "" || p.medical === "") return STEP.scores;
+  if (!p.draftDate.trim() || Number.isNaN(Date.parse(p.draftDate))) return STEP.draft;
+  if (!p.username.trim()) return STEP.name;
+  return 0;
 }
 
 function getStepMeta(step: number, loginOnly = false) {

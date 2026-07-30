@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as RoleInsightsRouteImport } from './routes/role-insights'
 import { Route as ReportRouteImport } from './routes/report'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostSignupRouteImport } from './routes/post-signup'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
@@ -23,6 +25,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportReportIdRouteImport } from './routes/report.$reportId'
 import { Route as AdminSecurityRouteImport } from './routes/admin_.security'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoleInsightsRoute = RoleInsightsRouteImport.update({
   id: '/role-insights',
   path: '/role-insights',
@@ -31,6 +38,11 @@ const RoleInsightsRoute = RoleInsightsRouteImport.update({
 const ReportRoute = ReportRouteImport.update({
   id: '/report',
   path: '/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostSignupRoute = PostSignupRouteImport.update({
@@ -99,8 +111,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/privacy': typeof PrivacyRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
@@ -114,8 +128,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/privacy': typeof PrivacyRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/admin/security': typeof AdminSecurityRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
@@ -130,8 +146,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/post-signup': typeof PostSignupRoute
+  '/privacy': typeof PrivacyRoute
   '/report': typeof ReportRouteWithChildren
   '/role-insights': typeof RoleInsightsRoute
+  '/terms': typeof TermsRoute
   '/admin_/security': typeof AdminSecurityRoute
   '/report/$reportId': typeof ReportReportIdRoute
 }
@@ -147,8 +165,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/privacy'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/admin/security'
     | '/report/$reportId'
   fileRoutesByTo: FileRoutesByTo
@@ -162,8 +182,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/privacy'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/admin/security'
     | '/report/$reportId'
   id:
@@ -177,8 +199,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/post-signup'
+    | '/privacy'
     | '/report'
     | '/role-insights'
+    | '/terms'
     | '/admin_/security'
     | '/report/$reportId'
   fileRoutesById: FileRoutesById
@@ -193,13 +217,22 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PostSignupRoute: typeof PostSignupRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReportRoute: typeof ReportRouteWithChildren
   RoleInsightsRoute: typeof RoleInsightsRoute
+  TermsRoute: typeof TermsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/role-insights': {
       id: '/role-insights'
       path: '/role-insights'
@@ -212,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/report'
       fullPath: '/report'
       preLoaderRoute: typeof ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post-signup': {
@@ -315,8 +355,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PostSignupRoute: PostSignupRoute,
+  PrivacyRoute: PrivacyRoute,
   ReportRoute: ReportRouteWithChildren,
   RoleInsightsRoute: RoleInsightsRoute,
+  TermsRoute: TermsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
 }
 export const routeTree = rootRouteImport

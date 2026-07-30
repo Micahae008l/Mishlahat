@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, Crosshair } from "lucide-react";
 import { toast } from "sonner";
-import { updateProfile, type YomHameah } from "@/lib/api";
+import { getDashboardStats, updateProfile, type YomHameah } from "@/lib/api";
 import { dashboardQueryOptions } from "@/lib/queries";
 import { getToken } from "@/lib/auth";
 import { PreferenceOptionGrid } from "@/components/PreferenceOptionGrid";

@@ -33,7 +33,7 @@ const militaryStatsSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female", null],
+      enum: ["male", "female"],
       default: null,
     },
     /** Mixed: 12 ממדי מא״ה (או מבנה ישן של 5) — Mixed כדי שלא יוסרו שדות בטעינה ממונגו. */

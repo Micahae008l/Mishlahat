@@ -261,7 +261,7 @@ export type ScoreOnboardingPayload = {
 };
 
 export function completeScoreOnboarding(payload: ScoreOnboardingPayload) {
-  return updateProfile({
+  const body: ProfileUpdateBody = {
     user: {
       preferredName: payload.username,
       serviceLifeCycle: payload.serviceLifeCycle ?? "pre",
@@ -277,6 +277,18 @@ export function completeScoreOnboarding(payload: ScoreOnboardingPayload) {
       ...payload.preferences,
       yomHameahSource: payload.yomHameahSource,
     },
+  };
+
+  return updateProfile(body).catch(async (err) => {
+    // Old API builds reject gender under stats — don't block signup.
+    if (
+      err instanceof ApiError &&
+      /unknown (stats )?field:\s*gender/i.test(err.message || "")
+    ) {
+      const { gender: _ignored, ...statsWithoutGender } = body.stats ?? {};
+      return updateProfile({ ...body, stats: statsWithoutGender });
+    }
+    throw err;
   });
 }
 

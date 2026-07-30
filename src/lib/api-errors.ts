@@ -18,6 +18,16 @@ const CODE_MESSAGES: Record<string, string> = {
   URI_TOO_LONG: "כתובת הבקשה ארוכה מדי.",
 };
 
+function humanizeValidationMessage(message: string): string | null {
+  if (/unknown (stats )?field:\s*gender/i.test(message)) {
+    return "שגיאת תצורה בשרת סביב שדה המגדר. רעננו ונסו שוב, ואם זה חוזר פנו לתמיכה.";
+  }
+  if (/^Unknown (stats |user |preferences )?field:/i.test(message)) {
+    return "שדה לא מזוהה בטופס. רעננו את הדף ונסו שוב.";
+  }
+  return null;
+}
+
 /** User-facing message from API or network errors. */
 export function getErrorMessage(err: unknown, fallback = "שגיאה"): string {
   if (err instanceof ApiError) {
@@ -28,7 +38,11 @@ export function getErrorMessage(err: unknown, fallback = "שגיאה"): string {
     }
     const fromCode = err.code ? CODE_MESSAGES[err.code] : undefined;
     if (fromCode && (!err.message || err.message === "Too Many Requests")) return fromCode;
-    if (err.message) return err.message;
+    if (err.message) {
+      const nicer = humanizeValidationMessage(err.message);
+      if (nicer) return nicer;
+      return err.message;
+    }
     if (fromCode) return fromCode;
     return fallback;
   }

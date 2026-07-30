@@ -219,6 +219,17 @@ export function validateProfileUpdate(req) {
   const bodyResult = requirePlainObject(req.body, "body");
   if (!bodyResult.ok) return bodyResult;
 
+  // Back-compat: older clients may send gender at the top level.
+  if (bodyResult.value.gender !== undefined) {
+    const stats =
+      bodyResult.value.stats && typeof bodyResult.value.stats === "object" && !Array.isArray(bodyResult.value.stats)
+        ? { ...bodyResult.value.stats }
+        : {};
+    if (stats.gender === undefined) stats.gender = bodyResult.value.gender;
+    bodyResult.value.stats = stats;
+    delete bodyResult.value.gender;
+  }
+
   const allowedTop = ["status", "user", "stats", "preferences"];
   for (const key of Object.keys(bodyResult.value)) {
     if (!allowedTop.includes(key)) return fail(`Unknown field: ${key}`);

@@ -222,7 +222,7 @@ function DashboardPage() {
                       <span>התקדמות לקראת הגיוס</span>
                       <span className="font-mono tabular-nums text-primary">{towardPct}%</span>
                     </div>
-                    <DashboardProgress value={towardPct} size="lg" />
+                    <DashboardProgress value={towardPct} label="התקדמות לקראת הגיוס" size="lg" />
                     <p className="font-mono text-[11px] text-dust/60">
                       מועד גיוס: {countdownTarget.toLocaleDateString("he-IL")}
                     </p>

@@ -89,8 +89,10 @@ export function ProfileMenu({
         <LayoutDashboard className="h-4 w-4 shrink-0 text-dust" aria-hidden />
         דשבורד
       </Link>
+      {/* Profile editing lives in the dashboard's account panel, which is open by default. */}
       <Link
-        to="/profile"
+        to="/dashboard"
+        hash="account-preferences-heading"
         onClick={close}
         className="flex items-center gap-2 px-3 py-2 text-sm text-foreground transition hover:bg-iron/10"
       >

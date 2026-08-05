@@ -1,4 +1,6 @@
 import ReportHistory from "../models/ReportHistory.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const MAX_REPORTS_PER_USER = 30;
 
@@ -24,8 +26,7 @@ export async function listReportHistory(req, res) {
       })),
     });
   } catch (err) {
-    console.error("[reports/list]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[reports/list]");
   }
 }
 
@@ -45,8 +46,7 @@ export async function getReportHistory(req, res) {
       generatedAt: row.createdAt,
     });
   } catch (err) {
-    console.error("[reports/get]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[reports/get]");
   }
 }
 
@@ -60,8 +60,7 @@ export async function deleteReportHistory(req, res) {
 
     res.json({ message: "Report deleted", id });
   } catch (err) {
-    console.error("[reports/delete]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[reports/delete]");
   }
 }
 

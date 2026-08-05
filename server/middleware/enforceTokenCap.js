@@ -1,5 +1,7 @@
 import { assertWithinTokenCap } from "../utils/tokenCap.js";
 import { assertWithinCallCap } from "../utils/aiCallCap.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 /** Blocks AI routes when the user has exhausted their lifetime AI-call or token cap. */
 export async function enforceTokenCap(req, res, next) {
@@ -31,7 +33,6 @@ export async function enforceTokenCap(req, res, next) {
     req.callCapStatus = callResult;
     next();
   } catch (err) {
-    console.error("[enforceTokenCap]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[enforceTokenCap]");
   }
 }

@@ -127,6 +127,21 @@ Open **https://app.mike.haddad.co.il** — the shop at the root domain is untouc
 
 ---
 
+## Origin lock (Cloudflare + Host allowlist)
+
+Do this in the dashboard — code cannot orange-cloud your DNS for you.
+
+1. **Proxy (orange cloud)** every public hostname (`kachkivun.com`, `www`, `api`) through Cloudflare. Do not publish the raw Render URL.
+2. **Wildcard DNS:** add `*.kachkivun.com` → same Cloudflare proxied target (or a decoy) so subdomain brute-force hits CF, not your origin.
+3. **Render env:** set `ALLOWED_HOSTS=api.kachkivun.com` so requests that still reach Render with `Host: *.onrender.com` get a uniform 404.
+4. **JWT:** `JWT_SECRET` must be ≥32 random chars (`openssl rand -base64 32`). Weak defaults are rejected in production.
+5. **Firewall / Authenticated Origin Pulls:** on hosts you control (VPS/AWS), allowlist [Cloudflare IP ranges](https://www.cloudflare.com/ips/) on 80/443 and drop the rest. On Render, prefer Cloudflare Tunnel or keep the onrender hostname secret + `ALLOWED_HOSTS` — Render does not expose iptables.
+6. **WAF:** enable Cloudflare WAF managed rules; rate-limit is already in the API (`AUTH` 5/15m, `API` 100/15m) plus path-probe logging.
+
+Already in the app (no extra work): httpOnly + Secure + SameSite=Strict refresh cookie, memory-only access JWT, probe path → identical 404, admin behind auth, IDOR scoped by `req.userId`, Mongoose (no string-built SQL).
+
+---
+
 ## Redeploy after code changes
 
 **API:** push to GitHub → Render auto-deploys.

@@ -1,5 +1,7 @@
 import MatchGeneration from "../models/MatchGeneration.js";
 import AiMatchResult from "../models/AiMatchResult.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 function summarize(doc) {
   const roles = Array.isArray(doc.roles) ? doc.roles : [];
@@ -42,8 +44,7 @@ export async function listMatchHistory(req, res) {
 
     res.json({ generations: docs.map(summarize) });
   } catch (err) {
-    console.error("[ai/match-history/list]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[ai/match-history/list]");
   }
 }
 
@@ -66,8 +67,7 @@ export async function getMatchHistory(req, res) {
       },
     });
   } catch (err) {
-    console.error("[ai/match-history/get]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[ai/match-history/get]");
   }
 }
 
@@ -82,7 +82,6 @@ export async function deleteMatchHistory(req, res) {
     }
     res.json({ message: "נמחק מההיסטוריה", id });
   } catch (err) {
-    console.error("[ai/match-history/delete]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[ai/match-history/delete]");
   }
 }

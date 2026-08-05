@@ -117,6 +117,23 @@
       "genderEligibility": "male_only",
       "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-07-18", "source": "mitgaisim.idf.il/roles/לוחם-בחטיבת-גבעתי" }
     },
+    "לוחם הנדסה קרבית": {
+      "daparFloor": 40,
+      "medicalFloor": 82,
+      "serviceLengthMonths": 32,
+      "serviceLengthLabel": "שירות חובה מלא; טירונות קרבית + הכשרת הנדסה (חבלה, מיקוש, צמ\"ה / רק\"ם לפי מסלול)",
+      "locations": ["יחידות חיל ההנדסה הקרבית", "הל\"ץ — בית הספר למקצועות ההנדסה"],
+      "dayToDay": "לוחמים ביחידות הנדסה קרבית: פריצת צירים, מיקוש וחבלה, תפעול צמ\"ה ורק\"ם הנדסי, ומשימות שדה לצד כוחות החי\"ר.",
+      "requirements": ["פרופיל 82 ומעלה", "כושר קרבי", "מיון בהתאם ליחידה"],
+      "physicalDemand": 5,
+      "techIntensity": 3,
+      "peopleIntensity": 2,
+      "competitiveness": "high",
+      "keyDimensions": ["spatialPerception", "technicalActivation", "disciplineMaturity", "teamwork"],
+      "popularity": "known",
+      "genderEligibility": "male_only",
+      "enrichment": { "status": "reviewed", "confidence": "high", "enrichedAt": "2026-08-05", "source": "product: combat engineering requires medical profile 82+" }
+    },
     "חובש/ת קרבי/ת": {
       "daparFloor": 50,
       "medicalFloor": 64,

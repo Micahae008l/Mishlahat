@@ -19,6 +19,8 @@ import { getIdfRoleCatalogV3 } from "../utils/roleCatalogV3.js";
 import { buildCandidatePool, blendPercent, seedFromString, computeProfileHash, buildProfileNotice } from "../utils/roleScoring.js";
 import AiMatchResult from "../models/AiMatchResult.js";
 import MatchGeneration from "../models/MatchGeneration.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -149,7 +151,7 @@ const AI_TEMPERATURE = parseFloat(process.env.AI_MATCH_TEMPERATURE) || 0.2;
 
 // Hybrid engine flag. Default "v1" = existing behavior (safe deploy); set AI_MATCH_ENGINE=v2 to activate.
 const MATCH_ENGINE = (process.env.AI_MATCH_ENGINE || "v1").toLowerCase();
-const MATCH_PROMPT_VERSION = "match-v2-2026-07";
+const MATCH_PROMPT_VERSION = "match-v2-2026-08-medical-gates";
 
 /**
  * v2: convert the model's {roleTitle, adjustment, ...} into final RoleMatch objects.
@@ -228,6 +230,7 @@ export async function matchRoles(req, res) {
       focus: preferences?.focus,
       physicalActivityLevel: preferences?.physicalActivityLevel,
       yom,
+      yomSource: preferences?.yomHameahSource || null,
     };
     const profileNotice = buildProfileNotice(profileForMatch);
 
@@ -511,7 +514,6 @@ ${yomLines}${legacyQ}
     if (err?.status === 401) {
       return res.status(503).json({ error: "OpenAI API key is invalid or missing." });
     }
-    console.error("[ai/match-roles]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[ai/match-roles]");
   }
 }

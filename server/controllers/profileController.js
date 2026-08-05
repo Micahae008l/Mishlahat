@@ -1,5 +1,7 @@
 import User from "../models/User.js";
 import { applyUserPatch, applyStatsPatch, applyPreferencesPatch } from "../utils/profileApply.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 export async function updateProfile(req, res) {
   try {
@@ -23,6 +25,6 @@ export async function updateProfile(req, res) {
 
     res.json({ message: "Profile updated successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err);
   }
 }

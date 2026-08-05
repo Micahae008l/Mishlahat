@@ -18,6 +18,8 @@ import { trimUserReportHistory } from "./reportHistoryController.js";
 import { generateReportPdf } from "../utils/reportPdf.js";
 import { buildReportHtml } from "../utils/reportHtml.js";
 import { SITE_NAME_HE } from "../utils/brand.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -79,6 +81,7 @@ export async function generateReport(req, res) {
       focus: preferences?.focus,
       physicalActivityLevel: preferences?.physicalActivityLevel,
       yom,
+      yomSource: preferences?.yomHameahSource || null,
     };
     let filteredRoles;
     let candidatePool = null;
@@ -376,8 +379,7 @@ ${JSON.stringify(
     if (err?.status === 401) {
       return res.status(503).json({ error: "OpenAI API key is invalid or missing." });
     }
-    console.error("[ai/full-report]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[ai/full-report]");
   }
 }
 
@@ -405,7 +407,6 @@ export async function downloadReportPdf(req, res) {
     });
     res.end(pdfBuffer);
   } catch (err) {
-    console.error("[report/pdf]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[report/pdf]");
   }
 }

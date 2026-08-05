@@ -1,3 +1,4 @@
+import { sendServerError } from "../utils/httpError.js";
 import {
   getRoleInsightBySlug,
   getRoleInsightByTitle,
@@ -47,8 +48,7 @@ export function listRoles(req, res) {
       })),
     });
   } catch (err) {
-    console.error("[roles/list]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[roles/list]");
   }
 }
 
@@ -70,7 +70,6 @@ export function getRole(req, res) {
 
     res.json({ role });
   } catch (err) {
-    console.error("[roles/get]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[roles/get]");
   }
 }

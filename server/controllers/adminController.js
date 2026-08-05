@@ -6,6 +6,8 @@ import AiUsageLog from "../models/AiUsageLog.js";
 import RefreshToken from "../models/RefreshToken.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { pricingMeta } from "../utils/openaiPricing.js";
+import { sendServerError } from "../utils/httpError.js";
+
 import {
   buildTokenCapStatus,
   getDefaultTokenCap,
@@ -34,7 +36,7 @@ export async function getAdminMe(req, res) {
       role: u.role,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err);
   }
 }
 
@@ -101,8 +103,7 @@ export async function getOverview(req, res) {
       recentUsage,
     });
   } catch (err) {
-    console.error("[admin/overview]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/overview]");
   }
 }
 
@@ -200,8 +201,7 @@ export async function listUsers(req, res) {
       defaults: { tokenCap: getDefaultTokenCap() },
     });
   } catch (err) {
-    console.error("[admin/users]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/users]");
   }
 }
 
@@ -233,8 +233,7 @@ export async function updateUserTokenCap(req, res) {
       aiTokens,
     });
   } catch (err) {
-    console.error("[admin/updateUserTokenCap]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/updateUserTokenCap]");
   }
 }
 
@@ -263,8 +262,7 @@ export async function updateUserRole(req, res) {
       },
     });
   } catch (err) {
-    console.error("[admin/updateUserRole]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/updateUserRole]");
   }
 }
 
@@ -294,7 +292,6 @@ export async function deleteUser(req, res) {
 
     res.json({ message: "User and related data deleted", deletedUserId: targetId, email });
   } catch (err) {
-    console.error("[admin/deleteUser]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/deleteUser]");
   }
 }

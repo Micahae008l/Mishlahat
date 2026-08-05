@@ -2,6 +2,8 @@ import SecurityEvent from "../models/SecurityEvent.js";
 import BlockedIp from "../models/BlockedIp.js";
 import { refreshBlockedIpCache } from "../middleware/ipBlock.js";
 import { getClientIp } from "../utils/securityLog.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -144,8 +146,7 @@ export async function getSecurityOverview(req, res) {
       recentEvents: recent.map(eventRow),
     });
   } catch (err) {
-    console.error("[admin/security/overview]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/security/overview]");
   }
 }
 
@@ -166,8 +167,7 @@ export async function listSecurityEvents(req, res) {
 
     res.json({ events: events.map(eventRow), total, skip, limit });
   } catch (err) {
-    console.error("[admin/security/events]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/security/events]");
   }
 }
 
@@ -176,8 +176,7 @@ export async function listBlockedIps(req, res) {
     const rows = await BlockedIp.find().sort({ createdAt: -1 }).limit(200).lean();
     res.json({ blockedIps: rows.map(blockedIpRow) });
   } catch (err) {
-    console.error("[admin/security/blocked-ips]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/security/blocked-ips]");
   }
 }
 
@@ -204,8 +203,7 @@ export async function blockIp(req, res) {
 
     res.json({ message: "כתובת ה-IP נחסמה", blockedIp: blockedIpRow(doc) });
   } catch (err) {
-    console.error("[admin/security/block-ip]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/security/block-ip]");
   }
 }
 
@@ -219,7 +217,6 @@ export async function unblockIp(req, res) {
 
     res.json({ message: "החסימה הוסרה", ip: doc.ip });
   } catch (err) {
-    console.error("[admin/security/unblock-ip]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/security/unblock-ip]");
   }
 }

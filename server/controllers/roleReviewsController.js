@@ -1,6 +1,8 @@
 import RoleReview from "../models/RoleReview.js";
 import User from "../models/User.js";
 import { getRoleInsightBySlug, getRoleInsightByTitle, roleSlug } from "../utils/roleInsights.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const BODY_MAX = 1200;
 const NAME_MAX = 40;
@@ -49,8 +51,7 @@ export async function listApprovedReviews(req, res) {
 
     res.json({ roleSlug: role.slug, roleTitle: role.roleTitle, reviews: reviews.map(publicReview) });
   } catch (err) {
-    console.error("[roles/reviews/list]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[roles/reviews/list]");
   }
 }
 
@@ -119,8 +120,7 @@ export async function submitReview(req, res) {
       review: { id: String(doc._id), status: "pending" },
     });
   } catch (err) {
-    console.error("[roles/reviews/submit]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[roles/reviews/submit]");
   }
 }
 
@@ -142,8 +142,7 @@ export async function adminListReviews(req, res) {
       reviews: reviews.map(adminReview),
     });
   } catch (err) {
-    console.error("[admin/role-reviews/list]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/role-reviews/list]");
   }
 }
 
@@ -175,7 +174,6 @@ export async function adminModerateReview(req, res) {
       review: adminReview(doc),
     });
   } catch (err) {
-    console.error("[admin/role-reviews/moderate]", err);
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err, "[admin/role-reviews/moderate]");
   }
 }

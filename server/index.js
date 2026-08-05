@@ -1,6 +1,7 @@
 import "./env.js";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
@@ -17,6 +18,7 @@ import { requireEnv, requireProductionEnv } from "./utils/requireEnv.js";
 import { rejectOversizedUrl, jsonErrorHandler } from "./middleware/rejectMalformed.js";
 import { ipBlockGuard, refreshBlockedIpCache } from "./middleware/ipBlock.js";
 import { suspiciousPathGuard, apiNotFoundHandler } from "./middleware/securityGuards.js";
+import { hostAllowlist } from "./middleware/hostAllowlist.js";
 
 const app = express();
 const JSON_BODY_LIMIT = "256kb";
@@ -25,6 +27,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL?.trim() || "http://localhost:8080/
 
 // Middleware
 app.set("trust proxy", 1);
+app.use(
+  helmet({
+    // JSON API consumed cross-origin by the SPA — same-origin CORP would break fetch.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    // HTML responses are rare (root hint page only); CSP belongs on the static host.
+    contentSecurityPolicy: false,
+  }),
+);
+app.use(hostAllowlist);
 app.use(rejectOversizedUrl);
 app.use(ipBlockGuard);
 app.use(suspiciousPathGuard);

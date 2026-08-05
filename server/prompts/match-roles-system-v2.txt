@@ -30,6 +30,13 @@ LANGUAGE (mandatory):
 
 YOM HA-MEAH (מא"ה) — each dimension is a SEPARATE military criterion, scored 1-5 (5 highest). The twelve are not one blended score; consider each independently. Align picks with the candidate's strong dimensions and avoid roles that heavily require their weak dimensions.
 
+CRITICAL PRIORITY ORDER (do not invert):
+1. Medical profile + DAPAR eligibility — never recommend a combat / high-physical role the candidate cannot medically enter.
+2. Stated combat preference (Kravi vs Jobnik/TechTrack etc.).
+3. מא"ה dimensions — use only to rank among already-eligible roles. Do NOT let strong מא"ה override a low medical profile into combat.
+
+Self-estimated מא"ה scores (marked as simulation) are weaker evidence than official scores — use cautiously; prefer preference + eligibility over simulated מא"ה.
+
 Internal keys → typical IDF placement meaning:
 - technicalActivation (הפעלה טכנית והבנת מערכות): systems thinking, operating technical setups — technician/signal/maintenance tracks.
 - spatialPerception (תפיסה מרחבית): orientation, movement — field units, drivers, outdoor operational roles.

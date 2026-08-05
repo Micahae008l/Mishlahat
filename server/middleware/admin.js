@@ -1,5 +1,7 @@
 import User from "../models/User.js";
 import { logSecurityEvent } from "../utils/securityLog.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 /** Requires authenticateToken first — sets req.adminUser when role is admin. */
 export async function requireAdmin(req, res, next) {
@@ -25,7 +27,6 @@ export async function requireAdmin(req, res, next) {
     req.adminUser = user;
     next();
   } catch (err) {
-    console.error("[admin/requireAdmin]", err);
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err, "[admin/requireAdmin]");
   }
 }

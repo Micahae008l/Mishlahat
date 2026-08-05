@@ -4,6 +4,8 @@ import Preferences from "../models/Preferences.js";
 import { computeAiProfileMissing } from "../utils/profileAiReady.js";
 import { getTokenCapStatusForUserId } from "../utils/tokenCap.js";
 import { getCallCapStatusForUserId } from "../utils/aiCallCap.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 export async function getStats(req, res) {
   try {
@@ -51,6 +53,6 @@ export async function getStats(req, res) {
       aiCalls,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return sendServerError(res, err);
   }
 }

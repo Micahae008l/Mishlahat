@@ -38,7 +38,8 @@ export function refreshCookieOptions() {
   return {
     httpOnly: true,
     secure: production,
-    sameSite: "lax",
+    // Same eTLD+1 (kachkivun.com ↔ api.kachkivun.com) still sends Strict cookies.
+    sameSite: "strict",
     path: "/api/auth",
     maxAge: refreshTokenMaxAgeMs(),
   };

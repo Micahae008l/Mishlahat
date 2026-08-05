@@ -19,18 +19,13 @@ import {
   revokeRefreshToken,
 } from "../utils/refreshTokens.js";
 import { logSecurityEvent } from "../utils/securityLog.js";
+import { sendServerError } from "../utils/httpError.js";
+
 
 const OTP_TTL_MINUTES = 10;
 const OTP_MAX_ATTEMPTS = 5;
 const OTP_RESEND_SECONDS = 45;
 const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || "15m";
-
-function bootstrapAdminEmail() {
-  const email = String(process.env.ADMIN_EMAIL || "")
-    .trim()
-    .toLowerCase();
-  return email.includes("@") ? email : null;
-}
 
 function normalizeEmail(email) {
   return String(email || "")
@@ -40,6 +35,7 @@ function normalizeEmail(email) {
 
 function signToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: ACCESS_TOKEN_TTL,
   });
 }
@@ -136,8 +132,7 @@ export async function getSession(req, res) {
       status: user.status,
     });
   } catch (err) {
-    console.error("[auth/me]", err);
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err, "[auth/me]");
   }
 }
 
@@ -179,8 +174,7 @@ export async function refreshSession(req, res) {
 
     res.json(userSessionPayload(user));
   } catch (err) {
-    console.error("[auth/refresh]", err);
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err, "[auth/refresh]");
   }
 }
 
@@ -193,7 +187,7 @@ export async function logout(req, res) {
   } catch (err) {
     console.error("[auth/logout]", err);
     clearRefreshCookie(res);
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err);
   }
 }
 
@@ -258,8 +252,7 @@ export async function requestOtp(req, res) {
     }
     res.json(payload);
   } catch (err) {
-    console.error("[auth/request-otp]", err);
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err, "[auth/request-otp]");
   }
 }
 
@@ -319,15 +312,9 @@ export async function verifyOtp(req, res) {
     otp.consumedAt = new Date();
     await otp.save();
 
-    const setFields = { emailVerifiedAt: new Date() };
-    const adminEmail = bootstrapAdminEmail();
-    if (adminEmail && email === adminEmail) {
-      setFields.role = "admin";
-    }
-
     const user = await User.findOneAndUpdate(
       { email },
-      { $setOnInsert: { email }, $set: setFields },
+      { $setOnInsert: { email }, $set: { emailVerifiedAt: new Date() } },
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
     await ensureUserScaffold(user._id);
@@ -350,6 +337,6 @@ export async function verifyOtp(req, res) {
     if (err?.code === 11000) {
       return res.status(409).json({ error: "האימייל כבר בשימוש. נסו שוב." });
     }
-    res.status(500).json({ error: err?.message || "Server error" });
+    return sendServerError(res, err);
   }
 }

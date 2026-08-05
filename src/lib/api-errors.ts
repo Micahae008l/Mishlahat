@@ -16,6 +16,7 @@ const CODE_MESSAGES: Record<string, string> = {
   INVALID_JSON: "בקשה לא תקינה. רעננו את הדף ונסו שוב.",
   PAYLOAD_TOO_LARGE: "הבקשה גדולה מדי.",
   URI_TOO_LONG: "כתובת הבקשה ארוכה מדי.",
+  SERVER_ERROR: "שגיאת שרת. נסו שוב מאוחר יותר.",
 };
 
 function humanizeValidationMessage(message: string): string | null {

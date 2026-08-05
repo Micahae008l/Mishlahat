@@ -142,7 +142,11 @@ export function normalizeRoleV3(role) {
     ...role,
     // eligibility floors — null means "unknown, no hard gate"
     daparFloor: VALID_DAPAR.has(role.daparFloor) ? role.daparFloor : null,
-    medicalFloor: VALID_MEDICAL.has(role.medicalFloor) ? role.medicalFloor : null,
+    medicalFloor: VALID_MEDICAL.has(role.medicalFloor)
+      ? role.medicalFloor
+      : role.combat
+        ? 82
+        : null,
     // service + location (empty until enriched; report Phase-4 kill-switch reads these)
     serviceLengthMonths: Number.isFinite(role.serviceLengthMonths) ? role.serviceLengthMonths : null,
     serviceLengthLabel: typeof role.serviceLengthLabel === "string" ? role.serviceLengthLabel : "",

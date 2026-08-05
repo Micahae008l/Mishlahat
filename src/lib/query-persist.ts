@@ -3,7 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 export const QUERY_CACHE_STORAGE_KEY = "kk-query-cache-v1";
 const STORAGE_KEY = QUERY_CACHE_STORAGE_KEY;
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const PERSIST_PREFIXES = new Set(["session", "dashboard", "report-history"]);
+const PERSIST_PREFIXES = new Set<string>();
+// Intentionally empty: do not write session/dashboard/report PII to localStorage.
 
 type PersistedPayload = {
   savedAt: number;

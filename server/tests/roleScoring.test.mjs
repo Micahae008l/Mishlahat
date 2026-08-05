@@ -35,6 +35,12 @@ test("weights sum to 1.0 (basePercent stays in band on all-neutral)", () => {
   assert.ok(r.basePercent >= 42 && r.basePercent <= 94, `basePercent ${r.basePercent} out of band`);
 });
 
+test("hard gate: combat role blocked when medical < 82 (default combat floor)", () => {
+  const at64 = scoreRole(combatRole, { ...techProfile, medicalProfile: 64, combatPreference: "FieldCombat" });
+  assert.equal(at64.eligible, false);
+  assert.ok(at64.hardFailReasons.some((r) => r.includes("82") || r.includes("פרופיל")));
+});
+
 test("hard gate: combat role blocked when medical < 64", () => {
   const r = scoreRole(combatRole, { ...techProfile, medicalProfile: 45, combatPreference: "FieldCombat" });
   assert.equal(r.eligible, false);
@@ -44,6 +50,33 @@ test("hard gate: combat role blocked when medical < 64", () => {
 test("combat role allowed at medical 82", () => {
   const r = scoreRole(combatRole, { ...techProfile, medicalProfile: 82, combatPreference: "FieldCombat" });
   assert.equal(r.eligible, true);
+});
+
+test("combat medic floor 64 remains open at profile 64", () => {
+  const medic = normalizeRoleV3({
+    roleTitle: "חובש/ת קרבי/ת",
+    category: "לחימה",
+    combat: true,
+    medicalFloor: 64,
+    preferenceTags: ["combat", "medicine"],
+    enrichment: { status: "reviewed", confidence: "high" },
+  });
+  const r = scoreRole(medic, { ...techProfile, medicalProfile: 64, combatPreference: "FieldCombat" });
+  assert.equal(r.eligible, true);
+  assert.equal(medic.medicalFloor, 64);
+});
+
+test("self-estimated yom has less swing than official מא״ה", () => {
+  // Force non-flat weights on both ends so we isolate SELF_YOM_SIGNAL dampening.
+  const lowYom = { ...richYom, technicalActivation: 1, dataProcessing: 1, command: 5, instruction: 5 };
+  const base = { ...techProfile, yomFlat: false };
+  const highOfficial = scoreRole(techRole, { ...base, yom: richYom, yomSource: "official" }).base01;
+  const lowOfficial = scoreRole(techRole, { ...base, yom: lowYom, yomSource: "official" }).base01;
+  const highSelf = scoreRole(techRole, { ...base, yom: richYom, yomSource: "self" }).base01;
+  const lowSelf = scoreRole(techRole, { ...base, yom: lowYom, yomSource: "self" }).base01;
+  const officialSwing = highOfficial - lowOfficial;
+  const selfSwing = highSelf - lowSelf;
+  assert.ok(selfSwing < officialSwing, `expected self swing ${selfSwing} < official ${officialSwing}`);
 });
 
 test("reviewed dapar floor is a HARD gate; ai_draft floor is soft", () => {

@@ -38,13 +38,9 @@ export function preFilterRoles(roles, stats, prefs, yom) {
     let score = 0;
     let eligible = true;
 
-    // Hard medical filter: profile < 64 can't do combat roles
-    if (role.combat && medicalProfile < 64) {
+    // Hard medical filter: unenriched combat = profile 82+ (line combat / combat corps)
+    if (role.combat && medicalProfile < 82) {
       eligible = false;
-    }
-    // Profile < 72 makes combat roles unlikely — heavy penalty
-    if (role.combat && medicalProfile < 72) {
-      score -= 15;
     }
 
     if (!eligible) continue;

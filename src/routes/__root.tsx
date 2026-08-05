@@ -10,8 +10,8 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
-import { warmApi } from "@/lib/api";
-import { clearToken, getToken, isStoredAdmin, setStoredRole } from "@/lib/auth";
+import { warmApi, bootstrapAuth, logoutRequest } from "@/lib/api";
+import { getToken, isStoredAdmin, setStoredRole, subscribeAuth } from "@/lib/auth";
 import { dashboardQueryOptions, prefetchAuthedData, sessionQueryOptions } from "@/lib/queries";
 import { Toaster } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -133,26 +133,59 @@ function RootLayoutInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isBareShell = pathname === "/post-signup";
   const navigate = useNavigate();
+  const [authReady, setAuthReady] = useState(false);
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await bootstrapAuth();
+      if (cancelled) return;
+      setAuthed(!!getToken());
+      setAuthReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    return subscribeAuth(() => setAuthed(!!getToken()));
+  }, []);
+
+  useEffect(() => {
+    if (!authReady) return;
     setAuthed(!!getToken());
-  }, [pathname]);
+  }, [pathname, authReady]);
 
   useEffect(() => {
     preloadIdfBackdropImages();
   }, []);
 
   useEffect(() => {
+    if (!authReady) return;
     const token = getToken();
     if (token) prefetchAuthedData(queryClient, token);
-  }, [pathname, queryClient]);
+  }, [pathname, queryClient, authReady, authed]);
 
-  function logout() {
-    clearToken();
+  async function logout() {
+    await logoutRequest();
     queryClient.clear();
     setAuthed(false);
     navigate({ to: "/" });
+  }
+
+  if (!authReady) {
+    return (
+      <main
+        id={MAIN_CONTENT_ID}
+        className="flex min-h-dvh items-center justify-center"
+        aria-busy="true"
+        aria-label={ARIA.main}
+      >
+        <span className="text-sm text-dust">טוען…</span>
+      </main>
+    );
   }
 
   return (

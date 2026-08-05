@@ -159,6 +159,13 @@ async function refreshAccessToken(): Promise<string | null> {
   return refreshPromise;
 }
 
+/** Restore in-memory access JWT from the httpOnly refresh cookie (page load). */
+export async function bootstrapAuth(): Promise<boolean> {
+  if (getToken()) return true;
+  const token = await refreshAccessToken();
+  return Boolean(token);
+}
+
 export async function logoutRequest() {
   clearToken();
   try {

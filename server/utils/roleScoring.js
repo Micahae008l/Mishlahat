@@ -9,9 +9,17 @@ import { TAG_TO_DIMENSIONS } from "./roleCatalogV3.js";
  */
 
 // ── Scoring weights (the tuning surface). Must sum to 1.0 in each mode. ──
-const W_NORMAL = { pref: 0.25, focus: 0.2, yom: 0.3, elig: 0.15, quality: 0.1 };
+// Eligibility (medical/DAPAR) outranks מא"ה — profile gates who can serve where;
+// מא"ה only ranks among roles that are already open.
+const W_NORMAL = { pref: 0.28, focus: 0.22, yom: 0.18, elig: 0.22, quality: 0.1 };
 // When מא"ה scores carry no signal (flat/duplicated), move weight off yom.
-const W_FLAT_YOM = { pref: 0.35, focus: 0.25, yom: 0.15, elig: 0.15, quality: 0.1 };
+const W_FLAT_YOM = { pref: 0.34, focus: 0.26, yom: 0.1, elig: 0.2, quality: 0.1 };
+/** Self-estimated מא"ה: keep weights, but compress yomFit toward neutral (0.5). */
+const SELF_YOM_SIGNAL = 0.35;
+/** Default medical floor for combat roles with no enriched floor (line infantry / combat corps). */
+export const DEFAULT_COMBAT_MEDICAL_FLOOR = 82;
+/** Absolute minimum for any combat-flagged role (e.g. combat medic). */
+export const ABSOLUTE_COMBAT_MEDICAL_MIN = 64;
 
 const BASE_MIN = 42;
 const BASE_SPAN = 52; // basePercent ∈ [42, 94]
@@ -100,7 +108,7 @@ function medicalStepMargin(medical, floor) {
 
 function eligibilityMargin(role, dapar, medical) {
   const daparComp = role.daparFloor == null ? 0.6 : clamp01((dapar - role.daparFloor) / 30);
-  const medComp = medicalStepMargin(medical, role.medicalFloor);
+  const medComp = medicalStepMargin(medical, effectiveMedicalFloor(role));
   let margin = 0.5 * daparComp + 0.5 * medComp;
   if (role.competitiveness === "very_high" && daparComp < 0.3) margin *= 0.85;
   return clamp01(margin);
@@ -138,20 +146,35 @@ const DIM_LABELS_SHORT = {
   disciplineMaturity: "משמעת",
 };
 
+/** Effective medical floor for scoring/gates. Combat defaults to 82 when unset. */
+export function effectiveMedicalFloor(role) {
+  if (role.medicalFloor != null) return role.medicalFloor;
+  if (role.combat) return DEFAULT_COMBAT_MEDICAL_FLOOR;
+  return null;
+}
+
 /**
  * @param {object} role  - a v3-normalized role
- * @param {object} profile - { daparScore, medicalProfile, combatPreference, focus, physicalActivityLevel, yom, yomFlat? }
+ * @param {object} profile - { daparScore, medicalProfile, combatPreference, focus, physicalActivityLevel, yom, yomFlat?, yomSource? }
  * @returns {{ eligible, hardFailReasons, base01, basePercent, subscores, breakdownHe }}
  */
 export function scoreRole(role, profile) {
   const dapar = Number(profile.daparScore) || 0;
   const medical = Number(profile.medicalProfile) || 0;
   const flat = profile.yomFlat ?? isFlatYom(profile.yom);
+  const selfYom = profile.yomSource === "self";
   const W = flat ? W_FLAT_YOM : W_NORMAL;
 
   const hardFailReasons = [];
-  // Always-on hard gate (unchanged from v1): no combat below profile 64.
-  if (role.combat && medical < 64) hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
+  const medFloor = effectiveMedicalFloor(role);
+
+  // Combat eligibility is a hard gate, not a soft score nudge.
+  // Absolute floor 64 (combat medic etc.); role floor defaults to 82 for line combat.
+  if (role.combat && medical < ABSOLUTE_COMBAT_MEDICAL_MIN) {
+    hardFailReasons.push("פרופיל רפואי נמוך מדי לתפקיד קרבי");
+  } else if (role.combat && medFloor != null && medical < medFloor) {
+    hardFailReasons.push(`פרופיל רפואי מתחת לסף (${medFloor})`);
+  }
 
   // Gender gate (skipped when gender unknown, to not break existing profiles).
   // Line-infantry combat is male_only, so females are gated there; the 82-profile
@@ -162,21 +185,23 @@ export function scoreRole(role, profile) {
     if (role.genderEligibility !== wanted) hardFailReasons.push("התפקיד אינו פתוח למגדר הנבחר");
   }
 
-  // Floors gate hard only when the data was human-reviewed; otherwise soft penalty.
+  // Non-combat floors: hard only when human-reviewed; otherwise soft penalty.
+  // Combat medical floors already hard-gated above (including the 82 default).
   const floorsTrusted = role.enrichment?.status === "reviewed" || role.enrichment?.status === "verified";
   let softMult = 1;
   if (role.daparFloor != null && dapar < role.daparFloor) {
-    if (floorsTrusted) hardFailReasons.push(`דפ"ר מתחת לסף (${role.daparFloor})`);
+    if (floorsTrusted || role.combat) hardFailReasons.push(`דפ"ר מתחת לסף (${role.daparFloor})`);
     else softMult *= SOFT_FLOOR_MULT;
   }
-  if (role.medicalFloor != null && medical < role.medicalFloor) {
+  if (!role.combat && role.medicalFloor != null && medical < role.medicalFloor) {
     if (floorsTrusted) hardFailReasons.push(`פרופיל רפואי מתחת לסף (${role.medicalFloor})`);
     else softMult *= SOFT_FLOOR_MULT;
   }
 
   const prefFit = 0.6 * combatMatch(role.combat, profile.combatPreference) + 0.4 * physMatch(role.physicalDemand, profile.physicalActivityLevel);
   const ff = focusFit(role, profile.focus);
-  const yf = yomFit(role, profile.yom);
+  let yf = yomFit(role, profile.yom);
+  if (selfYom) yf = 0.5 + (yf - 0.5) * SELF_YOM_SIGNAL;
   const em = eligibilityMargin(role, dapar, medical);
   const qp = qualityPrior(role);
 
@@ -205,13 +230,16 @@ export function scoreRole(role, profile) {
 export function buildProfileNotice(profile) {
   const medical = Number(profile.medicalProfile) || 0;
   const notes = [];
-  if (medical && medical < 64) {
-    notes.push(`עם פרופיל רפואי ${medical}, רוב תפקידי הלחימה סגורים בפניכם — ההמלצות מתמקדות בתפקידים עורפיים ותומכי-לחימה.`);
-  } else if (medical && medical < 82) {
-    notes.push(`עם פרופיל רפואי ${medical}, חלק מתפקידי הלחימה המובחרים אינם זמינים.`);
+  if (medical && medical < ABSOLUTE_COMBAT_MEDICAL_MIN) {
+    notes.push(`עם פרופיל רפואי ${medical}, תפקידי לחימה סגורים בפניכם — ההמלצות מתמקדות בתפקידים עורפיים ותומכי-לחימה.`);
+  } else if (medical && medical < DEFAULT_COMBAT_MEDICAL_FLOOR) {
+    notes.push(`עם פרופיל רפואי ${medical}, רוב תפקידי הלחימה (כולל הנדסה קרבית וחי״ר) דורשים פרופיל 82 — ההמלצות מתמקדות בתפקידים שאינם לחימה מלאה, ובמסלולים קרביים שפתוחים לפרופיל שלכם (אם יש).`);
   }
   if (profile.gender === "female") {
     notes.push("שירות קרבי לנשים הוא התנדבותי ומוגבל בעיקר ליחידות מעורבות (דורש פרופיל 82 ומעלה).");
+  }
+  if (profile.yomSource === "self") {
+    notes.push("ציוני המא״ה שהוזנו הם הערכה עצמית — הם משפיעים פחות על הדירוג מנתונים רשמיים.");
   }
   return notes.join(" ");
 }
@@ -287,12 +315,15 @@ export function computeProfileHash(profile, catalogVersion, promptVersion) {
     combat: profile.combatPreference || "",
     focus: profile.focus || "",
     physical: profile.physicalActivityLevel || "",
+    yomSource: profile.yomSource || "",
     yom: profile.yom
       ? Object.keys(profile.yom).sort().map((k) => `${k}:${profile.yom[k]}`).join(",")
       : "",
     catalog: catalogVersion || "",
     prompt: promptVersion || "",
     engine: process.env.AI_MATCH_ENGINE || "v2",
+    // Bump when gate/weight logic changes so old cached matches are not served.
+    scoringRev: "combat-floor-82-yom-downweight-v1",
   };
   return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
 }
